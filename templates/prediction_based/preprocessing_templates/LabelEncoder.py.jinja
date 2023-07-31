@@ -1,0 +1,6 @@
+from sklearn.preprocessing import OrdinalEncoder
+
+_CATEGORICAL_COLS = {{ columns }}
+_oe = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+{{ train_dataset }}[_CATEGORICAL_COLS] = _oe.fit_transform({{ train_dataset }}[_CATEGORICAL_COLS])
+{{ test_dataset }}[_CATEGORICAL_COLS] = _oe.transform({{ test_dataset }}[_CATEGORICAL_COLS])

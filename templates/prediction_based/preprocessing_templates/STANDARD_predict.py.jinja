@@ -1,0 +1,9 @@
+with open('standardScaler.pkl', 'rb') as f:
+    __standard_scaler = pickle.load(f)
+
+{% if pipeline.sparse_matrix %}
+{% set dataframe = "pd.DataFrame.sparse.from_spmatrix" %}
+{% else %}
+{% set dataframe = "pd.DataFrame" %}
+{% endif %}
+{{ test_dataset }} = {{ dataframe }}(__standard_scaler.transform({{ test_dataset }}), columns={{ test_dataset }}.columns, index={{ test_dataset }}.index)

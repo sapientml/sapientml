@@ -1,0 +1,52 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+_TEXT_COLUMNS = {{ columns }}
+__temp_train_data = {{ train_dataset }}[_TEXT_COLUMNS]
+__temp_test_data = {{ test_dataset }}[_TEXT_COLUMNS]
+# Make the entire dataframe sparse to avoid it converting into a dense matrix.
+{{ train_dataset }} = {{ train_dataset }}.drop(_TEXT_COLUMNS, axis=1).astype(pd.SparseDtype('float64', 0))
+{{ test_dataset }} = {{ test_dataset }}.drop(_TEXT_COLUMNS, axis=1).astype(pd.SparseDtype('float64', 0))
+
+{% if pipeline.task.use_word_list %}
+{% if pipeline.task.use_word_list is mapping %}
+# Use only specified words as features for each column
+use_word_list = {{ pipeline.task.use_word_list }}
+for col, word_list in use_word_list.items():
+    word_list = [word.lower() for word in word_list]
+    word_list = list(set(word_list))
+    use_word_list[col] = word_list
+for _col in _TEXT_COLUMNS:
+    __tfidfvectorizer = TfidfVectorizer(max_features=3000, vocabulary=use_word_list.get(_col))
+    vector_train = __tfidfvectorizer.fit_transform(__temp_train_data[_col])
+    __feature_names = ['_'.join([_col, name]) for name in __tfidfvectorizer.get_feature_names_out()]
+    vector_train = pd.DataFrame.sparse.from_spmatrix(vector_train, columns=__feature_names, index=__temp_train_data.index)
+    {{ train_dataset }} = pd.concat([{{ train_dataset }}, vector_train], axis=1)
+    vector_test = __tfidfvectorizer.transform(__temp_test_data[_col])
+    vector_test = pd.DataFrame.sparse.from_spmatrix(vector_test, columns=__feature_names, index=__temp_test_data.index)
+    {{ test_dataset }} = pd.concat([{{ test_dataset }}, vector_test], axis=1)
+{% else %}
+# Use only specified words as features
+use_word_list = {{ pipeline.task.use_word_list }}
+use_word_list = [word.lower() for word in use_word_list]
+use_word_list = list(set(use_word_list))
+for _col in _TEXT_COLUMNS:
+    __tfidfvectorizer = TfidfVectorizer(max_features=3000, vocabulary=use_word_list)
+    vector_train = __tfidfvectorizer.fit_transform(__temp_train_data[_col])
+    __feature_names = ['_'.join([_col, name]) for name in __tfidfvectorizer.get_feature_names_out()]
+    vector_train = pd.DataFrame.sparse.from_spmatrix(vector_train, columns=__feature_names, index=__temp_train_data.index)
+    {{ train_dataset }} = pd.concat([{{ train_dataset }}, vector_train], axis=1)
+    vector_test = __tfidfvectorizer.transform(__temp_test_data[_col])
+    vector_test = pd.DataFrame.sparse.from_spmatrix(vector_test, columns=__feature_names, index=__temp_test_data.index)
+    {{ test_dataset }} = pd.concat([{{ test_dataset }}, vector_test], axis=1)
+{% endif %}
+{% else %}
+for _col in _TEXT_COLUMNS:
+    __tfidfvectorizer = TfidfVectorizer(max_features=3000)
+    vector_train = __tfidfvectorizer.fit_transform(__temp_train_data[_col])
+    __feature_names = ['_'.join([_col, name]) for name in __tfidfvectorizer.get_feature_names_out()]
+    vector_train = pd.DataFrame.sparse.from_spmatrix(vector_train, columns=__feature_names, index=__temp_train_data.index)
+    {{ train_dataset }} = pd.concat([{{ train_dataset }}, vector_train], axis=1)
+    vector_test = __tfidfvectorizer.transform(__temp_test_data[_col])
+    vector_test = pd.DataFrame.sparse.from_spmatrix(vector_test, columns=__feature_names, index=__temp_test_data.index)
+    {{ test_dataset }} = pd.concat([{{ test_dataset }}, vector_test], axis=1)
+{% endif %}

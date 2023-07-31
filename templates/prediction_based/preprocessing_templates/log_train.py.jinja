@@ -1,0 +1,4 @@
+import numpy as np
+
+_NUMERIC_COLS_TO_SCALE = {{ columns }}
+{{ train_dataset }}[_NUMERIC_COLS_TO_SCALE] = np.log1p({{ train_dataset }}[_NUMERIC_COLS_TO_SCALE])

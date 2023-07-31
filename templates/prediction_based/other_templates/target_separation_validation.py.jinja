@@ -1,0 +1,7 @@
+# DETACH TARGET
+_TARGET_COLUMNS = {{ pipeline.task.target_columns }}
+__feature_train = __train_dataset.drop(_TARGET_COLUMNS, axis=1)
+__target_train = __train_dataset[_TARGET_COLUMNS].copy()
+__feature_test = __test_dataset.drop(_TARGET_COLUMNS, axis=1)
+__target_test = __test_dataset[_TARGET_COLUMNS].copy()
+

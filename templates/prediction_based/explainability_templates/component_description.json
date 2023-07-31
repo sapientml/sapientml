@@ -1,0 +1,146 @@
+{
+    "PREPROCESS:MissingValues:fillna:pandas": {
+        "normalized_name" : "Preprocess:SimpleImputer",
+        "api_description" : "Imputation transformer for completing missing values",
+        "data_shape" : "array of shape (n_features,)",
+        "hyperparameters": [
+            {
+              "hp_name" : "missing_values",
+              "hp_values" : "int, float, str, np.nan or None, default=np.nan",
+              "hp_description" : "The placeholder for the missing values. All occurrences of missing_values will be imputed. For pandas’ dataframes with nullable integer dtypes with missing values, missing_values should be set to np.nan, since pd.NA will be converted to np.nan."
+            },
+            {
+              "hp_name" : "strategy",
+              "hp_values" : "str, default='mean'",
+              "hp_description" : "The imputation strategy. If \"mean\", then replace missing values using the mean along each column. Can only be used with numeric data. If \"most_frequent\", then replace missing using the most frequent value along each column. Can be used with strings or numeric data. If there is more than one such value, only the smallest is returned."
+            }
+        ]
+    },
+    "PREPROCESS:Category:LabelEncoder:sklearn": {
+        "normalized_name" : "Preprocess:OrdinalEncoder",
+        "api_description" : "Encode categorical features as an integer array",
+        "data_shape" : "list of arrays",
+        "hyperparameters": [
+            {
+              "hp_name" : "handle_unknown",
+              "hp_values" : "{'error', 'use_encoded_value'}, default='error'",
+              "hp_description" : "When set to ‘error’ an error will be raised in case an unknown categorical feature is present during transform. When set to ‘use_encoded_value’, the encoded value of unknown categories will be set to the value given for the parameter unknown_value. In inverse_transform, an unknown category will be denoted as None."
+            },
+            {
+              "hp_name" : "unknown_value",
+              "hp_values" : "int or np.nan, default=None",
+              "hp_description" : "When the parameter handle_unknown is set to ‘use_encoded_value’, this parameter is required and will set the encoded value of unknown categories. It has to be distinct from the values used to encode any of the categories in fit. If set to np.nan, the dtype parameter must be a float dtype."
+            }
+        ]
+    },
+    "PREPROCESS:Category:get_dummies:pandas": {
+        "normalized_name" : "Preprocess:OneHotEncoder",
+        "api_description" : "Encode categorical features as a one-hot numeric array.",
+        "data_shape" : "list of arrays",
+        "hyperparameters": [
+            {
+              "hp_name" : "handle_unknown",
+              "hp_values" : "{‘error’, ‘ignore’}, default=’error’",
+              "hp_description" : "Whether to raise an error or ignore if an unknown categorical feature is present during transform (default is to raise). When this parameter is set to ‘ignore’ and an unknown category is encountered during transform, the resulting one-hot encoded columns for this feature will be all zeros. In the inverse transform, an unknown category will be denoted as None."
+            },
+            {
+              "hp_name" : "sparse",
+              "hp_values" : "bool, default=True",
+              "hp_description" : "Will return sparse matrix if set True else will return an array."
+            }
+        ]
+    },
+    "PREPROCESS:Text:TfidfVectorizer:sklearn": {
+        "normalized_name" : "Preprocess:TfidfVectorizer",
+        "api_description" : "Convert a collection of raw documents to a matrix of TF-IDF features.",
+        "data_shape" : "raw_documents",
+        "hyperparameters": [
+            {
+              "hp_name" : "max_features",
+              "hp_values" : "int, default=None",
+              "hp_description" : "If not None, build a vocabulary that only consider the top max_features ordered by term frequency across the corpus. This parameter is ignored if vocabulary is not None."
+            }
+        ]
+    },
+    "PREPROCESS:Scaling:STANDARD:sklearn": {
+        "normalized_name" : "Preprocess:StandardScaler",
+        "api_description" : "Standardize features by removing the mean and scaling to unit variance.",
+        "data_shape" : "{array-like, sparse matrix} of shape (n_samples, n_features)",
+        "hyperparameters": [
+            {
+              "hp_name" : "with_mean",
+              "hp_values" : "bool, default=True",
+              "hp_description" : "If True, center the data before scaling. This does not work (and will raise an exception) when attempted on sparse matrices, because centering them entails building a dense matrix which in common use cases is likely to be too large to fit in memory."
+            }
+        ]
+    },
+    "PREPROCESS:GenerateColumn:DATE:pandas": {
+        "normalized_name" : "Preprocess:DateTime",
+        "api_description" : "Convert argument to datetime.",
+        "data_shape" : "scalar, array-like, Series or DataFrame/dict-like",
+        "hyperparameters": [
+            {
+              "hp_name" : "errors",
+              "hp_values" : "{‘ignore’, ‘raise’, ‘coerce’}, default ‘raise’",
+              "hp_description" : "If 'coerce', then invalid parsing will be set as NaT."
+            }
+        ]
+    },
+    "PREPROCESS:TextProcessing:Processing:custom": {
+        "normalized_name" : "Preprocess:TextPreprocessing",
+        "api_description" : "Preprocess and normalize text.",
+        "data_shape" : "array of strings",
+        "hyperparameters": []
+    },
+    "PREPROCESS:Balancing:SMOTE:imblearn": {
+        "normalized_name" : "Preprocess:SMOTE",
+        "api_description" : "Perform over-sampling",
+        "data_shape" : "Dictionary containing the information to sample the dataset. The keys corresponds to the class labels from which to sample and the values are the number of samples to sample.",
+        "hyperparameters": []
+    },
+    "PREPROCESS:Scaling:log:custom": {
+        "normalized_name" : "Preprocess:Log",
+        "api_description" : "Return the natural logarithm of one plus the input array, element-wise.",
+        "data_shape" : "array_like",
+        "hyperparameters": []
+    },
+    "feature:str_category_presence": {
+        "normalized_name": "feature:str_category_presence"
+    },
+    "feature:str_text_presence": {
+        "normalized_name": "feature:str_text_presence"
+    },
+    "feature:str_category_binary_presence": {
+        "normalized_name": "feature:str_category_binary_presence"
+    },
+    "feature:str_category_small_presence": {
+        "normalized_name": "feature:str_category_small_presence"
+    },
+    "feature:str_category_large_presence": {
+        "normalized_name": "feature:str_category_large_presence"
+    },
+    "feature:str_date_presence": {
+        "normalized_name": "feature:str_date_presence"
+    },
+    "feature:str_other": {
+        "normalized_name": "feature:str_other"
+    },
+    "feature:missing_values_presence": {
+        "normalized_name": "feature:missing_values_presence"
+    },
+    "feature:max_normalized_mean": {
+        "normalized_name": "feature:max_normalized_mean"
+    },
+    "feature:max_normalized_stddev": {
+        "normalized_name": "feature:max_normalized_stddev"
+    },
+    "feature:normalized_variation_across_columns": {
+        "normalized_name": "feature:normalized_variation_across_columns"
+    },
+    "feature:target_imbalance_score": {
+        "normalized_name": "feature:target_imbalance_score"
+    },
+    "feature:max_skewness": {
+        "normalized_name": "feature:max_skewness"
+    }
+}

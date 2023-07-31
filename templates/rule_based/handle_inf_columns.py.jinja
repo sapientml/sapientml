@@ -1,0 +1,9 @@
+# CONVERT INF TO NAN
+import numpy as np
+cols_inf_values = {{ cols_inf_values }}
+{% if training %}
+__train_dataset[cols_inf_values] = __train_dataset[cols_inf_values].replace([-np.inf, np.inf], np.nan)
+{% endif %}
+{% if test %}
+__test_dataset[cols_inf_values] = __test_dataset[cols_inf_values].replace([-np.inf, np.inf], np.nan)
+{% endif %}

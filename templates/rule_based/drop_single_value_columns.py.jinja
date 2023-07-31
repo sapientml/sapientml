@@ -1,0 +1,11 @@
+# DISCARD SINGLE VALUE COLUMNS
+cols_single_value = {{ cols_single_value }}
+{% if training %}
+train_df = train_df.drop(cols_single_value, axis=1, errors="ignore")
+{% endif %}
+{% if validation and dataset.valid_path %}
+valid_df = valid_df.drop(cols_single_value, axis=1, errors="ignore")
+{% endif %}
+{% if test and dataset.test_path %}
+test_df = test_df.drop(cols_single_value, axis=1, errors="ignore")
+{% endif %}

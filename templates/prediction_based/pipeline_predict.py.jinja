@@ -1,0 +1,60 @@
+import pickle
+
+{% if 'store_prediction_columns' in pipeline_json %}
+
+{{ pipeline_json['store_prediction_columns']['code'] }}
+{% endif %}
+{% if 'discard_columns' in pipeline_json %}
+
+{{ pipeline_json['discard_columns']['code_predict'] }}
+{% endif %}
+{% if 'preprocessing_before_target_separation' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_before_target_separation"].values() %}
+{% for code in component['code_predict'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if 'target_separation' in pipeline_json %}
+
+{{ pipeline_json['target_separation']['code_predict'] }}
+{% endif %}
+{% if 'preprocessing_after_target_separation' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_after_target_separation"].values() %}
+{% for code in component['code_predict'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if 'preprocessing_after_train_test_split' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_after_train_test_split"].values() %}
+{% for code in component['code_predict'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if 'model' in pipeline_json %}
+
+# MODEL
+{{ pipeline_json['model']['code_predict'] }}
+{% endif %}
+{% if 'inverse_target' in pipeline_json %}
+
+{{ pipeline_json['inverse_target']['code'] }}
+{% endif %}
+{% if 'evaluation' in pipeline_json %}
+
+#EVALUATION
+if set(_TARGET_COLUMNS).issubset(__test_dataset.columns.tolist()):
+{{ pipeline_json['evaluation']['code_test'] }}
+{% endif %}
+{% if 'output_prediction' in pipeline_json %}
+
+{{ pipeline_json['output_prediction']['code'] }}
+{% endif %}

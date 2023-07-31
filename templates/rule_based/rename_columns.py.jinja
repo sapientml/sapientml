@@ -1,0 +1,10 @@
+# Remove special symbols that interfere with visualization and model training
+import re
+cols_has_symbols = {{ cols_has_symbols }}
+inhibited_symbol_pattern = re.compile(r"[\{\}\[\]\",:<'\\]+")
+{% if training %}
+__train_dataset = __train_dataset.rename(columns=lambda col: inhibited_symbol_pattern.sub("", col) if col in cols_has_symbols else col)
+{% endif %}
+{% if test %}
+__test_dataset = __test_dataset.rename(columns=lambda col: inhibited_symbol_pattern.sub("", col) if col in cols_has_symbols else col)
+{% endif %}
