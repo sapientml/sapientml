@@ -19,8 +19,16 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "sapientml"
 version = "0"
-description = ""
+description = "Generative AutoML for Tabular Data"
 authors = ["The SapientML Authors"]
+maintainers = [
+    "Kosaku Kimura <kimura.kosaku@fujitsu.com>",
+    "Akira Ura <ura.akira@fujitsu.com>",
+]
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["automl"]
+repository = "https://github.com/sapientml/sapientml"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
