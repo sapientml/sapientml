@@ -20,7 +20,6 @@ import fasttext
 import MeCab
 import numpy as np
 import pandas as pd
-import requests
 from jinja2 import Environment, FileSystemLoader
 from pandas.api.types import infer_dtype
 from sapientml.params import Pipeline, Task
