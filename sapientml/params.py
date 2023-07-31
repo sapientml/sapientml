@@ -19,7 +19,7 @@ from typing import List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, validator
+from pydantic import BaseModel, validator
 
 from .macros import Metric
 

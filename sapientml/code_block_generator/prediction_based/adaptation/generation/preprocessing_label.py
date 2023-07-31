@@ -87,22 +87,4 @@ class PreprocessingLabel:
                 if any(result):
                     rel_columns_list.append(column_name)
 
-            # # approach 1: a column is relavant if and only if all of the predicates applicable to that component are true
-            # if approach == 1:
-            #     result1 = True
-            #     for p in self.predicate_objects:
-            #         result1 = result1 and p.evaluate_predicate(df[[column_name]])
-            #         if not result1:
-            #             break
-            #     if result1:
-            #         rel_columns_list.append(column_name)
-            #
-            # # approach 2: a column is relavant if and only if at least one of the predicates applicable to that component are true (current)
-            # elif approach == 2:
-            #     result2 = False
-            #     for p in self.predicate_objects:
-            #         result2 = result2 or p.evaluate_predicate(df[[column_name]])
-            #         if result2:
-            #             rel_columns_list.append(column_name)
-            #             break
         return rel_columns_list
