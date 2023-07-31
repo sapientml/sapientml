@@ -1,5 +1,7 @@
 # SapientML
 
+## Generative AutoML for Tabular Data
+
 # Getting Started
 ## Prerequisites
 
