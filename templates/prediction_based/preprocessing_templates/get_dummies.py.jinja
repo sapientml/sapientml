@@ -1,0 +1,10 @@
+from sklearn.preprocessing import OneHotEncoder
+
+_CATEGORICAL_COLS = {{ columns }}
+_ohe = OneHotEncoder(handle_unknown='ignore', sparse=False)
+__train_encoded = pd.DataFrame(_ohe.fit_transform({{ train_dataset }}[_CATEGORICAL_COLS]), columns=_ohe.get_feature_names_out(), index={{ train_dataset }}.index)
+{{ train_dataset }} = pd.concat([{{ train_dataset }}, __train_encoded ], axis=1)
+{{ train_dataset }}.drop(_CATEGORICAL_COLS, axis=1, inplace=True)
+__test_encoded = pd.DataFrame(_ohe.transform({{ test_dataset }}[_CATEGORICAL_COLS]), columns=_ohe.get_feature_names_out(), index={{ test_dataset }}.index)
+{{ test_dataset }} = pd.concat([{{ test_dataset }}, __test_encoded ], axis=1)
+{{ test_dataset }}.drop(_CATEGORICAL_COLS, axis=1, inplace=True)

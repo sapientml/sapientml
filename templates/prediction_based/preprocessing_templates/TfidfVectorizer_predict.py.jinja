@@ -1,0 +1,12 @@
+_TEXT_COLUMNS = {{ columns }}
+__temp_test_data = {{ test_dataset }}[_TEXT_COLUMNS]
+# Make the entire dataframe sparse to avoid it converting into a dense matrix.
+{{ test_dataset }} = {{ test_dataset }}.drop(_TEXT_COLUMNS, axis=1).astype(pd.SparseDtype('float64', 0))
+with open('tfidfVectorizer.pkl', 'rb') as f:
+    __vectorizers = pickle.load(f)
+for _col in _TEXT_COLUMNS:
+    __tfidfvectorizer = __vectorizers[_col]
+    __feature_names = ['_'.join([_col, name]) for name in __tfidfvectorizer.get_feature_names_out()]
+    vector_test = __tfidfvectorizer.transform(__temp_test_data[_col])
+    vector_test = pd.DataFrame.sparse.from_spmatrix(vector_test, columns=__feature_names, index=__temp_test_data.index)
+    {{ test_dataset }} = pd.concat([{{ test_dataset }}, vector_test], axis=1)

@@ -1,0 +1,12 @@
+from sklearn.preprocessing import StandardScaler
+
+__standard_scaler = StandardScaler(with_mean=False)
+{% if pipeline.sparse_matrix %}
+{% set dataframe = "pd.DataFrame.sparse.from_spmatrix" %}
+{% else %}
+{% set dataframe = "pd.DataFrame" %}
+{% endif %}
+{{ train_dataset }} = {{ dataframe }}(__standard_scaler.fit_transform({{ train_dataset }}), columns={{ train_dataset }}.columns, index={{ train_dataset }}.index)
+
+with open('standardScaler.pkl', 'wb') as f:
+    pickle.dump(__standard_scaler, f)

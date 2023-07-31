@@ -1,0 +1,14 @@
+{% if columns %}
+import numpy as np
+from sklearn.impute import SimpleImputer
+
+_STRING_COLS_WITH_MISSING_VALUES = {{ columns }}
+__simple_imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
+{{ train_dataset }}[_STRING_COLS_WITH_MISSING_VALUES] = __simple_imputer.fit_transform({{ train_dataset }}[_STRING_COLS_WITH_MISSING_VALUES])
+{{ test_dataset }}[_STRING_COLS_WITH_MISSING_VALUES] = __simple_imputer.transform({{ test_dataset }}[_STRING_COLS_WITH_MISSING_VALUES])
+{% endif %}
+{% if cols_almost_missing_string %}
+_STRING_ALMOST_MISSING_COLS = {{ cols_almost_missing_string }}
+{{ train_dataset }}[_STRING_ALMOST_MISSING_COLS] = {{ train_dataset }}[_STRING_ALMOST_MISSING_COLS].fillna('')
+{{ test_dataset }}[_STRING_ALMOST_MISSING_COLS] = {{ test_dataset }}[_STRING_ALMOST_MISSING_COLS].fillna('')
+{% endif %}

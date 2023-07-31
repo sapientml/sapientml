@@ -1,0 +1,10 @@
+# SUBSAMPLE
+# If the number of rows of __train_dataset is larger than sample_size, sample rows to sample_size for speedup.
+from lib.sample_dataset import sample_dataset
+__train_dataset = sample_dataset(
+    dataframe=__train_dataset,
+    sample_size={{ sample_size }},
+    target_columns={{ task.target_columns }},
+    task_type='{{ task.task_type }}'
+)
+

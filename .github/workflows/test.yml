@@ -1,0 +1,72 @@
+# Copyright 2023 The SapientML Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Lint and Testing
+
+on:
+  pull_request:
+    branches:
+      - development
+
+env:
+  PYTHON_VERSION: 3.10
+  POETRY_VERSION: 1.5.1
+  POETRY_URL: https://install.python-poetry.org
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Poetry cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-cache-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
+
+      - name: Cache Packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.local
+          key: poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install mecab
+        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
+
+      - name: Set up mecab
+        run: sudo cp /etc/mecabrc /usr/local/etc/
+
+      - name: Install Packages
+        run: sudo apt install -y graphviz
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Pysen run lint
+        run: poetry run -- pysen run lint
+
+      - name: Pytest
+        run: poetry run -- pytest tests

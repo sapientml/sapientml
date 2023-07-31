@@ -1,0 +1,48 @@
+import pickle
+
+{% if 'discard_columns' in pipeline_json %}
+
+{{ pipeline_json['discard_columns']['code_train'] }}
+{% endif %}
+{% if 'preprocessing_before_target_separation' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_before_target_separation"].values() %}
+{% for code in component['code_train'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if 'target_separation' in pipeline_json %}
+
+{{ pipeline_json['target_separation']['code_train'] }}
+{% endif %}
+{% if 'preprocessing_after_target_separation' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_after_target_separation"].values() %}
+{% for code in component['code_train'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if 'preprocessing_after_train_test_split' in pipeline_json %}
+{% for component in pipeline_json["preprocessing_after_train_test_split"].values() %}
+{% for code in component['code_train'] %}
+
+# PREPROCESSING-{{ component['id'] + loop.index0 }}
+{{ code }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if flag_hyperparameter_tuning %}
+
+# BEST PARAMETERS IN THE CANDIDATE SCRIPT
+# PLEASE SEE THE CANDIDATE SCRIPTS FOR THE HYPERPARAMTER OPTIMIZATION CODE
+best_params = study.best_params
+{% endif %}
+{% if 'model' in pipeline_json %}
+
+# MODEL
+{{ pipeline_json['model']['code_train'] }}
+{% endif %}

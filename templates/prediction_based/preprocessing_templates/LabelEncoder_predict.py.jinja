@@ -1,0 +1,5 @@
+with open('ordinalEncoder.pkl', 'rb') as f:
+    _oe = pickle.load(f)
+
+_CATEGORICAL_COLS = {{ columns }}
+{{ test_dataset }}[_CATEGORICAL_COLS] = _oe.transform({{ test_dataset }}[_CATEGORICAL_COLS])

@@ -1,0 +1,20 @@
+import re
+import string
+
+import nltk
+
+_TEXT_COLUMNS = {{ columns }}
+def process_text(__dataset):
+    for _col in _TEXT_COLUMNS:
+        process_text = [t.lower() for t in __dataset[_col]]
+
+        # strip all punctuation
+        table = str.maketrans('', '', string.punctuation)
+        process_text = [t.translate(table) for t in process_text]
+
+        # convert all numbers in text to 'num'
+        process_text = [re.sub(r'\d+', 'num', t) for t in process_text]
+        __dataset[_col] = process_text
+    return __dataset
+
+{{ test_dataset }} = process_text({{ test_dataset }})
