@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import collections
+import warnings
 from typing import Literal, Union
 
 import numpy
@@ -20,7 +21,6 @@ import pandas as pd
 import scipy
 import scipy.stats
 from sklearn.preprocessing import StandardScaler
-import warnings
 
 from . import ps_macros
 from .design import search_space
@@ -779,7 +779,9 @@ def _collect_csv_column_type_presence_pp(X, preprocess):
     ]
     for t in types:
         res[t] = 0
-    for _, column in X.items():
+    if preprocess:
+        res["str_other"] = []
+    for name, column in X.items():
         if pd.api.types.is_object_dtype(column):
             if _is_date_column_pp(column):
                 res["str_date"] += 1
@@ -797,7 +799,10 @@ def _collect_csv_column_type_presence_pp(X, preprocess):
                 elif _is_text_column_pp(column, preprocess=True):
                     res["str_text"] += 1
                 else:
-                    res["str_other"] += 1
+                    if preprocess:
+                        res["str_other"].append(name)
+                    else:
+                        res["str_other"] += 1
         elif _is_realbool_dtype(column):
             if preprocess:
                 catg_type = _is_category_column_pp(column)
@@ -980,7 +985,7 @@ def _is_date_column_pp(c):
     if c2.shape[0] > 1000:
         c2 = c2.sample(1000, random_state=17)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter("ignore")
         c2 = pd.to_datetime(c2, errors="coerce")
     ratio = c2.notnull().sum() / c2.shape[0]
     return ratio > 0.8

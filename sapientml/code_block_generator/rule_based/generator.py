@@ -20,6 +20,7 @@ import fasttext
 import MeCab
 import numpy as np
 import pandas as pd
+import requests
 from jinja2 import Environment, FileSystemLoader
 from pandas.api.types import infer_dtype
 from sapientml.params import Pipeline, Task
@@ -172,7 +173,6 @@ def generate_code_rule_based(df: pd.DataFrame, task: Task):
         df[only_str] = np.where(pd.to_numeric(df[col], errors="coerce").isnull(), df[col], np.nan)
         # without .astype(float), cannot recongnize as `int` or `float`, leading to generate inappropriate code snippet
         df[only_num] = np.where(pd.to_numeric(df[col], errors="coerce").isnull(), np.nan, df[col]).astype(float)
-        cols_numeric_and_string.append(col)
         df = df.drop(col, axis=1)
     if cols_numeric_and_string:
         tpl = template_env.get_template("handle_mixed_typed_columns.py.jinja")

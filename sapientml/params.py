@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import os
+import warnings
 from logging import Logger
 from typing import List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, validator
-import warnings
+from pydantic import BaseModel, validator
 
 from .macros import Metric
 
@@ -55,7 +55,7 @@ def _is_date_column(c):
     if c2.shape[0] > 1000:
         c2 = c2.sample(1000, random_state=17)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter("ignore")
         c2 = pd.to_datetime(c2, errors="coerce")
     ratio = c2.notnull().sum() / c2.shape[0]
     return ratio > 0.8

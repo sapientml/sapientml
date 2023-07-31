@@ -19,7 +19,7 @@ from shutil import copyfile
 from typing import Literal, Optional, Union
 
 import pandas as pd
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .params import CancellationToken, Pipeline, PipelineResult
 

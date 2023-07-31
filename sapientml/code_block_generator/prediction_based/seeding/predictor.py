@@ -66,7 +66,7 @@ name_to_label_mapping = {
 class Predicate:
     def __init__(self, feature_name, value, threshold, op):
         self.feature_name = feature_name
-        self.value = value = value
+        self.value = value
         self.threshold = threshold
         self.op = op
 
