@@ -1333,18 +1333,18 @@ files = [
 
 [[package]]
 name = "optuna"
-version = "3.2.0"
+version = "3.3.0"
 description = "A hyperparameter optimization framework"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "optuna-3.2.0-py3-none-any.whl", hash = "sha256:6140ca7cc1cc6751b5184c9f88cd7bbaaf6172b4bed1792552db9d8931979d77"},
-    {file = "optuna-3.2.0.tar.gz", hash = "sha256:683d8693643a761a41d251a6b8e13263b24acacf9fc46a9233d5f6aa3ce5c683"},
+    {file = "optuna-3.3.0-py3-none-any.whl", hash = "sha256:3eefaed56a5fabf442036d51ef2001dbabfbe1a8ce33bc0c6b61ff5d15b30c82"},
+    {file = "optuna-3.3.0.tar.gz", hash = "sha256:76126c6e52354892488e75fc7743eaddcd397c5aba8fa1f964a1c5b5f942eaf6"},
 ]
 
 [package.dependencies]
 alembic = ">=1.5.0"
-cmaes = ">=0.9.1"
+cmaes = ">=0.10.0"
 colorlog = "*"
 numpy = "*"
 packaging = ">=20.0"
@@ -1354,11 +1354,11 @@ tqdm = "*"
 
 [package.extras]
 benchmark = ["asv (>=0.5.0)", "botorch", "cma", "scikit-optimize", "virtualenv"]
-checking = ["black", "blackdoc", "flake8", "isort", "mypy", "types-PyYAML", "types-redis", "types-setuptools", "types-tqdm", "typing-extensions (>=3.10.0.0)"]
-document = ["botorch", "cma", "distributed", "fvcore", "lightgbm", "matplotlib (!=3.6.0)", "mlflow", "pandas", "pillow", "plotly (>=4.9.0)", "scikit-learn", "scikit-optimize", "sphinx", "sphinx-copybutton", "sphinx-gallery", "sphinx-plotly-directive", "sphinx-rtd-theme", "torch", "torchaudio", "torchvision"]
-integration = ["botorch (>=0.4.0)", "catboost (>=0.26)", "catboost (>=0.26,<1.2)", "cma", "distributed", "fastai", "lightgbm", "mlflow", "mxnet", "pandas", "pytorch-ignite", "pytorch-lightning (>=1.6.0)", "scikit-learn (>=0.24.2)", "scikit-optimize", "shap", "tensorflow", "torch", "torchaudio", "torchvision", "wandb", "xgboost"]
-optional = ["botorch", "matplotlib (!=3.6.0)", "pandas", "plotly (>=4.9.0)", "redis", "scikit-learn (>=0.24.2)"]
-test = ["coverage", "fakeredis[lua]", "kaleido", "pytest", "scipy (>=1.9.2)"]
+checking = ["black", "blackdoc", "flake8", "isort", "mypy", "mypy-boto3-s3", "types-PyYAML", "types-redis", "types-setuptools", "types-tqdm", "typing-extensions (>=3.10.0.0)"]
+document = ["botorch", "cma", "distributed", "fvcore", "lightgbm", "matplotlib (!=3.6.0)", "mlflow", "pandas", "pillow", "plotly (>=4.9.0)", "scikit-learn", "scikit-optimize", "sphinx", "sphinx-copybutton", "sphinx-gallery", "sphinx-plotly-directive", "sphinx-rtd-theme (>=1.2.0)", "torch", "torchaudio", "torchvision"]
+integration = ["botorch (>=0.4.0)", "catboost (>=0.26)", "catboost (>=0.26,<1.2)", "cma", "distributed", "fastai", "lightgbm", "mlflow", "pandas", "pytorch-ignite", "pytorch-lightning (>=1.6.0)", "scikit-learn (>=0.24.2)", "scikit-optimize", "shap", "tensorflow", "torch", "torchaudio", "torchvision", "wandb", "xgboost"]
+optional = ["boto3", "botorch", "matplotlib (!=3.6.0)", "pandas", "plotly (>=4.9.0)", "redis", "scikit-learn (>=0.24.2)"]
+test = ["coverage", "fakeredis[lua]", "kaleido", "moto", "pytest", "scipy (>=1.9.2)"]
 
 [[package]]
 name = "packaging"
