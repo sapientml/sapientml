@@ -2,8 +2,7 @@
 /features/
 /models/
 /skeletons/
-/split_datasets/
-**/outputs/*
+/split_datasets//outputs/
 catboost_info
 
 !.gitkeep
@@ -180,7 +179,6 @@ Thumbs.db
 .env
 
 log/
-outputs/
 permutation_importance.csv
 prediction_result.csv
 sapientml/code_block_generator/rule_based/lib/lid.176.bin

@@ -34,12 +34,11 @@ def test_df_test():
 @pytest.fixture(scope="function")
 def setup_request_parameters():
     def _request_parameters():
-        test_root = Path(__file__).parents[1]
-        with open(test_root / "fixtures" / "params" / "task.pkl", mode="rb") as f:
+        with open(fxdir / "params" / "task.pkl", mode="rb") as f:
             task = pickle.load(f)
-        with open(test_root / "fixtures" / "params" / "config.pkl", mode="rb") as f:
+        with open(fxdir / "params" / "config.pkl", mode="rb") as f:
             config = pickle.load(f)
-        with open(test_root / "fixtures" / "params" / "dataset.pkl", mode="rb") as f:
+        with open(fxdir / "params" / "dataset.pkl", mode="rb") as f:
             dataset = pickle.load(f)
         return task, config, dataset
 
