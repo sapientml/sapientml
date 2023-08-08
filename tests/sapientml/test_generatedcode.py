@@ -598,11 +598,3 @@ def test_timeout_works_hyperparameter_tuning_timeout(
 
     assert pipeline_results[0][1].returncode == 0
     assert process_time < 20
-
-
-# TODO
-# ・Test for hyper parameter tuning → There are several in test_sapientml.py
-# ・Test for load_data, save_data, vizualize_data
-# ・Test for Timeout → There are several in test_sapientml.py
-# ・Test for Error → There are several in test_sapientml.py
-# ・Combination pattern of text word selection and Japanese part-of-speech selection → There are several in test_sapientml.py
