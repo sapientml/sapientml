@@ -48,6 +48,7 @@ lightgbm = "^4.0.0"
 imbalanced-learn = "^0.11.0"
 shap = "^0.42.1"
 numba = "^0.57.1"
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
