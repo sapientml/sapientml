@@ -47,7 +47,7 @@ def setup_request_parameters():
 
 
 @pytest.fixture(scope="function")
-def make_tempdir(dir="tests/fixtures/outputs"):
+def make_tempdir(dir=fxdir / "outputs"):
     with tempfile.TemporaryDirectory(dir=dir) as temp_dir_path_str:
         temp_dir = Path(temp_dir_path_str).absolute()
         temp_dir.mkdir(exist_ok=True)
