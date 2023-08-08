@@ -181,5 +181,6 @@ Thumbs.db
 
 log/
 outputs/
-*.csv
+permutation_importance.csv
+prediction_result.csv
 sapientml/code_block_generator/rule_based/lib/lid.176.bin
