@@ -73,7 +73,11 @@ class Objective(object):
 {% endif %}
 
 {% if pipeline.task.target_columns|length == 1 %}
+{% if model_name == xgbclassifier %}
+        __model.fit(__feature_train, __target_train.ravel())
+{% else %}
         __model.fit(__feature_train, __target_train.values.ravel())
+{% endif %}
 {% else %}
         __model.fit(__feature_train, __target_train)
 {% endif %}
@@ -94,7 +98,7 @@ class Objective(object):
         return score
     
 n_trials = {{ pipeline.config.hyperparameter_tuning_n_trials }}
-timeout = {{ timeout}} 
+timeout = {{ timeout }} 
 random_state = {{ pipeline.config.hyperparameter_tuning_random_state}} 
 random_state_model = {{ pipeline.task.seed_for_model}} 
 

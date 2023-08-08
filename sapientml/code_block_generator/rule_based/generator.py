@@ -22,8 +22,7 @@ import numpy as np
 import pandas as pd
 import requests
 from jinja2 import Environment, FileSystemLoader
-from pandas.api.types import infer_dtype
-from sapientml.params import Pipeline, Task
+from sapientml.params import Pipeline, Task, _confirm_mixed_type
 from sapientml.util.logging import setup_logger
 
 logger = setup_logger()
@@ -160,11 +159,7 @@ def generate_code_rule_based(df: pd.DataFrame, task: Task):
     # handle mixed-type columns
     # split a columns into 2 columns, one column has only numeric, another columns has only string
     # this operation should be done before calculating meta features
-    dtypes = df.drop(task.target_columns, axis=1).apply(infer_dtype)
-    is_strnum = df.drop(task.target_columns, axis=1).apply(_is_strnum_column)
-    mix_typed_cols = dtypes[
-        dtypes.str.fullmatch("|".join(["mixed", "mixed-integer"])) | (dtypes.str.fullmatch("string") & is_strnum)
-    ].index.to_list()
+    mix_typed_cols = _confirm_mixed_type(df.drop(task.target_columns, axis=1))
     cols_numeric_and_string = []
     for col in mix_typed_cols:
         cols_numeric_and_string.append(col)

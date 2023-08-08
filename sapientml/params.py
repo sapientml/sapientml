@@ -50,6 +50,21 @@ def _is_strnum_column(c):
     return ratio > 0.9
 
 
+def _confirm_mixed_type(df: pd.DataFrame) -> list[str]:
+    mixed_df_cols = []
+    for df_col in df.columns:
+        df_per_col = df[df_col].replace([-np.inf, np.inf], np.nan)
+        df_per_col2 = df_per_col[df_per_col.notnull()]
+        types_per_col = pd.api.types.infer_dtype(df_per_col2)
+
+        is_strnum = _is_strnum_column(df[df_col])
+
+        if types_per_col == "mixed" or types_per_col == "mixed-integer" or (types_per_col == "string" and is_strnum):
+            mixed_df_cols.append(df_col)
+
+    return mixed_df_cols
+
+
 def _is_date_column(c):
     c2 = c.loc[c.notnull()]
     if c2.shape[0] > 1000:
@@ -358,7 +373,7 @@ class Dataset:
             self._logger.warning(f"Column names of {target_data_name} dataframe are not unique.")
 
         # 4. Check strnum mixed type
-        mixed_df_cols = self._confirm_mixed_type(df)
+        mixed_df_cols = _confirm_mixed_type(df)
         for mixed_df_col in mixed_df_cols:
             if self._logger:
                 self._logger.warning(f"{mixed_df_col} would have mixed type in {target_data_name} dataframe.")
@@ -408,24 +423,6 @@ class Dataset:
                 inconsistent_df_cols.append(df1_col)
 
         return inconsistent_df_cols
-
-    def _confirm_mixed_type(self, df: pd.DataFrame) -> list[str]:
-        mixed_df_cols = []
-        for df_col in df.columns:
-            df_per_col = df[df_col].replace([-np.inf, np.inf], np.nan)
-            df_per_col2 = df_per_col[df_per_col.notnull()]
-            types_per_col = pd.api.types.infer_dtype(df_per_col2)
-
-            is_strnum = _is_strnum_column(df[df_col])
-
-            if (
-                types_per_col == "mixed"
-                or types_per_col == "mixed-integer"
-                or (types_per_col == "string" and is_strnum)
-            ):
-                mixed_df_cols.append(df_col)
-
-        return mixed_df_cols
 
     def _confirm_date_type(self, df: pd.DataFrame) -> dict:
         incorrect_info = {}

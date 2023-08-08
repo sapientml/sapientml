@@ -83,7 +83,13 @@ class Metric(enum.Enum):
 
 metric_lower_is_better = [Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value, Metric.LogLoss.value]
 
-metric_needing_predict_proba = [Metric.LogLoss.value, Metric.AUC.value, Metric.ROC_AUC.value, Metric.MAP_K.value]
+metric_needing_predict_proba = [
+    Metric.LogLoss.value,
+    Metric.AUC.value,
+    Metric.ROC_AUC.value,
+    Metric.MAP_K.value,
+    Metric.Gini.value,
+]
 
 metrics_for_regression = [Metric.R2.value, Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value]
 

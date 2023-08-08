@@ -40,19 +40,17 @@ def generate_code_data_load(dataset: Dataset, task: Task):
     code_predict += _render(tpl, dataset=dataset, task=task, script_type="predict")
 
     tpl = template_env.get_template("split.py.jinja")
-    code_validation += _render(tpl, task=task, validation=True)
-    code_test += _render(tpl, task=task, validation=False)
+    code_validation += _render(tpl, dataset=dataset, task=task, validation=True)
+    code_test += _render(tpl, dataset=dataset, task=task, validation=False)
 
     tpl = template_env.get_template("subsample.py.jinja")
     code_validation += _render(tpl, task=task, sample_size=ROW_THRESHOLD_FOR_SAMPLING)
 
-    dataset.training_dataframe = dataset.training_dataframe.drop(dataset.ignore_columns, axis=1, errors="ignore")
+    dataset.training_dataframe = dataset.training_dataframe.drop(task.ignore_columns, axis=1, errors="ignore")
     if dataset.validation_dataframe is not None:
-        dataset.validation_dataframe = dataset.validation_dataframe.drop(
-            dataset.ignore_columns, axis=1, errors="ignore"
-        )
+        dataset.validation_dataframe = dataset.validation_dataframe.drop(task.ignore_columns, axis=1, errors="ignore")
     if dataset.test_dataframe is not None:
-        dataset.test_dataframe = dataset.test_dataframe.drop(dataset.ignore_columns, axis=1, errors="ignore")
+        dataset.test_dataframe = dataset.test_dataframe.drop(task.ignore_columns, axis=1, errors="ignore")
 
     return Pipeline(
         code_for_validation=code_validation,

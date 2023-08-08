@@ -315,7 +315,7 @@ class PipelineTemplate(BaseModel):
         if pipeline.model is None:
             return
         model_name = pipeline.model.label_name.split(":")[2]
-        # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, since they require probability to be calculated
+        # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, Gini since they require probability to be calculated
         if pipeline.adaptation_metric and (
             pipeline.adaptation_metric in macros.metric_needing_predict_proba
             or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
@@ -380,8 +380,10 @@ class PipelineTemplate(BaseModel):
         else:
             model_arg = "noHPO_RandomSeed"
         flag_predict_proba = (
-            pipeline.adaptation_metric in macros.metric_needing_predict_proba
-        ) or pipeline.config.predict_option == macros.PRED_PROBABILITY
+            (pipeline.adaptation_metric in macros.metric_needing_predict_proba)
+            or (pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value))
+            or (pipeline.config.predict_option == macros.PRED_PROBABILITY)
+        )
         _is_multioutput_regression = (
             pipeline.task.task_type == macros.TASK_REGRESSION and len(pipeline.task.target_columns) > 1
         )
@@ -398,6 +400,7 @@ class PipelineTemplate(BaseModel):
             flag_predict_proba=flag_predict_proba,
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
+            metric_needing_predict_proba=macros.metric_needing_predict_proba,
         )
         snippet_train = self._render(
             tpl_train,
@@ -409,6 +412,7 @@ class PipelineTemplate(BaseModel):
             flag_predict_proba=flag_predict_proba,
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
+            metric_needing_predict_proba=macros.metric_needing_predict_proba,
         )
         snippet_predict = self._render(
             tpl_predict,
@@ -420,9 +424,10 @@ class PipelineTemplate(BaseModel):
             flag_predict_proba=flag_predict_proba,
             is_multioutput_regression=_is_multioutput_regression,
             is_multioutput_classification=_is_multioutput_classification,
+            metric_needing_predict_proba=macros.metric_needing_predict_proba,
         )
 
-        # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, since they require probability to be calculated
+        # change "predict" to "predict_proba", e.g., for metric = LogLoss, ROC_AUC, Gini since they require probability to be calculated
         if pipeline.adaptation_metric and (
             pipeline.adaptation_metric in macros.metric_needing_predict_proba
             or pipeline.adaptation_metric.startswith(macros.Metric.MAP_K.value)
