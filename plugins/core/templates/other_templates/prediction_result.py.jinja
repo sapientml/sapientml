@@ -1,0 +1,12 @@
+{% if pipeline.task.is_multiclass == True and pipeline.adaptation_metric == "LogLoss"%}
+# OUTPUT PREDICTION
+prediction = pd.DataFrame(columns={{ pipeline.task.id_columns_for_prediction }}, data=__test_dataset_prediction_columns, index=__test_dataset_prediction_columns.index)
+prediction = pd.concat([prediction, pd.DataFrame(__y_pred, columns=__model.classes_, index=__test_dataset_prediction_columns.index)], axis=1)
+prediction.to_csv("./prediction_result.csv", index=False)
+
+{% else %}
+prediction = pd.DataFrame(columns={{ pipeline.task.id_columns_for_prediction }}, data=__test_dataset_prediction_columns, index=__test_dataset_prediction_columns.index)
+prediction = pd.concat([prediction, pd.DataFrame(__y_pred, columns=_TARGET_COLUMNS, index=__test_dataset_prediction_columns.index)], axis=1)
+prediction.to_csv("./prediction_result.csv", index=False)
+
+{% endif %}

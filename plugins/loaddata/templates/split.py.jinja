@@ -1,0 +1,46 @@
+# TRAIN-TEST SPLIT
+{% if task.split_method == "random" %}
+{% if task.split_stratify == True %}
+from sklearn.model_selection import train_test_split
+def split_dataset(dataset, train_size={{ task.split_train_size }}, random_state={{ task.split_seed }}):
+    train_dataset, test_dataset = train_test_split(dataset, train_size=train_size, random_state=random_state, stratify=dataset["{{task.target_columns[0]}}"])
+    return train_dataset, test_dataset
+{% else %}
+from sklearn.model_selection import train_test_split
+def split_dataset(dataset, train_size={{ task.split_train_size }}, random_state={{ task.split_seed }}):
+    train_dataset, test_dataset = train_test_split(dataset, train_size=train_size, random_state=random_state)
+    return train_dataset, test_dataset	
+{% endif %}
+{% elif task.split_method == "group" %}
+from sklearn.model_selection import GroupShuffleSplit
+def split_dataset(dataset, split_column_name="{{ task.split_column_name }}", train_size={{ task.split_train_size }}, random_state={{ task.split_seed }}):
+    splitter = GroupShuffleSplit(n_splits=1, train_size=train_size, random_state=random_state)
+    train_idx, test_idx = next(splitter.split(dataset, groups=dataset[split_column_name]))
+    train_dataset, test_dataset = dataset.iloc[train_idx], dataset.iloc[test_idx]
+    return train_dataset, test_dataset
+{% else %}{# time #}
+from sklearn.model_selection import TimeSeriesSplit
+def split_dataset(dataset, split_column_name="{{ task.split_column_name }}", split_num={{ task.time_split_num }}, split_index={{ task.time_split_index}}):
+    dataset = dataset.sort_values(split_column_name)
+    splitter = TimeSeriesSplit(n_splits=split_num)
+    train_idx, test_idx = list(splitter.split(dataset))[split_index]
+    train_dataset, test_dataset = dataset.iloc[train_idx], dataset.iloc[test_idx]
+    for col in train_dataset.columns:
+        if train_dataset[col].isnull().all():
+            if test_dataset[col].dtype == float or test_dataset[col].dtype == int: 
+                train_dataset.loc[:, col] = 0
+            elif test_dataset[col].dtype == object:
+                train_dataset.loc[:, col] = ''
+            elif test_dataset[col].dtype == bool:
+                train_dataset.loc[:, col] = False
+    return train_dataset, test_dataset
+{% endif %}
+{% if not task.test_dataset_path %}
+__train_dataset, __test_dataset = split_dataset(__train_dataset)
+{% endif %}
+{% if validation and (not task.validation_dataset_path) %}
+__train_dataset, __validation_dataset = split_dataset(__train_dataset)
+{% endif %}
+{% if validation %}
+__test_dataset = __validation_dataset
+{% endif %}

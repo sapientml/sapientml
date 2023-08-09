@@ -1,12 +1,12 @@
 import pickle
 import tempfile
 import time
+from importlib.metadata import entry_points
 from pathlib import Path
 
 import pandas as pd
 import pytest
 from sapientml.executor import PipelineExecutor, run
-from sapientml.main import SapientML
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -56,11 +56,9 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
-        sml = SapientML()
-        sml.dataset = dataset
-        sml.task = task
-        sml.config = config
-        pipelines = sml._generate()
+        eps = entry_points(group="pipeline_generator")
+        generator = eps["sapientml_core"].load()(config)
+        pipelines = generator.generate_pipeline(dataset, task)
 
         executor = PipelineExecutor()
         pipeline_results = executor.execute(

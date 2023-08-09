@@ -1,8 +1,0 @@
-# POST PROCESSING
-{% if pipeline.adaptation_metric.startswith("MAP_") %}
-__y_pred_sorted_index = pd.DataFrame(np.argsort(-__y_pred))
-__y_pred = __y_pred_sorted_index.apply(lambda x: __model.classes_[x]).to_numpy()
-{% else %}
-if np.shape(__y_pred)[1] == 2:
-    __y_pred = __y_pred[:, 1]
-{% endif %}

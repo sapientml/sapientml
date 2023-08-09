@@ -80,18 +80,19 @@ class CancellationToken:
     isTriggered = False
 
 
-class Pipeline(BaseModel):
-    code_for_validation: str = ""
-    code_for_test: str = ""
-    code_for_train: str = ""
-    code_for_predict: str = ""
+class Code(BaseModel):
+    validation: str = ""
+    test: str = ""
+    train: str = ""
+    predict: str = ""
 
     def __add__(self, other):
-        self.code_for_validation += other.code_for_validation
-        self.code_for_test += other.code_for_test
-        self.code_for_train += other.code_for_train
-        self.code_for_predict += other.code_for_predict
-        return self
+        return Code(
+            validation=self.validation + other.validation,
+            test=self.test + other.test,
+            train=self.train + other.train,
+            predict=self.predict + other.predict,
+        )
 
 
 class RunningResult(BaseModel):

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "sapientml-core"
+version = "0.1.0"
+description = "A SapientML plugin of SapientMLGenerator"
+authors = ["Kosaku Kimura <kimura.kosaku@fujitsu.com>"]
+license = "Apache-2.0"
+packages = [{ include = "core" }]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+sapientml = "^0.1.4"
+sapientml-loaddata = { path = "../loaddata", develop = true }
+sapientml-preprocess = { path = "../preprocess", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+pytest-xdist = "^3.3.1"
+black = "^23.7.0"
+flake8 = "^6.1.0"
+isort = "^5.12.0"
+pysen = "^0.10.5"
+pre-commit = "^3.3.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."pipeline_generator"]
+sapientml_core = "core:SapientMLGenerator"

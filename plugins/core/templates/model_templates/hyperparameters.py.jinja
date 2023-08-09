@@ -1,0 +1,136 @@
+{% if model_name == "RandomForestClassifier" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['criterion'] = trial.suggest_categorical('criterion', ['gini', 'entropy']) # 'gini' 
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # None 
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['oob_score'] = trial.suggest_categorical('oob_score', [True, False]) # False 
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif model_name == "ExtraTreesClassifier" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['criterion'] = trial.suggest_categorical('criterion', ['gini', 'entropy', 'log_loss']) # 'gini'
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # sqrt 
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif (model_name == "LGBMClassifier" or  model_name == "LGBMRegressor") %}
+            params['num_leaves'] = trial.suggest_int('num_leaves', 2, 256, log=True) # 31
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['min_child_weight'] = trial.suggest_float('min_child_weight', 1e-5, 10, log=True) # 1e-3
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+            params['min_child_samples'] = trial.suggest_int('min_child_samples', 3, 100, log=True) # 20 
+            params['subsample'] = trial.suggest_float('subsample', 0.4, 1.0) # 1
+            params['subsample_freq'] = trial.suggest_int('subsample_freq', 0, 7) # 0
+            params['colsample_bytree'] = trial.suggest_float('colsample_bytree', 0.4, 1.0) # 1
+            params['reg_alpha'] = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True) # 0
+            params['reg_lambda'] = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True) # 0
+{% elif model_name == "XGBClassifier" %}
+            params['n_estimators'] = trial.suggest_int('n_estimators', 10, 1000, log=True) # 100 
+            params['max_depth'] = trial.suggest_int('max_depth', 1, 11, 1) # 6
+            params['min_child_weight'] = trial.suggest_float('min_child_weight', 1e-5, 10, log=True) # 1
+            params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
+            params['colsample_bytree'] = trial.suggest_float('colsample_bytree', 0.2, 1.0) # 1 
+            params['reg_alpha'] = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True) # 0 
+            params['reg_lambda'] = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True) # 0 
+{% elif (model_name == "CatBoostClassifier"  or model_name == "CatBoostRegressor") %}
+            params['depth'] =  trial.suggest_int('depth', 1, 12) #  
+            params['boosting_type'] =  trial.suggest_categorical('boosting_type', ['Ordered','Plain']) #  
+            params['bootstrap_type'] =  trial.suggest_categorical('bootstrap_type', ['Bayesian','Bernoulli', 'MVS']) #  
+{% elif model_name == "GradientBoostingClassifier" %}
+            params['loss'] =  trial.suggest_categorical('loss', ['log_loss', 'deviance', 'exponential']) # log_loss 
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
+            params['criterion'] = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error']) # 'friedman_mse'
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # None 
+{% elif model_name == "AdaBoostClassifier" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['algorithm'] =  trial.suggest_categorical('algorithm', ['SAMME', 'SAMME.R']) # SAMME.R’ 
+{% elif model_name == "DecisionTreeClassifier" %}
+            params['criterion'] = trial.suggest_categorical('criterion', ['gini', 'entropy', 'log_loss']) # 'gini'
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # None 
+{% elif (model_name == "SVC") %}
+            params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
+{#            params['gamma'] = trial.suggest_float('gamma', 1e-8, 1.0, log=True) # scale  #}
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif (model_name == "SVR") %}
+            params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
+{#            params['gamma'] = trial.suggest_float('gamma', 1e-8, 1.0, log=True) # scale  #}
+{% elif model_name == "LinearSVC" %}
+            params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2']) # l2 
+            params['loss'] =  trial.suggest_categorical('loss', ['hinge', 'squared_hinge']) # squared_hinge 
+            params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
+            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2) # 1  
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif model_name == "LogisticRegression" %}
+            #params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet']) # l2 
+            params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
+            #params['solver'] = trial.suggest_categorical('solver', ['lbfgs','saga']) # lbfgs 
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif model_name == "SGDClassifier" %}
+            params['loss'] =  trial.suggest_categorical('loss', ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # hinge
+            params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet']) # l2 
+            params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.0001 
+            #params['early_stopping'] =  trial.suggest_categorical('early_stopping', [True]) # False 
+            params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
+{% elif model_name == "MLPClassifier" or model_name == "MLPRegressor" %}
+            params['activation'] =  trial.suggest_categorical('activation', ['identity', 'logistic', 'tanh', 'relu']) # relu 
+            params['solver'] = trial.suggest_categorical('solver', ['lbfgs','sgd', 'adam']) # adam 
+            params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.0001 
+{#% elif model_name == "MultinomialNB" %#}
+{#% elif model_name == "GaussianNB" %#}
+{#% elif model_name == "BernoulliNB" %#}
+{% elif model_name == "RandomForestRegressor" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['criterion'] = trial.suggest_categorical('criterion', ['squared_error', 'absolute_error', 'poisson']) # 'squared_error' 
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['max_features'] = trial.suggest_categorical('max_features', [1,'sqrt', 'log2']) # 1 
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['oob_score'] = trial.suggest_categorical('oob_score', [True, False]) # False 
+{% elif model_name == "ExtraTreesRegressor" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['criterion'] = trial.suggest_categorical('criterion', ['squared_error', 'absolute_error']) # 'squared_error'
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', [1,'log2', None]) # 1 
+{% elif model_name == "XGBRegressor" %}
+            params['n_estimators'] = trial.suggest_int('n_estimators', 10, 1000, log=True) # 100 
+            params['max_depth'] = trial.suggest_int('max_depth', 1, 11, 1) # 6
+            params['min_child_weight'] = trial.suggest_float('min_child_weight', 1e-5, 10, log=True) # 1
+            params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
+            params['colsample_bytree'] = trial.suggest_float('colsample_bytree', 0.2, 1.0) # 1 
+            params['reg_alpha'] = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True) # 0 
+            params['reg_lambda'] = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True) # 0 
+{% elif model_name == "GradientBoostingRegressor" %}
+            params['loss'] =  trial.suggest_categorical('loss', ['ls', 'lad', 'huber', 'quantile']) # ls 
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
+            params['criterion'] = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error']) # 'friedman_mse' 
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # None 
+            params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.9, only if loss='huber' or loss='quantile'
+{% elif model_name == "AdaBoostRegressor" %}
+            params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
+            params['loss'] =  trial.suggest_categorical('loss', ['linear', 'square', 'exponential']) # linear 
+{% elif model_name == "DecisionTreeRegressor" %}
+            params['criterion'] = trial.suggest_categorical('criterion', ['squared_error', 'friedman_mse', 'absolute_error', 'poisson']) # 'squared_error'
+{#            params['max_depth'] =  trial.suggest_int('max_depth', 1, 11, 1) # None  #}
+            params['min_samples_leaf'] = trial.suggest_int('min_samples_leaf', 1, 32, log=True) # 1
+            params['max_features'] = trial.suggest_categorical('max_features', ['sqrt','log2', None]) # None 
+{% elif model_name == "LinearSVR" %}
+            params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
+            params['loss'] =  trial.suggest_categorical('loss', ['epsilon_insensitive', 'squared_epsilon_insensitive']) # epsilon_insensitive
+            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2. log=True) # 1  
+{#% elif model_name == "LinearRegression" %#}
+{% elif model_name == "Lasso" %}
+            params['alpha'] = trial.suggest_loguniform('alpha', 1e-5, 10.0) # 1 
+{% elif model_name == "SGDRegressor" %}
+            params['loss'] =  trial.suggest_categorical('loss', ['squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # squared_loss  
+            params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet']) # l2 
+            params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.0001 
+{% endif %}
