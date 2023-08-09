@@ -72,7 +72,7 @@
             #params['solver'] = trial.suggest_categorical('solver', ['lbfgs','saga']) # lbfgs 
             params['class_weight'] = trial.suggest_categorical('class_weight', ['balanced', None]) # None 
 {% elif model_name == "SGDClassifier" %}
-            params['loss'] =  trial.suggest_categorical('loss', ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # hinge
+            params['loss'] =  trial.suggest_categorical('loss', ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron', 'squared_error', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # hinge
             params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet']) # l2 
             params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.0001 
             #params['early_stopping'] =  trial.suggest_categorical('early_stopping', [True]) # False 
@@ -106,7 +106,7 @@
             params['reg_alpha'] = trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True) # 0 
             params['reg_lambda'] = trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True) # 0 
 {% elif model_name == "GradientBoostingRegressor" %}
-            params['loss'] =  trial.suggest_categorical('loss', ['ls', 'lad', 'huber', 'quantile']) # ls 
+            params['loss'] =  trial.suggest_categorical('loss', ['squared_error', 'ls', 'lad', 'huber', 'quantile']) # ls 
             params['n_estimators'] =  trial.suggest_int('n_estimators', 10, 1000, log=True) # 100
             params['subsample'] = trial.suggest_float('subsample', 0.2, 1) # 1  
             params['criterion'] = trial.suggest_categorical('criterion', ['friedman_mse', 'squared_error']) # 'friedman_mse' 
@@ -125,12 +125,12 @@
 {% elif model_name == "LinearSVR" %}
             params['C'] = trial.suggest_loguniform('C', 1e-5, 1e2) # 1 
             params['loss'] =  trial.suggest_categorical('loss', ['epsilon_insensitive', 'squared_epsilon_insensitive']) # epsilon_insensitive
-            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2. log=True) # 1  
+            params['intercept_scaling'] = trial.suggest_float('intercept_scaling', 0.3, 2, log=True) # 1  
 {#% elif model_name == "LinearRegression" %#}
 {% elif model_name == "Lasso" %}
             params['alpha'] = trial.suggest_loguniform('alpha', 1e-5, 10.0) # 1 
 {% elif model_name == "SGDRegressor" %}
-            params['loss'] =  trial.suggest_categorical('loss', ['squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # squared_loss  
+            params['loss'] =  trial.suggest_categorical('loss', ['squared_error', 'squared_loss', 'huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']) # squared_loss  
             params['penalty'] =  trial.suggest_categorical('penalty', ['l1', 'l2', 'elasticnet']) # l2 
             params['alpha'] = trial.suggest_loguniform('alpha', 1e-6, 1.0) # 0.0001 
 {% endif %}

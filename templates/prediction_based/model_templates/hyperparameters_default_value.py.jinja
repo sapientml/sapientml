@@ -39,11 +39,11 @@ default_hyperparameters = {'activation': 'relu', 'alpha': 0.0001, 'solver': 'ada
 {% elif model_name == 'MLPRegressor' %}
 default_hyperparameters = {'activation': 'relu', 'alpha': 0.0001, 'solver': 'adam'}
 {% elif model_name == 'LGBMClassifier' or model_name == 'LGBMRegressor' %}
-default_hyperparameters = {'class_weight': None, 'colsample_bytree': 1.0, 'min_child_samples': 20, 'min_child_weight': 0.001, 'n_estimators': 100, 'num_leaves': 31, 'reg_alpha': 0.0, 'reg_lambda': 0.0, 'subsample': 1.0, 'subsample_freq': 0}
+default_hyperparameters = {'class_weight': None, 'colsample_bytree': 1.0, 'min_child_samples': 20, 'min_child_weight': 0.001, 'n_estimators': 100, 'num_leaves': 31, 'reg_alpha': 0.1, 'reg_lambda': 0.1, 'subsample': 1.0, 'subsample_freq': 0}
 {% elif model_name == 'XGBClassifier' %}
-default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_weight': 1, 'n_estimators': 100, 'reg_alpha': 0, 'reg_lambda': 1, 'subsample': 1}
+default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_weight': 1, 'n_estimators': 100, 'reg_alpha': 0.1, 'reg_lambda': 0.1, 'subsample': 1}
 {% elif model_name == 'XGBRegressor' %}
-default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_weight': 1, 'n_estimators': 100, 'reg_alpha': 0, 'reg_lambda': 1, 'subsample': 1}
+default_hyperparameters = {'colsample_bytree': 1, 'max_depth': 6, 'min_child_weight': 1, 'n_estimators': 100, 'reg_alpha': 0.1, 'reg_lambda': 0.1, 'subsample': 1}
 {% elif model_name == 'CatBoostClassifier' or model_name == 'CatBoostRegressor' %}
 default_hyperparameters = {'boosting_type': 'Plain', 'depth': 6, 'bootstrap_type': 'MVS'}
 {% else %}

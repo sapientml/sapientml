@@ -202,7 +202,6 @@ class SapientML:
             Delimiter to read csv files
         initial_timeout: int
             Timelimit to execute each generated script.
-            Ignored when hyperparameter_tuning=True and hyperparameter_tuning_timeout is set.
         timeout_for_test: int
             Timelimit to execute test script (final_script) and Visualization.
         eda: bool
@@ -222,7 +221,6 @@ class SapientML:
             The number of trials of hyperparameter tuning.
         hyperparameter_tuning_timeout: int
             Time limit for hyperparameter tuning in each generated script.
-            initial_timeout is ignored when hyperparameter_tuning_timeout is set.
         hyperparameter_tuning_random_state: int
             Random seed for hyperparameter tuning.
         id_columns_for_prediction: list[str]
@@ -296,6 +294,7 @@ class SapientML:
                 csv_encoding=csv_encoding,
                 csv_delimiter=csv_delimiter,
                 save_datasets_format=save_datasets_format,
+                ignore_columns=ignore_columns,
                 output_dir=str(tmpdir),
                 logger=self._logger,
             )
@@ -393,7 +392,7 @@ class SapientML:
             )
 
             self._evaluate(pipeline_results)
-            final_script = (self.best_pipeline, PipelineResult(score=None, metric=None, best_params=None))
+            final_script = (self.best_pipeline, self.best_pipeline_score)
             candidate_scripts = self.candidate_scripts
             self._logger.info("Done.")
 
@@ -470,10 +469,12 @@ class SapientML:
         return PipelineResult(score=score, metric=metric, best_params=best_params)
 
     def _evaluate(self, pipeline_results):
+        self.best_pipeline = None
+        self.best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
         candidate_scripts = []
         for pipeline, result in pipeline_results:
             if result.returncode == 0:
-                pipeline_score = SapientML._parse_pipeline_output(result.output)
+                pipeline_score = self._parse_pipeline_output(result.output)
             else:
                 pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
             candidate_scripts.append((pipeline, pipeline_score))
@@ -500,6 +501,7 @@ class SapientML:
         best_pipeline_tuple = ranked_candidate_scripts[0]
         if best_pipeline_tuple is None:
             return None, ranked_candidate_scripts
+
         best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
         if best_pipeline_tuple[1].best_params is not None:
             best_pipeline.code_for_test = best_pipeline.code_for_test.replace(
@@ -509,3 +511,4 @@ class SapientML:
                 "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
             )
         self.best_pipeline = best_pipeline
+        self.best_pipeline_score = best_pipeline_tuple[1]

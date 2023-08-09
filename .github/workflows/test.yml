@@ -17,11 +17,11 @@ name: Lint and Testing
 on:
   pull_request:
     branches:
-      - development
+      - main
 
 env:
-  PYTHON_VERSION: 3.10
-  POETRY_VERSION: 1.5.1
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.5.1"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:

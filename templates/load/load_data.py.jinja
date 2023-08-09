@@ -1,8 +1,8 @@
 # LOAD DATA
 import pandas as pd
 
-{% if dataset.ignore_columns %}
-ignore_columns = {{ dataset.ignore_columns }}
+{% if task.ignore_columns %}
+ignore_columns = {{ task.ignore_columns }}
 {% endif %}
 
 {% if dataset.training_data_path.endswith(".pkl") %}
@@ -10,7 +10,7 @@ __train_dataset = pd.read_pickle("{{ dataset.training_data_path }}")
 {% else %}
 __train_dataset = pd.read_csv("{{ dataset.training_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
 {% endif %}
-{% if dataset.ignore_columns %}
+{% if task.ignore_columns %}
 __train_dataset = __train_dataset.drop(ignore_columns, axis=1, errors="ignore")
 {% endif %}
 
@@ -20,7 +20,7 @@ __validation_dataset = pd.read_pickle("{{ dataset.validation_data_path }}")
 {% else %}
 __validation_dataset = pd.read_csv("{{ dataset.validation_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
 {% endif %}
-{% if dataset.ignore_columns %}
+{% if task.ignore_columns %}
 __validation_dataset = __validation_dataset.drop(ignore_columns, axis=1, errors="ignore")
 {% endif %}
 {% if not validation %}
@@ -34,7 +34,7 @@ __test_dataset = pd.read_pickle("{{ dataset.test_data_path }}")
 {% else %}
 __test_dataset = pd.read_csv("{{ dataset.test_data_path }}", encoding="{{ dataset.csv_encoding }}", delimiter="{{ dataset.csv_delimiter }}")
 {% endif %}
-{% if dataset.ignore_columns %}
+{% if task.ignore_columns %}
 __test_dataset = __test_dataset.drop(ignore_columns, axis=1, errors="ignore")
 {% endif %}
 {% endif %}{# if not validation and dataset.test_data_path #}

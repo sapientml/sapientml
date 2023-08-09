@@ -3,7 +3,11 @@
 {% endif %}
 {% if pipeline.adaptation_metric == macros.Metric.AUC.value %}
         from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+        score = roc_auc_score(__target_test.values.ravel(), __y_pred, multi_class="ovr")
+{% else %}
         score = roc_auc_score(__target_test, __y_pred)
+{% endif %}
 {% elif pipeline.adaptation_metric == macros.Metric.Accuracy.value %}
         from sklearn.metrics import accuracy_score
         score = accuracy_score(__target_test, __y_pred)
@@ -23,21 +27,12 @@
         __y_pred = np.clip(__y_pred, 0, None)
         score = np.sqrt(mean_squared_log_error(__target_test, __y_pred))
 {% elif pipeline.adaptation_metric == macros.Metric.Gini.value %}
-        import numpy as np
-        def gini(actual, pred, cmpcol = 0, sortcol = 1):
-            assert( len(actual) == len(pred) )
-            all = np.asarray(np.c_[ actual, pred, np.arange(len(actual)) ], dtype=np.float)
-            all = all[ np.lexsort((all[:,2], -1*all[:,1])) ]
-            totalLosses = all[:,0].sum()
-            giniSum = all[:,0].cumsum().sum() / totalLosses
-        
-            giniSum -= (len(actual) + 1) / 2.
-            return giniSum / len(actual)
-    
-        def gini_normalized(a, p):
-            return gini(a, p) / gini(a, a)
-        
-        score = gini(__target_test, __y_pred)
+        from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+        score = 2 * roc_auc_score(__target_test.values.ravel(), __y_pred, multi_class="ovr") - 1
+{% else %}
+        score = 2 * roc_auc_score(__target_test, __y_pred) - 1
+{% endif %}
 {% elif pipeline.adaptation_metric == macros.Metric.MAE.value %}
         from sklearn.metrics import mean_absolute_error
         score = mean_absolute_error(__target_test, __y_pred)
@@ -46,7 +41,11 @@
         score = log_loss(__target_test, __y_pred)
 {% elif pipeline.adaptation_metric == macros.Metric.ROC_AUC.value %}
         from sklearn.metrics import roc_auc_score
+{% if pipeline.task.is_multiclass == True %}
+        score = roc_auc_score(__target_test.values.ravel(), __y_pred, multi_class="ovr")
+{% else %}
         score = roc_auc_score(__target_test, __y_pred)
+{% endif %}
 {% elif pipeline.adaptation_metric.startswith("MAP_") %}
 {% set k = pipeline.adaptation_metric.split("_")[1] %}
         def apk(actual, predicted, k):

@@ -35,6 +35,9 @@ __model.fit(__feature_train, __target_train.values.ravel())
 __model.fit(__feature_train, __target_train)
 {% endif %}
 __y_pred = __model.predict(__feature_test)
-{% if model_name == xgbclassifier and not flag_predict_proba %}
-__y_pred = _le.inverse_transform(__y_pred)
+{% if flag_predict_proba and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
+__y_pred = __model.classes_[np.argmax(__y_pred, axis=1)].reshape(-1, 1)
+{% endif %}
+{% if model_name == xgbclassifier and (not pipeline.adaptation_metric.startswith("MAP_")) and (not pipeline.adaptation_metric == "LogLoss") and (pipeline.adaptation_metric not in metric_needing_predict_proba) %}
+__y_pred = _le.inverse_transform(__y_pred).reshape(-1, 1)
 {% endif %}
