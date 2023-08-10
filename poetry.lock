@@ -2208,13 +2208,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.1.2"
+version = "0.1.3"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_core-0.1.2-py3-none-any.whl", hash = "sha256:03b314ececfc38418122fa03c32c62e9540aaf06d585f31a06202ab338a40de5"},
-    {file = "sapientml_core-0.1.2.tar.gz", hash = "sha256:ae52f1b7aa34388f067f4476db0262ba50d387cb4efaefe9366f8d2f99141198"},
+    {file = "sapientml_core-0.1.3-py3-none-any.whl", hash = "sha256:c4fb0cede1410136ca8325c4f56e542e97db8e40daf06c8b83ddf6b5bd0c305f"},
+    {file = "sapientml_core-0.1.3.tar.gz", hash = "sha256:f44f872f83aafc9a05d938cef4e7effc30f43c66832b9e5d367168270517567a"},
 ]
 
 [package.dependencies]
@@ -2703,4 +2703,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "c153e31cc1c0b90189b74273b244b5ebfe8ffaa73a59231221f2cc66432bfe4d"
+content-hash = "0e46850aa013107dfda07b16c6ecfe5986b68bcfb9f2408fcca94378dcf7cb66"

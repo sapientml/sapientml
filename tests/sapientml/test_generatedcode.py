@@ -81,7 +81,7 @@ def execute_code_for_test():
 
         save_file_path = (temp_dir / "code.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
-            code_for_test = pipeline_results[i][0].code_for_test
+            code_for_test = pipeline_results[i][0].test
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(code_for_test)
             test_result = run(save_file_path, 300, None)
