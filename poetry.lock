@@ -2200,19 +2200,19 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.1.6"
+version = "0.1.8"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_core-0.1.6-py3-none-any.whl", hash = "sha256:816ae959d61b69e538c47c225e4a20e0010053e1c5b5d56c9c8c1d67d457946a"},
-    {file = "sapientml_core-0.1.6.tar.gz", hash = "sha256:f7f7c456dc3b67343367ffa0c992f15c9507b34bb2969c1ebeed35c6a85cd1aa"},
+    {file = "sapientml_core-0.1.8-py3-none-any.whl", hash = "sha256:343c14c2db997220ff77ba67ce570a006c3ff84da4d72306e29bc654722313ff"},
+    {file = "sapientml_core-0.1.8.tar.gz", hash = "sha256:d8bd7e1f3dfec8f67ae1d1e1f92b3ed4c6f4a88e503174ba1c6fc45b43850feb"},
 ]
 
 [package.dependencies]
 sapientml = ">=0.1.4,<0.2.0"
 sapientml-loaddata = ">=0.1.4,<0.2.0"
-sapientml-preprocess = ">=0.1.2,<0.2.0"
+sapientml-preprocess = ">=0.1.3,<0.2.0"
 
 [[package]]
 name = "sapientml-loaddata"
@@ -2230,13 +2230,13 @@ sapientml = ">=0.1.4,<0.2.0"
 
 [[package]]
 name = "sapientml-preprocess"
-version = "0.1.2"
+version = "0.1.3"
 description = "A SapientML plugin of preprocess CodeBlockGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_preprocess-0.1.2-py3-none-any.whl", hash = "sha256:da1f906e3916a179e227778744b0ef66656a22a73a11614c73915a224083fa0b"},
-    {file = "sapientml_preprocess-0.1.2.tar.gz", hash = "sha256:9dd13b24c05bf01ca058d5d58ea3d74680bb8d822e6b4e714327531ee6f4eef1"},
+    {file = "sapientml_preprocess-0.1.3-py3-none-any.whl", hash = "sha256:bd394b7917dd8310eeea1577b5c895b79f8c9d24fac95f88647028bb32e0ff59"},
+    {file = "sapientml_preprocess-0.1.3.tar.gz", hash = "sha256:077cb1b48cf0a3a7dccbe7fd3d29112794879d6fa1bcf659b3afd00fd1e71d71"},
 ]
 
 [package.dependencies]
@@ -2695,4 +2695,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "d8d6be0979e9beb317d90811e104452fd38c3a9816cf8161309d84d82008df37"
+content-hash = "29c550932edc8967e771da5b3aa2a105c4e290ed0ffc270bafc987c90a88ef8e"
