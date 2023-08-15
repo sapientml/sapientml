@@ -341,7 +341,7 @@ def test_sapientml_works_with_Japanese_download_model(testdata_df):
         target_columns=["target_number"],
         task_type="regression",
     )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].code_for_test
+    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
 
 
 @pytest.mark.parametrize(
@@ -362,7 +362,7 @@ def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, us
         use_pos_list=use_pos_list,
         use_word_stemming=use_word_stemming,
     )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].code_for_test
+    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
 
 
 @pytest.mark.parametrize(
@@ -388,9 +388,7 @@ def test_sapientml_works_with_specified_word_ja(testdata_df, use_word_list, expe
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].code_for_test) and (
-        expected_string in ret.final_script[0].code_for_train
-    )
+    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
 
 
 @pytest.mark.parametrize(
@@ -412,9 +410,7 @@ def test_sapientml_works_with_specified_word_en(testdata_df, use_word_list, expe
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].code_for_test) and (
-        expected_string in ret.final_script[0].code_for_train
-    )
+    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
 
 
 @pytest.mark.parametrize("exp_col", ["explanatory_json", "explanatory_list"])
@@ -639,7 +635,7 @@ def test_sapientml_works_for_classification_with_stratification(testdata_df_ligh
         adaptation_metric="LogLoss",
     )
 
-    assert "stratify" in ret.final_script[0].code_for_test
+    assert "stratify" in ret.final_script[0].test
 
 
 def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
@@ -651,4 +647,4 @@ def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
         split_stratification=True,
     )
 
-    assert "stratify" not in ret.final_script[0].code_for_test
+    assert "stratify" not in ret.final_script[0].test
