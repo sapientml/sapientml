@@ -2200,29 +2200,29 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.1.4"
+version = "0.1.6"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_core-0.1.4-py3-none-any.whl", hash = "sha256:99cee50b3ecd406019e74741a7d21d893afaa440d06540fff691c7634ea5efa5"},
-    {file = "sapientml_core-0.1.4.tar.gz", hash = "sha256:4b735f88c19d4ad7679f3cc83ef2a1bc004fb56b859879e6e78cd0673ce27713"},
+    {file = "sapientml_core-0.1.6-py3-none-any.whl", hash = "sha256:816ae959d61b69e538c47c225e4a20e0010053e1c5b5d56c9c8c1d67d457946a"},
+    {file = "sapientml_core-0.1.6.tar.gz", hash = "sha256:f7f7c456dc3b67343367ffa0c992f15c9507b34bb2969c1ebeed35c6a85cd1aa"},
 ]
 
 [package.dependencies]
 sapientml = ">=0.1.4,<0.2.0"
-sapientml-loaddata = ">=0.1.2,<0.2.0"
+sapientml-loaddata = ">=0.1.4,<0.2.0"
 sapientml-preprocess = ">=0.1.2,<0.2.0"
 
 [[package]]
 name = "sapientml-loaddata"
-version = "0.1.2"
+version = "0.1.4"
 description = "A SapientML plugin of CodeBlockGenerator for loading dataset"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_loaddata-0.1.2-py3-none-any.whl", hash = "sha256:e7052a8c09054229118519eb7ab3089784b02fcfee2a97179d4df47e58a0408d"},
-    {file = "sapientml_loaddata-0.1.2.tar.gz", hash = "sha256:1211b761b0ba9489d005f23f254bc0c03da4805b7c15de8c34166c77d007ee98"},
+    {file = "sapientml_loaddata-0.1.4-py3-none-any.whl", hash = "sha256:6fa9f7b5f41b96ff2055f432f89ba40f294947e8d2dff1077670ba6487596f17"},
+    {file = "sapientml_loaddata-0.1.4.tar.gz", hash = "sha256:e025b539cbeac39d02725f6cf5daa1cc16e0f9b37fe60ca14d1719bd2519767a"},
 ]
 
 [package.dependencies]
@@ -2695,4 +2695,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "cb6f485c5e2f6e15e9c1ac9935e3f16e48380bb3685c7aa2cc22e10dcae5d3bd"
+content-hash = "d8d6be0979e9beb317d90811e104452fd38c3a9816cf8161309d84d82008df37"
