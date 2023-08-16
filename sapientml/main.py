@@ -487,10 +487,10 @@ class SapientML:
 
         best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
         if best_pipeline_tuple[1].best_params is not None:
-            best_pipeline.code_for_test = best_pipeline.code_for_test.replace(
+            best_pipeline.test = best_pipeline.test.replace(
                 "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
             )
-            best_pipeline.code_for_train = best_pipeline.code_for_train.replace(
+            best_pipeline.train = best_pipeline.train.replace(
                 "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
             )
         self.best_pipeline = best_pipeline
