@@ -153,7 +153,7 @@ def test_regressor_preprocess_scaling_log(
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
     # Exclude columns that prevent the application of Scaling:log preprocessing
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
     )
 
@@ -190,7 +190,7 @@ def test_regressor_notext(
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_text_english", "explanatory_text_japanese", "explanatory_json", "explanatory_list"]
     )
 
@@ -362,7 +362,7 @@ def test_classifier_preprocess(
 
     dataset.training_dataframe = df
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
     )
     temp_dir = make_tempdir
@@ -402,8 +402,8 @@ def test_classifier_notext_nonegative_explanatry(
     task.target_columns = [target_col]
     use_cols = [target_col] + ["explanatory_number", "explanatory_multi_category_nonnum"]
     ignore_cols = [col for col in df.columns if col not in use_cols]
-    task.ignore_columns.extend(ignore_cols)
-    task.ignore_columns = list(set(task.ignore_columns))
+    dataset.ignore_columns.extend(ignore_cols)
+    dataset.ignore_columns = list(set(dataset.ignore_columns))
 
     dataset.training_dataframe = df
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
