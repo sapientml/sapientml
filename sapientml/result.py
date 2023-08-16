@@ -124,7 +124,7 @@ class SapientMLGeneratorResult(BaseModel):
             )
 
             for index, (script, detail) in enumerate(self.candidate_scripts, start=1):
-                # script.task.train_dataset_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
+                # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
                 # If latter one, we have to modify the {tmpdir} to output_dir.
                 script_body = script.validation.replace(self.tmpdir_path.as_posix(), ".")
 
@@ -136,7 +136,7 @@ class SapientMLGeneratorResult(BaseModel):
                     json.dump(script.pipeline_json, f, cls=JSONEncoder, indent=4)
 
         if save_datasets:
-            # script.task.train_dataset_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
+            # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
             # We want to save dataset only when the last two ones.
             training_data_path = self.training_data_path
             if Path(training_data_path).parent == self.tmpdir_path:
