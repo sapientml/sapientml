@@ -206,16 +206,6 @@ def test_sapientml_set_logger_handler_only_once():
     assert len(logger.handlers) == 1
 
 
-# @mock.patch("sapientml.common.macros.ROW_THRESHOLD_FOR_SAMPLING", 10)
-# def test_sapientml_get_dev_training_for_adaptation_works(tmp_path, housing_dataframe):
-#    cls_ = SapientML()
-#    _, _, dataset, _ = _split_dataset(housing_dataframe)
-#    sampled, _ = cls_._get_dev_training_for_adaptation(
-#        dataset, "path/to/dataset", ["SalePrice"], "regression", tmp_path
-#    )
-#    assert len(sampled) == 10
-
-
 def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
     import numpy as np
 
@@ -228,44 +218,6 @@ def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
             target_columns=["target_number"],
             task_type="regression",
         )
-
-
-# def test_sapientml_ignore_columns_initialized_everytime(testdata_df_light):
-#     class RunCalledException(Exception):
-#         pass
-
-#     class SummarizeDatasetCalledException(Exception):
-#         pass
-
-#     with mock.patch(
-#         "sapientml.executor.run", side_effect=RunCalledException()
-#     ) as run:
-#         # add all null column to change ignore_columns
-#         df = testdata_df_light.copy()
-#         df["null_columns"] = None
-#         with pytest.raises(RunCalledException):
-#             cls_ = SapientML()
-#             cls_.generate_code(
-#                 training_data=df,
-#                 target_columns=["target_number"],
-#                 task_type="regression",
-#             )
-#         assert run.called
-
-#     with mock.patch(
-#         "sapientml.code_block_generator.prediction_based.params.summarize_dataset", side_effect=SummarizeDatasetCalledException()
-#     ) as summarize_dataset:
-#         with pytest.raises(SummarizeDatasetCalledException):
-#             # cls_ = SapientML()
-#             cls_.generate_code(
-#                 training_data=testdata_df_light,
-#                 target_columns=["target_number"],
-#                 task_type="regression",
-#             )
-
-#         args, _ = summarize_dataset.call_args
-#         _, task, _, _ = args
-#         assert len(task.ignore_columns) == 0
 
 
 def test_sapientml_adaptation_metric_is_None_regression(testdata_df_light):

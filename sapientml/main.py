@@ -410,7 +410,7 @@ class SapientML:
                 tmpdir_path=tmpdir,
                 target_columns=target_columns,
                 task_type=task_type,
-                ignore_columns=task.ignore_columns,
+                ignore_columns=dataset.ignore_columns,
                 split_method=split_method,
                 split_seed=split_seed,
                 split_train_size=split_train_size,
