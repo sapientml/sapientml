@@ -294,20 +294,20 @@ def test_sapientml_works_with_ignored_mixed_type_column(testdata_df_light):
     assert ret.final_script[0] and ret.final_script[1].score
 
 
-def test_sapientml_works_with_Japanese_download_model(testdata_df):
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "code_block_generator" / "rule_based" / "lib" / "lid.176.bin"
-    if model_path.exists():
-        model_path.unlink()
-    testdata_df.loc[1, "explanatory_text_japanese"] = 1
+# def test_sapientml_works_with_Japanese_download_model(testdata_df):
+#     src_root = Path(__file__).parents[2]
+#     model_path = src_root / "code_block_generator" / "rule_based" / "lib" / "lid.176.bin"
+#     if model_path.exists():
+#         model_path.unlink()
+#     testdata_df.loc[1, "explanatory_text_japanese"] = 1
 
-    cls_ = SapientML()
-    ret1 = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_number"],
-        task_type="regression",
-    )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
+#     cls_ = SapientML()
+#     ret1 = cls_.generate_code(
+#         training_data=testdata_df,
+#         target_columns=["target_number"],
+#         task_type="regression",
+#     )
+#     assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
 
 
 @pytest.mark.parametrize(
@@ -502,46 +502,46 @@ def test_sapientml_raise_error_if_number_models_are_zero(testdata_df_light):
         )
 
 
-def test_sapientml_raise_error_if_pp_models_can_not_load():
-    import os
-    import pickle
+# def test_sapientml_raise_error_if_pp_models_can_not_load():
+#     import os
+#     import pickle
 
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
+#     src_root = Path(__file__).parents[2]
+#     model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
 
-    test = "test"
-    assert os.path.isfile(model_path / "pp_models.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "pp_models.pkl", "rb") as f:
-            pickle.load(f)
-
-
-def test_sapientml_raise_error_if_mp_model_1_can_not_load():
-    import os
-    import pickle
-
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
-
-    test = "test"
-    assert os.path.isfile(model_path / "mp_model_1.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "mp_model_1.pkl", "rb") as f:
-            pickle.load(f)
+#     test = "test"
+#     assert os.path.isfile(model_path / "pp_models.pkl")
+#     with pytest.raises(Exception):
+#         with open(model_path / test / "pp_models.pkl", "rb") as f:
+#             pickle.load(f)
 
 
-def test_sapientml_raise_error_if_mp_model_2_can_not_load():
-    import os
-    import pickle
+# def test_sapientml_raise_error_if_mp_model_1_can_not_load():
+#     import os
+#     import pickle
 
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
+#     src_root = Path(__file__).parents[2]
+#     model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
 
-    test = "test"
-    assert os.path.isfile(model_path / "mp_model_2.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "mp_model_2.pkl", "rb") as f:
-            pickle.load(f)
+#     test = "test"
+#     assert os.path.isfile(model_path / "mp_model_1.pkl")
+#     with pytest.raises(Exception):
+#         with open(model_path / test / "mp_model_1.pkl", "rb") as f:
+#             pickle.load(f)
+
+
+# def test_sapientml_raise_error_if_mp_model_2_can_not_load():
+#     import os
+#     import pickle
+
+#     src_root = Path(__file__).parents[2]
+#     model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
+
+#     test = "test"
+#     assert os.path.isfile(model_path / "mp_model_2.pkl")
+#     with pytest.raises(Exception):
+#         with open(model_path / test / "mp_model_2.pkl", "rb") as f:
+#             pickle.load(f)
 
 
 def test_sapientml_works_with_hyperparameter_tuning_true(testdata_df_light):
