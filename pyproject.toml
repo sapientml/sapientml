@@ -18,7 +18,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "sapientml"
-version = "0.1.4"
+version = "0"
 description = "Generative AutoML for Tabular Data"
 authors = ["The SapientML Authors"]
 maintainers = [
@@ -32,7 +32,7 @@ repository = "https://github.com/sapientml/sapientml"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-sapientml-core = "^0.1.12"
+sapientml-core = "^0.1.13"
 numpy = "^1.19.5"
 pandas = "^2.0.3"
 scikit-learn = "1.1.3"

@@ -68,7 +68,6 @@ packaging = ">=22.0"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
-typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
@@ -858,24 +857,6 @@ optional = ["keras (>=2.4.3)", "pandas (>=1.0.5)", "tensorflow (>=2.4.3)"]
 tests = ["black (>=23.3.0)", "flake8 (>=3.8.2)", "keras (>=2.4.3)", "mypy (>=1.3.0)", "pandas (>=1.0.5)", "pytest (>=5.0.1)", "pytest-cov (>=2.9.0)", "tensorflow (>=2.4.3)"]
 
 [[package]]
-name = "importlib-resources"
-version = "6.0.1"
-description = "Read resources from Python packages"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "importlib_resources-6.0.1-py3-none-any.whl", hash = "sha256:134832a506243891221b88b4ae1213327eea96ceb4e407a00d790bb0626f45cf"},
-    {file = "importlib_resources-6.0.1.tar.gz", hash = "sha256:4359457e42708462b9626a04657c6208ad799ceb41e5c58c57ffa0e6a098a5d4"},
-]
-
-[package.dependencies]
-zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
-
-[package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
-
-[[package]]
 name = "iniconfig"
 version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
@@ -1239,7 +1220,6 @@ files = [
 contourpy = ">=1.0.1"
 cycler = ">=0.10"
 fonttools = ">=4.22.0"
-importlib-resources = {version = ">=3.2.0", markers = "python_version < \"3.10\""}
 kiwisolver = ">=1.0.1"
 numpy = ">=1.20"
 packaging = ">=20.0"
@@ -1505,7 +1485,6 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.20.3", markers = "python_version < \"3.10\""},
     {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
 ]
@@ -2200,47 +2179,47 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.1.12"
+version = "0.1.13"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
-python-versions = ">=3.9,<3.13"
+python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_core-0.1.12-py3-none-any.whl", hash = "sha256:70c74455c49ef49150fafb46d2f7d365c79481596b0df82eb9df91d071063470"},
-    {file = "sapientml_core-0.1.12.tar.gz", hash = "sha256:5caba1d07f97fe52069d58c79ba7971a2ff081755fe909bfca1d57c72b91ba4f"},
+    {file = "sapientml_core-0.1.13-py3-none-any.whl", hash = "sha256:bfa899ff35bca06c4e08e08f7dae89cc9867656de2aa819992a9ba9463c0efe9"},
+    {file = "sapientml_core-0.1.13.tar.gz", hash = "sha256:3f7954ef5fdbfe140b67d61ee54e5ef590099edd44bdd9d981640144aa1e522b"},
 ]
 
 [package.dependencies]
-sapientml = ">=0.1.4,<0.2.0"
-sapientml-loaddata = ">=0.1.7,<0.2.0"
-sapientml-preprocess = ">=0.1.3,<0.2.0"
+sapientml = "*"
+sapientml-loaddata = ">=0.1.9,<0.2.0"
+sapientml-preprocess = ">=0.1.4,<0.2.0"
 
 [[package]]
 name = "sapientml-loaddata"
-version = "0.1.7"
+version = "0.1.9"
 description = "A SapientML plugin of CodeBlockGenerator for loading dataset"
 optional = false
-python-versions = ">=3.9,<3.13"
+python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_loaddata-0.1.7-py3-none-any.whl", hash = "sha256:21be112ca4f994a83f856cb7bfde3d1df35393b54e9ab2c5383749100a82a2fd"},
-    {file = "sapientml_loaddata-0.1.7.tar.gz", hash = "sha256:e532baefb144067b05850416ebdcca559601b1db9882af96f96500835eec358d"},
+    {file = "sapientml_loaddata-0.1.9-py3-none-any.whl", hash = "sha256:abb5e66ba5699cef97427814b477feb6d95e1b671b110676e8484e4f2f07db18"},
+    {file = "sapientml_loaddata-0.1.9.tar.gz", hash = "sha256:c1c4acecc2dd6cf8e01cecb8ac6143f34eb98deeb80468e80015010d69904e72"},
 ]
 
 [package.dependencies]
-sapientml = ">=0.1.4,<0.2.0"
+sapientml = "*"
 
 [[package]]
 name = "sapientml-preprocess"
-version = "0.1.3"
+version = "0.1.4"
 description = "A SapientML plugin of preprocess CodeBlockGenerator"
 optional = false
-python-versions = ">=3.9,<3.13"
+python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_preprocess-0.1.3-py3-none-any.whl", hash = "sha256:bd394b7917dd8310eeea1577b5c895b79f8c9d24fac95f88647028bb32e0ff59"},
-    {file = "sapientml_preprocess-0.1.3.tar.gz", hash = "sha256:077cb1b48cf0a3a7dccbe7fd3d29112794879d6fa1bcf659b3afd00fd1e71d71"},
+    {file = "sapientml_preprocess-0.1.4-py3-none-any.whl", hash = "sha256:428aa7056f11146e7431eb55b01561034d02df3edb3c728adae67deedbfae382"},
+    {file = "sapientml_preprocess-0.1.4.tar.gz", hash = "sha256:6a4ae9ed4201c69e3e2c4c4973cb245ba65439a9c4d48f22112f232cfe15b176"},
 ]
 
 [package.dependencies]
-sapientml = ">=0.1.4,<0.2.0"
+sapientml = "*"
 
 [[package]]
 name = "scikit-learn"
@@ -2677,22 +2656,7 @@ plotting = ["graphviz", "matplotlib"]
 pyspark = ["cloudpickle", "pyspark", "scikit-learn"]
 scikit-learn = ["scikit-learn"]
 
-[[package]]
-name = "zipp"
-version = "3.16.2"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "zipp-3.16.2-py3-none-any.whl", hash = "sha256:679e51dd4403591b2d6838a48de3d283f3d188412a9782faadf845f298736ba0"},
-    {file = "zipp-3.16.2.tar.gz", hash = "sha256:ebc15946aa78bd63458992fc81ec3b6f7b1e92d51c35e6de1c3804e73b799147"},
-]
-
-[package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
-
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<3.13"
-content-hash = "12d112f8bc8f54bae4c1d614b3cdad41948ef5882a07bcc520336490ab7f65d7"
+python-versions = ">=3.10,<3.13"
+content-hash = "8ef9301eb5ff12a273c9a62426983c090a4432a3713dd6e211019ff75f4a5842"
