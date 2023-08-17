@@ -18,7 +18,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "sapientml"
-version = "0"
+version = "0.1.4"
 description = "Generative AutoML for Tabular Data"
 authors = ["The SapientML Authors"]
 maintainers = [
