@@ -2,13 +2,13 @@
 
 [[package]]
 name = "alembic"
-version = "1.11.2"
+version = "1.11.3"
 description = "A database migration tool for SQLAlchemy."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "alembic-1.11.2-py3-none-any.whl", hash = "sha256:7981ab0c4fad4fe1be0cf183aae17689fe394ff874fd2464adb774396faf0796"},
-    {file = "alembic-1.11.2.tar.gz", hash = "sha256:678f662130dc540dac12de0ea73de9f89caea9dbea138f60ef6263149bf84657"},
+    {file = "alembic-1.11.3-py3-none-any.whl", hash = "sha256:d6c96c2482740592777c400550a523bc7a9aada4e210cae2e733354ddae6f6f8"},
+    {file = "alembic-1.11.3.tar.gz", hash = "sha256:3db4ce81a9072e1b5aa44c2d202add24553182672a12daf21608d6f62a8f9cf9"},
 ]
 
 [package.dependencies]
@@ -1648,13 +1648,13 @@ test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-co
 
 [[package]]
 name = "plotly"
-version = "5.16.0"
+version = "5.16.1"
 description = "An open-source, interactive data visualization library for Python"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "plotly-5.16.0-py2.py3-none-any.whl", hash = "sha256:046ba0cd9f6b251780e0d93313016ec5e2cb69d9a68da818cd7110e6c77a4011"},
-    {file = "plotly-5.16.0.tar.gz", hash = "sha256:13dc052665dcb4d9eefd89847c0b144984e99aca5c8008f9885d2583b77d8b7d"},
+    {file = "plotly-5.16.1-py2.py3-none-any.whl", hash = "sha256:19cc34f339acd4e624177806c14df22f388f23fb70658b03aad959a0e650a0dc"},
+    {file = "plotly-5.16.1.tar.gz", hash = "sha256:295ac25edeb18c893abb71dcadcea075b78fd6fdf07cee4217a4e1009667925b"},
 ]
 
 [package.dependencies]
@@ -2200,13 +2200,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.1.11"
+version = "0.1.12"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.9,<3.13"
 files = [
-    {file = "sapientml_core-0.1.11-py3-none-any.whl", hash = "sha256:903da158d4c0cef330a38db590654a1ccd7767cae77f2e23b053078d3e24ef8d"},
-    {file = "sapientml_core-0.1.11.tar.gz", hash = "sha256:ff7093bbf8e18301ab2f67b6f6c67f6e8182d1d7ad9b5b50ed7b0674b1402489"},
+    {file = "sapientml_core-0.1.12-py3-none-any.whl", hash = "sha256:70c74455c49ef49150fafb46d2f7d365c79481596b0df82eb9df91d071063470"},
+    {file = "sapientml_core-0.1.12.tar.gz", hash = "sha256:5caba1d07f97fe52069d58c79ba7971a2ff081755fe909bfca1d57c72b91ba4f"},
 ]
 
 [package.dependencies]
@@ -2695,4 +2695,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "9e6c52f6d19c1907aa41bbc1261bb4c4f0263e0b142290358a17a1cd5d072924"
+content-hash = "12d112f8bc8f54bae4c1d614b3cdad41948ef5882a07bcc520336490ab7f65d7"
