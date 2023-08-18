@@ -33,7 +33,7 @@ PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list
 
 
 class SapientMLGeneratorResult(BaseModel):
-    skeleton: PipelineSkeleton
+    skeleton: Optional[PipelineSkeleton]
     final_script: Optional[tuple[Optional[Code], PipelineResult]]
     candidate_scripts: Optional[list[tuple[Code, PipelineResult]]]
     training_data: pd.DataFrame

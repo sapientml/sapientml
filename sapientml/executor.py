@@ -89,12 +89,8 @@ class PipelineExecutor:
         initial_timeout: int,
         output_dir: Path,
         cancel: Optional[CancellationToken],
-    ) -> tuple[Optional[tuple[Code, RunningResult]], Optional[list[tuple[Code, RunningResult]]]]:
+    ) -> list[tuple[Code, RunningResult]]:
         candidate_scripts: list[tuple[Code, RunningResult]] = []
-
-        if candidate_scripts is None:
-            self._logger.warning("No candidate is generated.")
-            return None, None
 
         # copy libs
         lib_path = output_dir / "lib"
