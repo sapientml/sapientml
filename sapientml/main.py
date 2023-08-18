@@ -386,7 +386,7 @@ class SapientML:
 
             lower_is_better = self.task.adaptation_metric in macros.metric_lower_is_better
             self._generator.evaluate(pipeline_results, lower_is_better)
-            self._logger.info("Done.")
+            logger.info("Done.")
 
             final_script, candidate_scripts = self._generator.get_result()
 
