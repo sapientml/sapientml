@@ -16,17 +16,17 @@ import json
 import os
 from pathlib import Path
 from shutil import copyfile
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import pandas as pd
 from pydantic import BaseModel
 
 from .params import CancellationToken, Code, PipelineResult
-
 from .util.json_util import JSONEncoder
 from .util.logging import setup_logger
 
 logger = setup_logger()
+
 
 class SapientMLGeneratorResult(BaseModel):
     final_script: Optional[tuple[Optional[Code], PipelineResult]]
