@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import json
-import os
+from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
 from typing import Literal, Optional, Union
@@ -119,9 +120,11 @@ class SapientMLGeneratorResult(BaseModel):
             # copy libs
             lib_path = path / "lib"
             lib_path.mkdir(exist_ok=True)
-            copyfile(
-                Path(os.path.dirname(__file__)) / "../static/lib/sample_dataset.py", lib_path / "sample_dataset.py"
-            )
+
+            eps = entry_points(group="export_modules")
+            for ep in eps:
+                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                    copyfile(file, lib_path / Path(file).name)
 
             for index, (script, detail) in enumerate(self.candidate_scripts, start=1):
                 # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
