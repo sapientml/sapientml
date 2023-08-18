@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sapientml.main import SapientML
+from sapientml.util.logging import setup_logger
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -211,10 +212,10 @@ def test_sapientml_generate_code_returns_top_script_if_any_one_script_ran_succes
 
 
 def test_sapientml_set_logger_handler_only_once():
-    logger = logging.getLogger("sapientml")
-    assert len(logger.handlers) == 0
+    logger = setup_logger()
+    assert len(logger.handlers) == 1
     _ = SapientML()
-    logger = logging.getLogger("sapientml")
+    logger = setup_logger()
     assert len(logger.handlers) == 1
     _ = SapientML()
     assert len(logger.handlers) == 1

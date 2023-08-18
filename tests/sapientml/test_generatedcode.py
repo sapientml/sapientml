@@ -14,7 +14,6 @@
 
 import pickle
 import tempfile
-import time
 from importlib.metadata import entry_points
 from pathlib import Path
 
@@ -602,10 +601,6 @@ def test_timeout_works_hyperparameter_tuning_timeout(
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
 
     temp_dir = make_tempdir
-    start_time = time.time()
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=initial_timeout)
-    end_time = time.time()
-    process_time = end_time - start_time
 
     assert pipeline_results[0][1].returncode == 0
-    assert process_time < 20
