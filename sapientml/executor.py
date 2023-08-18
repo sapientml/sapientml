@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+import glob
 import platform
 import subprocess
 import sys
 import time
+from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 
 from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
+
+logger = setup_logger()
 
 
 def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> RunningResult:
@@ -78,10 +81,8 @@ def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> Ru
 class PipelineExecutor:
     def __init__(
         self,
-        loglevel=logging.INFO,
     ):
-        self._logger = setup_logger()
-        self._logger.setLevel(loglevel)
+        pass
 
     def execute(
         self,
@@ -93,13 +94,17 @@ class PipelineExecutor:
         candidate_scripts: list[tuple[Code, RunningResult]] = []
 
         if candidate_scripts is None:
-            self._logger.warning("No candidate is generated.")
+            logger.warning("No candidate is generated.")
             return None, None
 
         # copy libs
         lib_path = output_dir / "lib"
         lib_path.mkdir(exist_ok=True)
-        copyfile(Path(__file__).parent / "../static/lib" / "sample_dataset.py", lib_path / "sample_dataset.py")
+
+        eps = entry_points(group="export_modules")
+        for ep in eps:
+            for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                copyfile(file, lib_path / Path(file).name)
 
         for index, pipeline in enumerate(pipeline_list, start=1):
             script_name = f"{index}_script.py"
@@ -107,7 +112,7 @@ class PipelineExecutor:
             with open(script_path, "w", encoding="utf-8") as f:
                 f.write(pipeline.validation)
 
-            self._logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
+            logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
             running_result = run(script_path, initial_timeout, cancel)
             candidate_scripts.append((pipeline, running_result))
             reason = ""
@@ -122,6 +127,6 @@ class PipelineExecutor:
                 else:
                     # Unknown error
                     reason = f"Status code: {running_result.returncode}"
-                self._logger.warning(f"Failed to run a pipeline '{script_name}': {reason}")
+                logger.warning(f"Failed to run a pipeline '{script_name}': {reason}")
 
         return candidate_scripts

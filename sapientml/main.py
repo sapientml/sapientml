@@ -14,7 +14,6 @@
 
 import ast
 import copy
-import logging
 import re
 
 # from msilib.schema import Error
@@ -33,55 +32,55 @@ from .util.logging import setup_logger
 
 INITIAL_TIMEOUT = 600
 
+logger = setup_logger()
+
+
+def check_stratification(
+    full_dataset,
+    target_columns,
+    task_type,
+    adaptation_metric,
+    split_stratification,
+    stratify_threshold,
+):
+    base_threshold = 0.2
+    temp_res = full_dataset[target_columns[0]].value_counts()
+    min_value = temp_res.min()
+    min_value_ratio = min_value / temp_res.sum()
+    ratio_threshold = base_threshold / len(temp_res)
+    if task_type == "classification":
+        if min_value < stratify_threshold:
+            if adaptation_metric == "LogLoss":
+                raise ValueError(
+                    f"Target value {temp_res.idxmin()} appears only {min_value} times, the input data cannot be split for LogLoss metric. Please review the target column or set another adaptation_metric"
+                )
+            elif split_stratification:
+                raise ValueError(
+                    f"split_stratification=True, but the input data cannot be split using stratification because target value {temp_res.idxmin()} appears only {min_value} times. Please set split_stratification as False"
+                )
+            else:
+                return False
+        elif min_value_ratio < ratio_threshold:
+            if split_stratification is None:
+                return True
+            elif not split_stratification:
+                logger.warning(
+                    "split_stratification is set False, but setting True is recommended because the target is imbalance."
+                )
+            return split_stratification
+        else:
+            if split_stratification is None:
+                return False
+            return split_stratification
+    else:
+        return False
+
 
 class SapientML:
     def __init__(
         self,
-        loglevel=logging.INFO,
     ):
-        self._logger = setup_logger()
-        self._logger.setLevel(loglevel)
-
-    def check_stratification(
-        self,
-        full_dataset,
-        target_columns,
-        task_type,
-        adaptation_metric,
-        split_stratification,
-        stratify_threshold,
-    ):
-        base_threshold = 0.2
-        temp_res = full_dataset[target_columns[0]].value_counts()
-        min_value = temp_res.min()
-        min_value_ratio = min_value / temp_res.sum()
-        ratio_threshold = base_threshold / len(temp_res)
-        if task_type == "classification":
-            if min_value < stratify_threshold:
-                if adaptation_metric == "LogLoss":
-                    raise ValueError(
-                        f"Target value {temp_res.idxmin()} appears only {min_value} times, the input data cannot be split for LogLoss metric. Please review the target column or set another adaptation_metric"
-                    )
-                elif split_stratification:
-                    raise ValueError(
-                        f"split_stratification=True, but the input data cannot be split using stratification because target value {temp_res.idxmin()} appears only {min_value} times. Please set split_stratification as False"
-                    )
-                else:
-                    return False
-            elif min_value_ratio < ratio_threshold:
-                if split_stratification is None:
-                    return True
-                elif not split_stratification:
-                    self._logger.warning(
-                        "split_stratification is set False, but setting True is recommended because the target is imbalance."
-                    )
-                return split_stratification
-            else:
-                if split_stratification is None:
-                    return False
-                return split_stratification
-        else:
-            return False
+        pass
 
     def fit():
         pass
@@ -273,12 +272,12 @@ class SapientML:
 
         if adaptation_metric is None:
             if task_type == "regression":
-                self._logger.warning("Metric is not specified. Use 'r2' by default.")
+                logger.warning("Metric is not specified. Use 'r2' by default.")
             else:
-                self._logger.warning("Metric is not specified. Use 'f1' by default.")
+                logger.warning("Metric is not specified. Use 'f1' by default.")
             adaptation_metric = macros.Metric.get_default_value(task_type)
 
-        self._logger.info("Loading dataset...")
+        logger.info("Loading dataset...")
 
         with tempfile.TemporaryDirectory() as tmpdir_path_str:
             tmpdir = Path(tmpdir_path_str).absolute()
@@ -293,7 +292,6 @@ class SapientML:
                 save_datasets_format=save_datasets_format,
                 ignore_columns=ignore_columns,
                 output_dir=str(tmpdir),
-                logger=self._logger,
             )
             dataset.check_dataframes(target_columns)
 
@@ -305,7 +303,7 @@ class SapientML:
                 stratify_threshold -= 1
             split_stratify = False
             if len(target_columns) == 1:
-                split_stratify = self.check_stratification(
+                split_stratify = check_stratification(
                     training_dataframe,
                     target_columns,
                     task_type,
@@ -317,7 +315,7 @@ class SapientML:
                 raise ValueError("Stratification for multiple target columns is not supported.")
 
             # Generate the meta-features
-            self._logger.info("Generating meta features ...")
+            logger.info("Generating meta features ...")
             task = Task(
                 target_columns=target_columns,
                 task_type=task_type,
@@ -341,7 +339,7 @@ class SapientML:
             adaptation_metric = macros.Metric.get(adaptation_metric)
 
             if not macros.Metric.metric_match_task_type(adaptation_metric, task_type):
-                self._logger.warning(f"{adaptation_metric} is not a metric for {task_type}")
+                logger.warning(f"{adaptation_metric} is not a metric for {task_type}")
 
             if task_type == "classification":
                 is_multiclass = False
@@ -355,11 +353,11 @@ class SapientML:
 
                 if is_multioutput:
                     if is_multiclass and not macros.Metric.metric_support_multiclass_multioutput(adaptation_metric):
-                        self._logger.warning(
+                        logger.warning(
                             f"{adaptation_metric} does not support Multiclass-Multioutput classification. Execution of candidate script raises an exception."
                         )
                     elif not macros.Metric.metric_support_multioutput(adaptation_metric):
-                        self._logger.warning(
+                        logger.warning(
                             f"{adaptation_metric} does not support Multioutput (Multilabel) classification. Execution of candidate script raises an exception."
                         )
 
@@ -382,7 +380,7 @@ class SapientML:
             pipelines = generator.generate_pipeline(dataset, task)
             skeleton = pipelines[0].labels
 
-            self._logger.info("Executing generated pipelines ...")
+            logger.info("Executing generated pipelines ...")
             executor = PipelineExecutor()
             pipeline_results = executor.execute(
                 pipelines,
@@ -394,7 +392,7 @@ class SapientML:
             self._evaluate(pipeline_results)
             final_script = (self.best_pipeline, self.best_pipeline_score)
             candidate_scripts = self.candidate_scripts
-            self._logger.info("Done.")
+            logger.info("Done.")
 
             return SapientMLGeneratorResult(
                 skeleton=skeleton,

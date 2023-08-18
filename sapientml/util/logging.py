@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import logging
+import threading
 
 
 def setup_logger():
     logger = logging.getLogger("sapientml")
+    mutex = threading.Lock()
     if len(logger.handlers) == 0:
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S"))
         logger.setLevel(logging.INFO)
         logger.addHandler(handler)
+    mutex.acquire()
     return logger
