@@ -2173,13 +2173,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "sapientml-core"
-version = "0.2.0"
+version = "0.2.3"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_core-0.2.0-py3-none-any.whl", hash = "sha256:0d1ffec2364e50334ee3a41eda4edd265d59a110708eae3cfc29b18ca6635ef9"},
-    {file = "sapientml_core-0.2.0.tar.gz", hash = "sha256:6389697ac00774197cab9d161ce74a7eae8da7a698db3fb8ee514caf89f874af"},
+    {file = "sapientml_core-0.2.3-py3-none-any.whl", hash = "sha256:339b4cbfbcb34695c7a4c2eee0e607e42169bf849e0a92c11f075343c7778939"},
+    {file = "sapientml_core-0.2.3.tar.gz", hash = "sha256:25b5d30370d9192a55220690e224262f400ca0c1e880d91b57ab83597dc23b8d"},
 ]
 
 [package.dependencies]
@@ -2191,21 +2191,21 @@ nltk = ">=3.8.1,<4.0.0"
 numba = ">=0.57.1,<0.58.0"
 optuna = ">=3.2.0,<4.0.0"
 sapientml = "*"
-sapientml-loaddata = ">=0.2.0,<0.3.0"
-sapientml-preprocess = ">=0.2.0,<0.3.0"
+sapientml-loaddata = ">=0.2.4,<0.3.0"
+sapientml-preprocess = ">=0.2.2,<0.3.0"
 scikit-learn = "1.1.3"
 scipy = ">=1.11.1,<2.0.0"
 xgboost = ">=1.7.6,<2.0.0"
 
 [[package]]
 name = "sapientml-loaddata"
-version = "0.2.0"
+version = "0.2.4"
 description = "A SapientML plugin of CodeBlockGenerator for loading dataset"
 optional = false
 python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_loaddata-0.2.0-py3-none-any.whl", hash = "sha256:b362ca3c79b39da497d993786fc574c6dc0f9ec67b78cf408c9050084c932781"},
-    {file = "sapientml_loaddata-0.2.0.tar.gz", hash = "sha256:e07b10feafbad2b615addd4f27ee0eb8d5448f227f8d1310f7a6e6d360d6d14b"},
+    {file = "sapientml_loaddata-0.2.4-py3-none-any.whl", hash = "sha256:a01ce564935d27f8111f6334a74897bff39e29c9fd360ed1752655a22ac97060"},
+    {file = "sapientml_loaddata-0.2.4.tar.gz", hash = "sha256:43d3a49cc45946e30385ebba61537670964c9a6ef4d2526922b5b1ea5ff0fd00"},
 ]
 
 [package.dependencies]
@@ -2215,13 +2215,13 @@ scikit-learn = "1.1.3"
 
 [[package]]
 name = "sapientml-preprocess"
-version = "0.2.0"
+version = "0.2.2"
 description = "A SapientML plugin of preprocess CodeBlockGenerator"
 optional = false
 python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_preprocess-0.2.0-py3-none-any.whl", hash = "sha256:4cfb1a9c4e54f9428946bbe5f2ceb2095087922bf2ebdc17b94061b5752b2248"},
-    {file = "sapientml_preprocess-0.2.0.tar.gz", hash = "sha256:013b326b670e682e1f071ab5b98137ed23c8fadaa271d5cc3b8eb89fef62704a"},
+    {file = "sapientml_preprocess-0.2.2-py3-none-any.whl", hash = "sha256:934e33d895fe238ad49547043c71e4f922022ec5809274ad349c6db10aa5aec2"},
+    {file = "sapientml_preprocess-0.2.2.tar.gz", hash = "sha256:43ff9ab0b4f605510ef8d29ee8f08d1a02e140559990d5701a6b57077fd4f2c3"},
 ]
 
 [package.dependencies]
@@ -2612,4 +2612,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "cd201961f121f9daa090ed662faad441e6dc3dcf7c0422264973c4549c72c74a"
+content-hash = "721f80025418f594fc4f445d6129f3ef6594ef0b7d038dbb8ec5d5cce78bc510"

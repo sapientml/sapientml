@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import logging
 import platform
 import subprocess
 import sys
 import time
+from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
 from typing import Optional
@@ -99,7 +101,11 @@ class PipelineExecutor:
         # copy libs
         lib_path = output_dir / "lib"
         lib_path.mkdir(exist_ok=True)
-        copyfile(Path(__file__).parent / "../static/lib" / "sample_dataset.py", lib_path / "sample_dataset.py")
+
+        eps = entry_points(group="export_modules")
+        for ep in eps:
+            for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                copyfile(file, lib_path / Path(file).name)
 
         for index, pipeline in enumerate(pipeline_list, start=1):
             script_name = f"{index}_script.py"
