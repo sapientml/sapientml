@@ -14,7 +14,7 @@ pip install sapientml
 
 ### Generate Code in a notebook
 
-Please download [housing-prices.csv](https://github.com/F-AutoML/sapientml/files/10430539/housing-prices.csv) to execute the following code.
+Please download [housing-prices.csv](https://github.com/sapientml/sapientml/files/12374429/housing-prices.csv) to execute the following code.
 
 ```py
 import pandas as pd
