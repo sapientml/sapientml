@@ -21,7 +21,7 @@ from typing import Literal, Optional, Union
 import pandas as pd
 from pydantic import BaseModel
 
-from .params import CancellationToken, Pipeline, PipelineResult
+from .params import CancellationToken, Code, PipelineResult
 
 # from .resynthesis.main import process as resynthesizer
 from .util.json_util import JSONEncoder
@@ -34,8 +34,8 @@ PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list
 
 class SapientMLGeneratorResult(BaseModel):
     skeleton: PipelineSkeleton
-    final_script: Optional[tuple[Optional[Pipeline], PipelineResult]]
-    candidate_scripts: Optional[list[tuple[Pipeline, PipelineResult]]]
+    final_script: Optional[tuple[Optional[Code], PipelineResult]]
+    candidate_scripts: Optional[list[tuple[Code, PipelineResult]]]
     training_data: pd.DataFrame
     validation_data: Optional[pd.DataFrame]
     test_data: Optional[pd.DataFrame]
@@ -124,9 +124,9 @@ class SapientMLGeneratorResult(BaseModel):
             )
 
             for index, (script, detail) in enumerate(self.candidate_scripts, start=1):
-                # script.task.train_dataset_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
+                # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
                 # If latter one, we have to modify the {tmpdir} to output_dir.
-                script_body = script.code_for_validation.replace(self.tmpdir_path.as_posix(), ".")
+                script_body = script.validation.replace(self.tmpdir_path.as_posix(), ".")
 
                 with open(path / f"{index}_script.py", "w", encoding="utf-8") as f:
                     f.write(script_body)
@@ -136,7 +136,7 @@ class SapientMLGeneratorResult(BaseModel):
                     json.dump(script.pipeline_json, f, cls=JSONEncoder, indent=4)
 
         if save_datasets:
-            # script.task.train_dataset_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
+            # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
             # We want to save dataset only when the last two ones.
             training_data_path = self.training_data_path
             if Path(training_data_path).parent == self.tmpdir_path:
@@ -168,7 +168,7 @@ class SapientMLGeneratorResult(BaseModel):
                     "w",
                     encoding="utf-8",
                 ) as f:
-                    json.dump(self.final_script[1].__dict__, f, indent=4)
+                    json.dump(self.final_script[1].__dict__, f, cls=JSONEncoder, indent=4)
             else:
                 raise RuntimeError("All candidate scripts failed. Final script is not saved.")
 
@@ -179,7 +179,7 @@ class SapientMLGeneratorResult(BaseModel):
                 debug_info[i] = info
 
             with open(path / add_prefix("run_info.json", project_name), "w", encoding="utf-8") as f:
-                json.dump(debug_info, f, indent=4)
+                json.dump(debug_info, f, cls=JSONEncoder, indent=4)
 
         if not self.final_script:
             logger.warning("All candidate scripts failed. Final script is not saved.")
@@ -188,15 +188,15 @@ class SapientMLGeneratorResult(BaseModel):
         if save_user_scripts:
             # script.task.train_dataset_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.pkl'
             # If latter one, we have to modify the {tmpdir} to output_dir.
-            script_body = self.final_script[0].code_for_test.replace(self.tmpdir_path.as_posix(), ".")
+            script_body = self.final_script[0].test.replace(self.tmpdir_path.as_posix(), ".")
             with open(path / add_prefix("final_script.py", project_name), "w", encoding="utf-8") as f:
                 f.write(script_body)
 
-            script_body = self.final_script[0].code_for_train.replace(self.tmpdir_path.as_posix(), ".")
+            script_body = self.final_script[0].train.replace(self.tmpdir_path.as_posix(), ".")
             with open(path / add_prefix("final_train.py", project_name), "w", encoding="utf-8") as f:
                 f.write(script_body)
 
-            script_body = self.final_script[0].code_for_predict.replace(self.tmpdir_path.as_posix(), ".")
+            script_body = self.final_script[0].predict.replace(self.tmpdir_path.as_posix(), ".")
             with open(path / add_prefix("final_predict.py", project_name), "w", encoding="utf-8") as f:
                 f.write(script_body)
 
@@ -227,6 +227,6 @@ class SapientMLGeneratorResult(BaseModel):
                     "id_columns_for_prediction": self.id_columns_for_prediction,
                     "split_stratify": self.split_stratify,
                 }
-                json.dump(kwargs, f, indent=4)
+                json.dump(kwargs, f, cls=JSONEncoder, indent=4)
 
         logger.info(f"The files saved in {path.absolute().as_posix()}")

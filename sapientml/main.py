@@ -19,15 +19,13 @@ import re
 
 # from msilib.schema import Error
 import tempfile
+from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Literal, Optional, Union
 
 import pandas as pd
 
 from . import macros
-from .code_block_generator.load.generator import generate_code_data_load
-from .code_block_generator.prediction_based.generator import generate_code_sapientml
-from .code_block_generator.rule_based.generator import generate_code_rule_based
 from .executor import PipelineExecutor
 from .params import CancellationToken, Config, Dataset, PipelineResult, Task
 from .result import SapientMLGeneratorResult
@@ -43,7 +41,6 @@ class SapientML:
     ):
         self._logger = setup_logger()
         self._logger.setLevel(loglevel)
-        self._generator = None
 
     def check_stratification(
         self,
@@ -380,7 +377,10 @@ class SapientML:
             self.dataset = dataset
             self.task = task
             self.config = config_instance
-            pipelines = self._generate()
+            eps = entry_points(group="pipeline_generator")
+            generator = eps["sapientml_core"].load()(self.config)
+            pipelines = generator.generate_pipeline(dataset, task)
+            skeleton = pipelines[0].labels
 
             self._logger.info("Executing generated pipelines ...")
             executor = PipelineExecutor()
@@ -397,7 +397,7 @@ class SapientML:
             self._logger.info("Done.")
 
             return SapientMLGeneratorResult(
-                skeleton=self.skeleton,
+                skeleton=skeleton,
                 final_script=final_script,
                 candidate_scripts=candidate_scripts,
                 training_data=training_data,
@@ -410,7 +410,7 @@ class SapientML:
                 tmpdir_path=tmpdir,
                 target_columns=target_columns,
                 task_type=task_type,
-                ignore_columns=task.ignore_columns,
+                ignore_columns=dataset.ignore_columns,
                 split_method=split_method,
                 split_seed=split_seed,
                 split_train_size=split_train_size,
@@ -432,23 +432,6 @@ class SapientML:
                 id_columns_for_prediction=id_columns_for_prediction,
                 split_stratify=split_stratify,
             )
-
-    def _generate(self):
-        base_pipeline = generate_code_data_load(self.dataset, self.task)
-        full_dataframe = pd.concat(self.dataset.get_dataframes()).reset_index(drop=True)
-        rule_pipeline = generate_code_rule_based(full_dataframe, self.task)
-        base_pipeline += rule_pipeline
-        sapientml_result = generate_code_sapientml(full_dataframe, self.task, self.config, self._logger)
-        self.skeleton = sapientml_result.labels
-
-        result_pipelines = []
-        for pipeline in sapientml_result.pipelines:
-            pipeline.code_for_validation = base_pipeline.code_for_validation + pipeline.code_for_validation
-            pipeline.code_for_test = base_pipeline.code_for_test + pipeline.code_for_test
-            pipeline.code_for_train = base_pipeline.code_for_train + pipeline.code_for_train
-            pipeline.code_for_predict = base_pipeline.code_for_predict + pipeline.code_for_predict
-            result_pipelines.append(pipeline)
-        return result_pipelines
 
     @staticmethod
     def _parse_pipeline_output(output: str):
@@ -504,10 +487,10 @@ class SapientML:
 
         best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
         if best_pipeline_tuple[1].best_params is not None:
-            best_pipeline.code_for_test = best_pipeline.code_for_test.replace(
+            best_pipeline.test = best_pipeline.test.replace(
                 "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
             )
-            best_pipeline.code_for_train = best_pipeline.code_for_train.replace(
+            best_pipeline.train = best_pipeline.train.replace(
                 "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
             )
         self.best_pipeline = best_pipeline

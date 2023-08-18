@@ -1,7 +1,0 @@
-with open('oneHotEncoder.pkl', 'rb') as f:
-    _ohe = pickle.load(f)
-
-_CATEGORICAL_COLS = {{ columns }}
-__test_encoded = pd.DataFrame(_ohe.transform({{ test_dataset }}[_CATEGORICAL_COLS]), columns=_ohe.get_feature_names_out(), index={{ test_dataset }}.index)
-{{ test_dataset }} = pd.concat([{{ test_dataset }}, __test_encoded ], axis=1)
-{{ test_dataset }}.drop(_CATEGORICAL_COLS, axis=1, inplace=True)

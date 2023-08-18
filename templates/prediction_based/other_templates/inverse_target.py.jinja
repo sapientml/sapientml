@@ -1,9 +1,0 @@
-# INVERSE TARGET
-import numpy as np
-
-_COLS_TO_BE_INVERSED = list(set(_NUMERIC_COLS_TO_SCALE) & set(_TARGET_COLUMNS))
-if set(_TARGET_COLUMNS).issubset(__test_dataset.columns.tolist()):
-    __target_test[_COLS_TO_BE_INVERSED] = np.expm1(__target_test[_COLS_TO_BE_INVERSED])
-__y_pred = pd.DataFrame(data=__y_pred, columns=_TARGET_COLUMNS, index=__test_dataset.index)
-__y_pred[_COLS_TO_BE_INVERSED] = np.expm1(__y_pred[_COLS_TO_BE_INVERSED])
-__y_pred = __y_pred.to_numpy()

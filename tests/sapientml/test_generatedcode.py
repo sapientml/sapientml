@@ -1,12 +1,26 @@
+# Copyright 2023 The SapientML Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import pickle
 import tempfile
 import time
+from importlib.metadata import entry_points
 from pathlib import Path
 
 import pandas as pd
 import pytest
 from sapientml.executor import PipelineExecutor, run
-from sapientml.main import SapientML
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -56,11 +70,9 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
-        sml = SapientML()
-        sml.dataset = dataset
-        sml.task = task
-        sml.config = config
-        pipelines = sml._generate()
+        eps = entry_points(group="pipeline_generator")
+        generator = eps["sapientml_core"].load()(config)
+        pipelines = generator.generate_pipeline(dataset, task)
 
         executor = PipelineExecutor()
         pipeline_results = executor.execute(
@@ -83,7 +95,7 @@ def execute_code_for_test():
 
         save_file_path = (temp_dir / "code.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
-            code_for_test = pipeline_results[i][0].code_for_test
+            code_for_test = pipeline_results[i][0].test
             with open(save_file_path, "w", encoding="utf-8") as f:
                 f.write(code_for_test)
             test_result = run(save_file_path, 300, None)
@@ -155,7 +167,7 @@ def test_regressor_preprocess_scaling_log(
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
     # Exclude columns that prevent the application of Scaling:log preprocessing
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
     )
 
@@ -192,7 +204,7 @@ def test_regressor_notext(
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_text_english", "explanatory_text_japanese", "explanatory_json", "explanatory_list"]
     )
 
@@ -364,7 +376,7 @@ def test_classifier_preprocess(
 
     dataset.training_dataframe = df
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
-    task.ignore_columns.extend(
+    dataset.ignore_columns.extend(
         ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
     )
     temp_dir = make_tempdir
@@ -404,8 +416,8 @@ def test_classifier_notext_nonegative_explanatry(
     task.target_columns = [target_col]
     use_cols = [target_col] + ["explanatory_number", "explanatory_multi_category_nonnum"]
     ignore_cols = [col for col in df.columns if col not in use_cols]
-    task.ignore_columns.extend(ignore_cols)
-    task.ignore_columns = list(set(task.ignore_columns))
+    dataset.ignore_columns.extend(ignore_cols)
+    dataset.ignore_columns = list(set(dataset.ignore_columns))
 
     dataset.training_dataframe = df
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()

@@ -31,7 +31,8 @@ keywords = ["automl"]
 repository = "https://github.com/sapientml/sapientml"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
+sapientml-core = "^0.1.13"
 numpy = "^1.19.5"
 pandas = "^2.0.3"
 scikit-learn = "1.1.3"
@@ -78,9 +79,6 @@ line_length = 120
 py_version = "py310"
 
 [tool.pysen.lint.source]
-includes = [
-    "sapientml/", 
-    "tests/", 
-]
+includes = ["sapientml/", "tests/"]
 [pytest]
 addopts = "-p no:cacheprovider -s"

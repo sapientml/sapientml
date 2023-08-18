@@ -1,8 +1,0 @@
-_DATE_COLUMNS = {{ columns }}
-for _col in _DATE_COLUMNS:
-    test_date_col = pd.to_datetime({{ test_dataset }}[_col], errors='coerce')
-    {{ test_dataset }}[_col+ "_year"] = test_date_col.dt.year.fillna(-1)
-    {{ test_dataset }}[_col + "_month"] = test_date_col.dt.month.fillna(-1)
-    {{ test_dataset }}[_col + "_day"] = test_date_col.dt.day.fillna(-1)
-    {{ test_dataset }}[_col + "_day_of_week"] = test_date_col.dt.dayofweek.fillna(-1)
-    {{ test_dataset }}.drop(_col, axis=1, inplace=True)

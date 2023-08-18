@@ -21,7 +21,7 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 
-from .params import CancellationToken, Pipeline, RunningResult
+from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
 
 
@@ -85,12 +85,12 @@ class PipelineExecutor:
 
     def execute(
         self,
-        pipeline_list: list[Pipeline],
+        pipeline_list: list[Code],
         initial_timeout: int,
         output_dir: Path,
         cancel: Optional[CancellationToken],
-    ) -> tuple[Optional[tuple[Pipeline, RunningResult]], Optional[list[tuple[Pipeline, RunningResult]]]]:
-        candidate_scripts: list[tuple[Pipeline, RunningResult]] = []
+    ) -> tuple[Optional[tuple[Code, RunningResult]], Optional[list[tuple[Code, RunningResult]]]]:
+        candidate_scripts: list[tuple[Code, RunningResult]] = []
 
         if candidate_scripts is None:
             self._logger.warning("No candidate is generated.")
@@ -105,7 +105,7 @@ class PipelineExecutor:
             script_name = f"{index}_script.py"
             script_path = (output_dir / script_name).absolute().as_posix()
             with open(script_path, "w", encoding="utf-8") as f:
-                f.write(pipeline.code_for_validation)
+                f.write(pipeline.validation)
 
             self._logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
             running_result = run(script_path, initial_timeout, cancel)

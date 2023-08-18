@@ -1,3 +1,17 @@
+# Copyright 2023 The SapientML Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 from pathlib import Path
 from unittest import mock
@@ -206,16 +220,6 @@ def test_sapientml_set_logger_handler_only_once():
     assert len(logger.handlers) == 1
 
 
-# @mock.patch("sapientml.common.macros.ROW_THRESHOLD_FOR_SAMPLING", 10)
-# def test_sapientml_get_dev_training_for_adaptation_works(tmp_path, housing_dataframe):
-#    cls_ = SapientML()
-#    _, _, dataset, _ = _split_dataset(housing_dataframe)
-#    sampled, _ = cls_._get_dev_training_for_adaptation(
-#        dataset, "path/to/dataset", ["SalePrice"], "regression", tmp_path
-#    )
-#    assert len(sampled) == 10
-
-
 def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
     import numpy as np
 
@@ -228,44 +232,6 @@ def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
             target_columns=["target_number"],
             task_type="regression",
         )
-
-
-# def test_sapientml_ignore_columns_initialized_everytime(testdata_df_light):
-#     class RunCalledException(Exception):
-#         pass
-
-#     class SummarizeDatasetCalledException(Exception):
-#         pass
-
-#     with mock.patch(
-#         "sapientml.executor.run", side_effect=RunCalledException()
-#     ) as run:
-#         # add all null column to change ignore_columns
-#         df = testdata_df_light.copy()
-#         df["null_columns"] = None
-#         with pytest.raises(RunCalledException):
-#             cls_ = SapientML()
-#             cls_.generate_code(
-#                 training_data=df,
-#                 target_columns=["target_number"],
-#                 task_type="regression",
-#             )
-#         assert run.called
-
-#     with mock.patch(
-#         "sapientml.code_block_generator.prediction_based.params.summarize_dataset", side_effect=SummarizeDatasetCalledException()
-#     ) as summarize_dataset:
-#         with pytest.raises(SummarizeDatasetCalledException):
-#             # cls_ = SapientML()
-#             cls_.generate_code(
-#                 training_data=testdata_df_light,
-#                 target_columns=["target_number"],
-#                 task_type="regression",
-#             )
-
-#         args, _ = summarize_dataset.call_args
-#         _, task, _, _ = args
-#         assert len(task.ignore_columns) == 0
 
 
 def test_sapientml_adaptation_metric_is_None_regression(testdata_df_light):
@@ -328,22 +294,6 @@ def test_sapientml_works_with_ignored_mixed_type_column(testdata_df_light):
     assert ret.final_script[0] and ret.final_script[1].score
 
 
-def test_sapientml_works_with_Japanese_download_model(testdata_df):
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "code_block_generator" / "rule_based" / "lib" / "lid.176.bin"
-    if model_path.exists():
-        model_path.unlink()
-    testdata_df.loc[1, "explanatory_text_japanese"] = 1
-
-    cls_ = SapientML()
-    ret1 = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_number"],
-        task_type="regression",
-    )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].code_for_test
-
-
 @pytest.mark.parametrize(
     ("use_pos_list", "use_word_stemming"),
     [
@@ -362,7 +312,7 @@ def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, us
         use_pos_list=use_pos_list,
         use_word_stemming=use_word_stemming,
     )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].code_for_test
+    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
 
 
 @pytest.mark.parametrize(
@@ -388,9 +338,7 @@ def test_sapientml_works_with_specified_word_ja(testdata_df, use_word_list, expe
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].code_for_test) and (
-        expected_string in ret.final_script[0].code_for_train
-    )
+    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
 
 
 @pytest.mark.parametrize(
@@ -412,9 +360,7 @@ def test_sapientml_works_with_specified_word_en(testdata_df, use_word_list, expe
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].code_for_test) and (
-        expected_string in ret.final_script[0].code_for_train
-    )
+    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
 
 
 @pytest.mark.parametrize("exp_col", ["explanatory_json", "explanatory_list"])
@@ -540,48 +486,6 @@ def test_sapientml_raise_error_if_number_models_are_zero(testdata_df_light):
         )
 
 
-def test_sapientml_raise_error_if_pp_models_can_not_load():
-    import os
-    import pickle
-
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
-
-    test = "test"
-    assert os.path.isfile(model_path / "pp_models.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "pp_models.pkl", "rb") as f:
-            pickle.load(f)
-
-
-def test_sapientml_raise_error_if_mp_model_1_can_not_load():
-    import os
-    import pickle
-
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
-
-    test = "test"
-    assert os.path.isfile(model_path / "mp_model_1.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "mp_model_1.pkl", "rb") as f:
-            pickle.load(f)
-
-
-def test_sapientml_raise_error_if_mp_model_2_can_not_load():
-    import os
-    import pickle
-
-    src_root = Path(__file__).parents[2]
-    model_path = src_root / "sapientml" / "code_block_generator" / "prediction_based" / "models"
-
-    test = "test"
-    assert os.path.isfile(model_path / "mp_model_2.pkl")
-    with pytest.raises(Exception):
-        with open(model_path / test / "mp_model_2.pkl", "rb") as f:
-            pickle.load(f)
-
-
 def test_sapientml_works_with_hyperparameter_tuning_true(testdata_df_light):
     cls_ = SapientML()
 
@@ -639,7 +543,7 @@ def test_sapientml_works_for_classification_with_stratification(testdata_df_ligh
         adaptation_metric="LogLoss",
     )
 
-    assert "stratify" in ret.final_script[0].code_for_test
+    assert "stratify" in ret.final_script[0].test
 
 
 def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
@@ -651,4 +555,4 @@ def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
         split_stratification=True,
     )
 
-    assert "stratify" not in ret.final_script[0].code_for_test
+    assert "stratify" not in ret.final_script[0].test
