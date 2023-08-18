@@ -391,10 +391,11 @@ class SapientML:
             self._generator.evaluate(pipeline_results, lower_is_better)
             self._logger.info("Done.")
 
-            self._result = SapientMLGeneratorResult(
-                skeleton=None,
-                final_script=None,
-                candidate_scripts=None,
+            final_script, candidate_scripts = self._generator.get_result()
+
+            self.result = SapientMLGeneratorResult(
+                final_script=final_script,
+                candidate_scripts=candidate_scripts,
                 training_data=training_data,
                 validation_data=validation_data,
                 test_data=test_data,
@@ -428,6 +429,8 @@ class SapientML:
                 split_stratify=split_stratify,
             )
 
+            return self.result
+
     def save(
         self,
         output_dir_path: str,
@@ -437,10 +440,10 @@ class SapientML:
         save_datasets: bool = False,
         save_run_info: bool = True,
         save_running_arguments: bool = False,
+        add_explain: bool = True,
         cancel: Optional[CancellationToken] = None,
     ):
-        self._generator.save(
-            result=self._result,
+        self.result.save(
             output_dir_path=output_dir_path,
             project_name=project_name,
             save_user_scripts=save_user_scripts,
@@ -448,5 +451,11 @@ class SapientML:
             save_datasets=save_datasets,
             save_run_info=save_run_info,
             save_running_arguments=save_running_arguments,
-            cancel=cancel,
         )
+        if add_explain:
+            self._generator.save(
+                result=self.result,
+                output_dir_path=output_dir_path,
+                project_name=project_name,
+                cancel=cancel,
+            )

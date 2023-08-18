@@ -23,19 +23,14 @@ from pydantic import BaseModel
 
 from .params import CancellationToken, Code, PipelineResult
 
-# from .resynthesis.main import process as resynthesizer
 from .util.json_util import JSONEncoder
 from .util.logging import setup_logger
 
 logger = setup_logger()
 
-PipelineSkeleton = dict[str, Union[float, dict[str, Union[float, list[str], list[dict[str, Union[float, int, str]]]]]]]
-
-
 class SapientMLGeneratorResult(BaseModel):
-    skeleton: Optional[PipelineSkeleton]
     final_script: Optional[tuple[Optional[Code], PipelineResult]]
-    candidate_scripts: Optional[list[tuple[Code, PipelineResult]]]
+    candidate_scripts: list[tuple[Code, PipelineResult]]
     training_data: pd.DataFrame
     validation_data: Optional[pd.DataFrame]
     test_data: Optional[pd.DataFrame]
@@ -130,10 +125,6 @@ class SapientMLGeneratorResult(BaseModel):
 
                 with open(path / f"{index}_script.py", "w", encoding="utf-8") as f:
                     f.write(script_body)
-                # store pipeline json
-                json_filename = f"{index}_script" + "_code_explainability.json"
-                with open(path / json_filename, "w", encoding="utf-8") as f:
-                    json.dump(script.pipeline_json, f, cls=JSONEncoder, indent=4)
 
         if save_datasets:
             # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
