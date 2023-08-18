@@ -14,7 +14,6 @@
 
 import os
 import warnings
-from logging import Logger
 from typing import List, Literal, Optional, Union
 
 import numpy as np
@@ -22,6 +21,7 @@ import pandas as pd
 from pydantic import BaseModel, validator
 
 from .macros import Metric
+from .util.logging import setup_logger
 
 MAX_NUM_OF_COLUMNS = 10000000
 MAX_PATH_LENGTH = 1000
@@ -33,6 +33,8 @@ MAX_N_MODELS = 30
 MAX_HPO_N_TRIALS = 100000
 MAX_HPO_TIMEOUT = 500000
 DEFAULT_OUTPUT_DIR = "."
+
+logger = setup_logger()
 
 
 def _read_file(filepath: str, csv_encoding: str, csv_delimiter: str) -> pd.DataFrame:
@@ -242,9 +244,7 @@ class Dataset:
         save_datasets_format: Literal["csv", "pickle"] = "pickle",
         ignore_columns: Optional[List[str]] = None,
         output_dir: str = DEFAULT_OUTPUT_DIR,
-        logger: Optional[Logger] = None,
     ):
-        self._logger = logger
         self.ignore_columns = [] if ignore_columns is None else ignore_columns
         self.csv_encoding = csv_encoding
         self.csv_delimiter = csv_delimiter
@@ -312,12 +312,11 @@ class Dataset:
         if self.test_dataframe is not None:
             self._check_single_dataframe(self.test_dataframe, target_columns, "test")
 
-        def format_warning(inconsistent_df_cols, target_data_name1, target_data_name2, logger):
-            if logger:
-                for inconsistent_df_col in inconsistent_df_cols:
-                    logger.warning(
-                        f"types of {inconsistent_df_col} are inconsistent between {target_data_name1} and {target_data_name2} dataframes."
-                    )
+        def format_warning(inconsistent_df_cols, target_data_name1, target_data_name2):
+            for inconsistent_df_col in inconsistent_df_cols:
+                logger.warning(
+                    f"types of {inconsistent_df_col} are inconsistent between {target_data_name1} and {target_data_name2} dataframes."
+                )
 
         # 2. Check whether column names and orders are consistency between two dataframes
         if self.validation_dataframe is not None:
@@ -345,14 +344,12 @@ class Dataset:
                 self._confirm_consistent_type(self.training_dataframe, self.validation_dataframe),
                 "train",
                 "validation",
-                self._logger,
             )
         if self.test_dataframe is not None:
             format_warning(
                 self._confirm_consistent_type(self.training_dataframe, self.test_dataframe),
                 "train",
                 "test",
-                self._logger,
             )
 
     def _check_single_dataframe(self, df: pd.DataFrame, target_columns: List[str], target_data_name: str) -> bool:
@@ -370,14 +367,13 @@ class Dataset:
             raise ValueError(f"Index names of {target_data_name} dataframe are not unique.")
 
         # 3. Check whether column names are unique
-        if self._logger and not self._is_columns_unique(df):
-            self._logger.warning(f"Column names of {target_data_name} dataframe are not unique.")
+        if not self._is_columns_unique(df):
+            logger.warning(f"Column names of {target_data_name} dataframe are not unique.")
 
         # 4. Check strnum mixed type
         mixed_df_cols = _confirm_mixed_type(df)
         for mixed_df_col in mixed_df_cols:
-            if self._logger:
-                self._logger.warning(f"{mixed_df_col} would have mixed type in {target_data_name} dataframe.")
+            logger.warning(f"{mixed_df_col} would have mixed type in {target_data_name} dataframe.")
 
         # 5. Check whether datetime columns are correct value
         incorrect_info = self._confirm_date_type(df)
@@ -387,11 +383,11 @@ class Dataset:
         for col, dt_column in incorrect_info.items():
             for index, value in dt_column.iloc[:num_shown_for_one_column].items():
                 incorrect_summary.append((col, index, value))
-        if incorrect_summary and self._logger:
-            self._logger.warning(
+        if incorrect_summary:
+            logger.warning(
                 f"The follwing columns would have incorrect datetime values in {target_data_name} dataframe: {incorrect_cols}"
             )
-            self._logger.warning(f"For example, (column_name, index, value) = {incorrect_summary}")
+            logger.warning(f"For example, (column_name, index, value) = {incorrect_summary}")
 
         return True
 

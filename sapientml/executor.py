@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import glob
-import logging
 import platform
 import subprocess
 import sys
@@ -25,6 +24,8 @@ from typing import Optional
 
 from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
+
+logger = setup_logger()
 
 
 def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> RunningResult:
@@ -80,10 +81,8 @@ def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> Ru
 class PipelineExecutor:
     def __init__(
         self,
-        loglevel=logging.INFO,
     ):
-        self._logger = setup_logger()
-        self._logger.setLevel(loglevel)
+        pass
 
     def execute(
         self,
@@ -95,7 +94,7 @@ class PipelineExecutor:
         candidate_scripts: list[tuple[Code, RunningResult]] = []
 
         if candidate_scripts is None:
-            self._logger.warning("No candidate is generated.")
+            logger.warning("No candidate is generated.")
             return None, None
 
         # copy libs
@@ -113,7 +112,7 @@ class PipelineExecutor:
             with open(script_path, "w", encoding="utf-8") as f:
                 f.write(pipeline.validation)
 
-            self._logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
+            logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
             running_result = run(script_path, initial_timeout, cancel)
             candidate_scripts.append((pipeline, running_result))
             reason = ""
@@ -128,6 +127,6 @@ class PipelineExecutor:
                 else:
                     # Unknown error
                     reason = f"Status code: {running_result.returncode}"
-                self._logger.warning(f"Failed to run a pipeline '{script_name}': {reason}")
+                logger.warning(f"Failed to run a pipeline '{script_name}': {reason}")
 
         return candidate_scripts
