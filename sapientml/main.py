@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-import copy
-import re
-
 # from msilib.schema import Error
 import tempfile
 from importlib.metadata import entry_points
@@ -26,7 +22,7 @@ import pandas as pd
 
 from . import macros
 from .executor import PipelineExecutor
-from .params import CancellationToken, Config, Dataset, PipelineResult, Task
+from .params import CancellationToken, Config, Dataset, Task
 from .result import SapientMLGeneratorResult
 from .util.logging import setup_logger
 
@@ -376,9 +372,8 @@ class SapientML:
             self.task = task
             self.config = config_instance
             eps = entry_points(group="pipeline_generator")
-            generator = eps["sapientml_core"].load()(self.config)
-            pipelines = generator.generate_pipeline(dataset, task)
-            skeleton = pipelines[0].labels
+            self._generator = eps["sapientml_core"].load()(self.config)
+            pipelines = self._generator.generate_pipeline(dataset, task)
 
             logger.info("Executing generated pipelines ...")
             executor = PipelineExecutor()
@@ -389,13 +384,13 @@ class SapientML:
                 cancel,
             )
 
-            self._evaluate(pipeline_results)
-            final_script = (self.best_pipeline, self.best_pipeline_score)
-            candidate_scripts = self.candidate_scripts
+            lower_is_better = self.task.adaptation_metric in macros.metric_lower_is_better
+            self._generator.evaluate(pipeline_results, lower_is_better)
             logger.info("Done.")
 
-            return SapientMLGeneratorResult(
-                skeleton=skeleton,
+            final_script, candidate_scripts = self._generator.get_result()
+
+            self.result = SapientMLGeneratorResult(
                 final_script=final_script,
                 candidate_scripts=candidate_scripts,
                 training_data=training_data,
@@ -431,65 +426,33 @@ class SapientML:
                 split_stratify=split_stratify,
             )
 
-    @staticmethod
-    def _parse_pipeline_output(output: str):
-        score = None
-        best_params = None
-        metric = None
-        output_lines = output.splitlines()
-        try:
-            for line in output_lines:
-                if re.match("best params: ", line):
-                    best_params = ast.literal_eval(re.findall("best params: (.+)", line)[0])
-                elif re.match("RESULT: ", line):
-                    parts = [x.strip() for x in line.split(":")]
-                    metric = parts[-2].strip().split(" ")[0]
-                    score = float(parts[-1])
-        except Exception:
-            pass
-        return PipelineResult(score=score, metric=metric, best_params=best_params)
+            return self.result
 
-    def _evaluate(self, pipeline_results):
-        self.best_pipeline = None
-        self.best_pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
-        candidate_scripts = []
-        for pipeline, result in pipeline_results:
-            if result.returncode == 0:
-                pipeline_score = self._parse_pipeline_output(result.output)
-            else:
-                pipeline_score = PipelineResult(score=None, metric=None, best_params=None)
-            candidate_scripts.append((pipeline, pipeline_score))
-        self.candidate_scripts = candidate_scripts
-
-        # When an error occurs while running a pipeline, the score becomes None
-        error_pipelines = [pipeline for pipeline in candidate_scripts if pipeline[1].score is None]
-
-        # If none of them have the score, stop ranking them
-        if len(candidate_scripts) == len(error_pipelines):
-            return None, candidate_scripts
-
-        # sort descending
-        succeeded_scripts = sorted(
-            [x for x in candidate_scripts if x[1].score is not None], key=lambda x: x[1].score, reverse=True
+    def save(
+        self,
+        output_dir_path: str,
+        project_name: str = "",
+        save_user_scripts: bool = True,
+        save_dev_scripts: bool = True,
+        save_datasets: bool = False,
+        save_run_info: bool = True,
+        save_running_arguments: bool = False,
+        add_explain: bool = True,
+        cancel: Optional[CancellationToken] = None,
+    ):
+        self.result.save(
+            output_dir_path=output_dir_path,
+            project_name=project_name,
+            save_user_scripts=save_user_scripts,
+            save_dev_scripts=save_dev_scripts,
+            save_datasets=save_datasets,
+            save_run_info=save_run_info,
+            save_running_arguments=save_running_arguments,
         )
-        failed_scripts = [x for x in candidate_scripts if x[1].score is None]
-
-        # sort ascending if needed
-        if self.task.adaptation_metric in macros.metric_lower_is_better:
-            succeeded_scripts.reverse()
-
-        ranked_candidate_scripts = succeeded_scripts + failed_scripts
-        best_pipeline_tuple = ranked_candidate_scripts[0]
-        if best_pipeline_tuple is None:
-            return None, ranked_candidate_scripts
-
-        best_pipeline = copy.deepcopy(best_pipeline_tuple[0])
-        if best_pipeline_tuple[1].best_params is not None:
-            best_pipeline.test = best_pipeline.test.replace(
-                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
+        if add_explain:
+            self._generator.save(
+                result=self.result,
+                output_dir_path=output_dir_path,
+                project_name=project_name,
+                cancel=cancel,
             )
-            best_pipeline.train = best_pipeline.train.replace(
-                "best_params = study.best_params", "best_params = " + str(best_pipeline_tuple[1].best_params)
-            )
-        self.best_pipeline = best_pipeline
-        self.best_pipeline_score = best_pipeline_tuple[1]
