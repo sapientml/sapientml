@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import glob
+import os
 import platform
 import subprocess
 import sys
@@ -28,7 +29,9 @@ from .util.logging import setup_logger
 logger = setup_logger()
 
 
-def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> RunningResult:
+def run(
+    file_path: str, timeout: int, cancel: Optional[CancellationToken] = None, cwd: Optional[str] = None
+) -> RunningResult:
     start_time = time.time()
 
     if platform.system() == "Windows":
@@ -42,6 +45,7 @@ def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> Ru
         f"{sys.executable} {file_path}",
         shell=True,
         executable=executable,
+        cwd=os.path.dirname(file_path),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -54,7 +58,7 @@ def run(file_path: str, timeout: int, cancel: Optional[CancellationToken]) -> Ru
             interrupted_reason = "Timeout"
             process.kill()
             break
-        if cancel is not None and cancel.isTriggered:
+        if cancel is not None and cancel.is_triggered:
             interrupted_reason = "Cancelled by user"
             process.kill()
             break
@@ -97,7 +101,7 @@ class PipelineExecutor:
         lib_path = output_dir / "lib"
         lib_path.mkdir(exist_ok=True)
 
-        eps = entry_points(group="export_modules")
+        eps = entry_points(group="sapientml.export_modules")
         for ep in eps:
             for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
                 copyfile(file, lib_path / Path(file).name)

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import warnings
+from pathlib import Path
 from typing import List, Literal, Optional, Union
 
 import numpy as np
@@ -30,9 +30,8 @@ MAX_COLUMN_NAME_LENGTH = 1000
 MAX_TIME_SPLIT_NUM = 10000
 MAX_TIME_SPLIT_INDEX = 10000
 MAX_N_MODELS = 30
-MAX_HPO_N_TRIALS = 100000
-MAX_HPO_TIMEOUT = 500000
-DEFAULT_OUTPUT_DIR = "."
+DEFAULT_OUTPUT_DIR = "./outputs"
+INITIAL_TIMEOUT = 600
 
 logger = setup_logger()
 
@@ -78,8 +77,8 @@ def _is_date_column(c):
     return ratio > 0.8
 
 
-class CancellationToken:
-    isTriggered = False
+class CancellationToken(BaseModel):
+    is_triggered: bool = False
 
 
 class Code(BaseModel):
@@ -112,7 +111,7 @@ class PipelineResult(BaseModel):
 
 class Task(BaseModel):
     target_columns: list[str]
-    task_type: Literal["classification", "regression"]
+    task_type: Optional[Literal["classification", "regression"]]
     ignore_columns: list[str]
     split_method: Literal["random", "time", "group"]
     split_seed: int
@@ -120,22 +119,13 @@ class Task(BaseModel):
     split_column_name: Optional[str]
     time_split_num: int
     time_split_index: int
-    adaptation_metric: str
-    n_models: int
-    seed_for_model: int
-    id_columns_for_prediction: list[str]
-    use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None
-    use_pos_list: Optional[list[str]] = None
-    use_word_stemming: Optional[bool] = None
-    split_stratify: Optional[bool] = None
-    is_multiclass: Optional[bool] = None
+    adaptation_metric: Optional[str]
+    is_multiclass: bool = False
+    split_stratification: Optional[bool] = None
 
     @validator(
         "target_columns",
         "ignore_columns",
-        "id_columns_for_prediction",
-        "use_word_list",
-        "use_pos_list",
     )
     def check_num_of_column_names(cls, v):
         if v is None:
@@ -144,12 +134,17 @@ class Task(BaseModel):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
+    @validator("target_columns")
+    def check_columns_is_not_empty(cls, v):
+        if v is None:
+            return v
+        if len(v) == 0:
+            raise ValueError("Target columns are empty.")
+        return v
+
     @validator(
         "target_columns",
         "ignore_columns",
-        "id_columns_for_prediction",
-        "use_word_list",
-        "use_pos_list",
     )
     def check_column_name_length(cls, v):
         if v is None:
@@ -159,7 +154,7 @@ class Task(BaseModel):
                 raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("split_seed", "seed_for_model")
+    @validator("split_seed")
     def check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
@@ -197,40 +192,14 @@ class Task(BaseModel):
             raise ValueError(f"'{v}' is invalid as a metric.")
         return v
 
-    @validator("n_models")
-    def check_n_models(cls, v):
-        if v <= 0 or MAX_N_MODELS < v:
-            raise ValueError(f"{v} is out of [1, {MAX_N_MODELS}]")
-        return v
-
 
 class Config(BaseModel):
-    use_hyperparameters: bool = False
-    impute_all: bool = True
-    hyperparameter_tuning: bool = False
-    hyperparameter_tuning_n_trials: int = 10
-    hyperparameter_tuning_timeout: int = 0
-    hyperparameter_tuning_random_state: int = 1023
-    predict_option: Literal["default", "probability"] = "default"
-    permutation_importance: bool = True
-
-    @validator("hyperparameter_tuning_n_trials")
-    def check_hyperparameter_tuning_n_trials(cls, v):
-        if v < 1 or MAX_HPO_N_TRIALS < v:
-            raise ValueError(f"{v} is out of [1, {MAX_HPO_N_TRIALS}]")
-        return v
-
-    @validator("hyperparameter_tuning_timeout")
-    def check_hyperparameter_tuning_timeout(cls, v):
-        if v < 0 or MAX_HPO_TIMEOUT < v:
-            raise ValueError(f"{v} is out of [0, {MAX_HPO_TIMEOUT}]")
-        return v
-
-    @validator("hyperparameter_tuning_random_state")
-    def check_hyperparameter_tuning_random_state(cls, v):
-        if v < 0 or MAX_SEED < v:
-            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
-        return v
+    initial_timeout: int = INITIAL_TIMEOUT
+    timeout_for_test: int = 0
+    cancel: Optional[CancellationToken] = None
+    project_name: Optional[str] = None
+    dry_run: bool = False
+    debug: bool = False
 
 
 class Dataset:
@@ -243,12 +212,13 @@ class Dataset:
         csv_delimiter: str = ",",
         save_datasets_format: Literal["csv", "pickle"] = "pickle",
         ignore_columns: Optional[List[str]] = None,
-        output_dir: str = DEFAULT_OUTPUT_DIR,
+        output_dir: Path = Path(DEFAULT_OUTPUT_DIR),
     ):
         self.ignore_columns = [] if ignore_columns is None else ignore_columns
         self.csv_encoding = csv_encoding
         self.csv_delimiter = csv_delimiter
         self.save_datasets_format = save_datasets_format
+        self.output_dir = output_dir
 
         if isinstance(training_data, str):
             self.training_dataframe = _read_file(training_data, csv_encoding, csv_delimiter)
@@ -256,10 +226,10 @@ class Dataset:
         else:
             self.training_dataframe = training_data.copy()
             if save_datasets_format == "pickle":
-                self.training_data_path = os.path.join(output_dir, "training.pkl")
+                self.training_data_path = str(self.output_dir / "training.pkl")
                 self.training_dataframe.to_pickle(self.training_data_path)
             else:
-                self.training_data_path = os.path.join(output_dir, "training.csv")
+                self.training_data_path = str(self.output_dir / "training.csv")
                 self.training_dataframe.to_csv(
                     self.training_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
                 )
@@ -275,10 +245,10 @@ class Dataset:
         elif isinstance(validation_data, pd.DataFrame):
             self.validation_dataframe = validation_data.copy()
             if save_datasets_format == "pickle":
-                self.validation_data_path = os.path.join(output_dir, "validation.pkl")
+                self.validation_data_path = str(self.output_dir / "validation.pkl")
                 self.validation_dataframe.to_pickle(self.validation_data_path)
             else:
-                self.validation_data_path = os.path.join(output_dir, "validation.csv")
+                self.validation_data_path = str(self.output_dir / "validation.csv")
                 self.validation_dataframe.to_csv(
                     self.validation_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
                 )
@@ -292,14 +262,50 @@ class Dataset:
         elif isinstance(test_data, pd.DataFrame):
             self.test_dataframe = test_data.copy()
             if save_datasets_format == "pickle":
-                self.test_data_path = os.path.join(output_dir, "test.pkl")
+                self.test_data_path = str(self.output_dir / "test.pkl")
                 self.test_dataframe.to_pickle(self.test_data_path)
             else:
-                self.test_data_path = os.path.join(output_dir, "test.csv")
+                self.test_data_path = str(self.output_dir / "test.csv")
                 self.test_dataframe.to_csv(self.test_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False)
         else:
             self.test_dataframe = None
             self.test_data_path = None
+
+    def save(self, output_dir: Optional[Union[Path, str]] = None):
+        # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
+        # We want to save dataset only when the last two ones.
+        if output_dir is None:
+            output_dir = self.output_dir
+        output_dir = Path(output_dir)
+        original_output_dir = Path(self.output_dir)
+        training_data_path = self.training_data_path
+        if Path(training_data_path).parent == original_output_dir:
+            if Path(training_data_path).suffix == ".pkl":
+                self.training_dataframe.to_pickle(output_dir / Path(training_data_path).name)
+            else:
+                self.training_dataframe.to_csv(
+                    output_dir / Path(training_data_path).name, encoding=self.csv_encoding, index=False
+                )
+        validation_data_path = self.validation_data_path
+        if (
+            validation_data_path
+            and self.validation_dataframe
+            and Path(validation_data_path).parent == original_output_dir
+        ):
+            if Path(validation_data_path).suffix == ".pkl":
+                self.validation_dataframe.to_pickle(output_dir / Path(validation_data_path).name)
+            else:
+                self.validation_dataframe.to_csv(
+                    output_dir / Path(validation_data_path).name, encoding=self.csv_encoding, index=False
+                )
+        test_data_path = self.test_data_path
+        if test_data_path and self.test_dataframe and Path(test_data_path).parent == original_output_dir:
+            if Path(test_data_path).suffix == ".pkl":
+                self.test_dataframe.to_pickle(output_dir / Path(test_data_path).name)
+            else:
+                self.test_dataframe.to_csv(
+                    output_dir / Path(test_data_path).name, encoding=self.csv_encoding, index=False
+                )
 
     def check_dataframes(
         self,

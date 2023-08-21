@@ -18,29 +18,23 @@ Please download [housing-prices.csv](https://github.com/sapientml/sapientml/file
 
 ```py
 import pandas as pd
-
-df = pd.read_csv("housing-prices.csv")
-
 from sapientml import SapientML
+from sklearn.model_selection import train_test_split
 
-sml = SapientML()
+train_data = pd.read_csv("housing-prices.csv")
+train_data, test_data = train_test_split(train_data)
+test_data.drop(["SalePrice"], axis=1)
 
-ret = sml.generate_code(
-    training_data=df,
-    task_type="regression",
-    target_columns=["SalePrice"],
-    ignore_columns=["Id"],
+sml = SapientML(
+    ["SalePrice"],
     adaptation_metric="RMSE",
-    hyperparameter_tuning=False,
-    id_columns_for_prediction=["Id"]
+    id_columns_for_prediction=["Id"],
 )
-ret.save(
-    "outputs",
-    save_dev_scripts=True,
-    save_user_scripts=True,
-    save_datasets=True,
-    save_running_arguments=True,
-)
+
+sml.fit(train_data, ignore_columns=["Id"])
+pred = sml.predict(test_data)
+
+print(pred)
 ```
 
 ### Run Generated Code

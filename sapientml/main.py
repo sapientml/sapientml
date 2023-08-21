@@ -19,19 +19,19 @@ from pathlib import Path
 from typing import Literal, Optional, Union
 
 import pandas as pd
+from sapientml.suggestion import SapientMLSuggestion
 
-from . import macros
-from .executor import PipelineExecutor
-from .params import CancellationToken, Config, Dataset, Task
-from .result import SapientMLGeneratorResult
+from .executor import run
+from .macros import Metric
+from .params import Dataset, Task
 from .util.logging import setup_logger
-
-INITIAL_TIMEOUT = 600
 
 logger = setup_logger()
 
+DEFAULT_OUTPUT_DIR = "./outputs"
 
-def check_stratification(
+
+def _check_stratification(
     full_dataset,
     target_columns,
     task_type,
@@ -75,26 +75,8 @@ def check_stratification(
 class SapientML:
     def __init__(
         self,
-    ):
-        pass
-
-    def fit():
-        pass
-
-    def predict():
-        pass
-
-    def generate_code(
-        self,
         # Dataset
         target_columns: list[str],
-        training_data: Union[pd.DataFrame, str],
-        validation_data: Optional[Union[pd.DataFrame, str]] = None,
-        test_data: Optional[Union[pd.DataFrame, str]] = None,
-        save_datasets_format: Literal["csv", "pickle"] = "pickle",
-        csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
-        csv_delimiter: str = ",",
-        ignore_columns: Optional[list[str]] = None,
         # Task
         task_type: Optional[Literal["classification", "regression"]] = None,
         adaptation_metric: Optional[str] = None,
@@ -105,29 +87,9 @@ class SapientML:
         time_split_num: int = 5,
         time_split_index: int = 4,
         split_stratification: Optional[bool] = None,
-        # SharedConfig
-        initial_timeout: Optional[int] = None,
-        timeout_for_test: int = 0,
-        cancel: Optional[CancellationToken] = None,
-        # Config for generators
-        # 1. rule_based
-        use_word_list: Optional[Union[list[str], dict[str, list[str]]]] = None,
-        use_pos_list: Optional[list[str]] = ["名詞", "動詞", "助動詞", "形容詞", "副詞"],
-        use_word_stemming: bool = True,
-        # 2. prediction_based
-        # 2.1 model
-        n_models: int = 3,
-        model_seed: int = 551,
-        use_hyperparameters: bool = False,
-        hyperparameter_tuning: bool = False,
-        hyperparameter_tuning_n_trials: int = 10,
-        hyperparameter_tuning_timeout: Optional[int] = None,
-        hyperparameter_tuning_random_state: int = 1021,
-        # 2.2 postprocess
-        predict_option: Literal["default", "probability"] = "default",
-        permutation_importance: bool = True,
-        id_columns_for_prediction: Optional[list[str]] = None,
-    ) -> SapientMLGeneratorResult:
+        model_type: str = "sapientml",
+        **kwargs,
+    ):
         """
         Generate ML scripts for input data.
 
@@ -238,221 +200,142 @@ class SapientML:
         SapientMLGeneratorResult
             SapientMLGeneratorResult.save() must be called to save the generated scripts.
         """
-        if task_type not in ["classification", "regression"]:
-            raise ValueError(f"task_type '{task_type}' is invalid.")
 
-        if len(target_columns) == 0:
-            raise ValueError("Target columns are empty.")
+        self.task = Task(
+            target_columns=target_columns,
+            task_type=task_type,
+            ignore_columns=[],
+            split_method=split_method,
+            split_seed=split_seed,
+            split_train_size=split_train_size,
+            split_column_name=split_column_name,
+            time_split_num=time_split_num,
+            time_split_index=time_split_index,
+            adaptation_metric=adaptation_metric,
+            split_stratification=split_stratification,
+        )
+        eps_generator = entry_points(group="sapientml.pipeline_generator")
+        eps_config = entry_points(group="sapientml.config")
+        if eps_generator[model_type] and eps_config[model_type]:
+            self._Generator = eps_generator[model_type].load()
+            self._Config = eps_config[model_type].load()
+        else:
+            raise ValueError(f"Model '{model_type}' is invalid.")
 
+        self.generator = self._Generator(**kwargs)
+        self.config = self.generator.config
+        self.config.postinit()
+
+    def fit(
+        self,
+        training_data: Union[pd.DataFrame, str],
+        validation_data: Optional[Union[pd.DataFrame, str]] = None,
+        save_datasets_format: Literal["csv", "pickle"] = "pickle",
+        csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
+        csv_delimiter: str = ",",
+        ignore_columns: Optional[list[str]] = None,
+        output_dir: str = DEFAULT_OUTPUT_DIR,
+        dry_run: bool = False,
+    ):
         if ignore_columns is None:
             ignore_columns = []
 
-        if id_columns_for_prediction is None:
-            id_columns_for_prediction = []
-
-        if initial_timeout is None:
-            if hyperparameter_tuning:
-                initial_timeout = 0
-            else:
-                initial_timeout = INITIAL_TIMEOUT
-            if hyperparameter_tuning_timeout is None:
-                hyperparameter_tuning_timeout = INITIAL_TIMEOUT
-        elif hyperparameter_tuning_timeout is None:
-            if hyperparameter_tuning:
-                hyperparameter_tuning_timeout = initial_timeout
-            else:
-                hyperparameter_tuning_timeout = INITIAL_TIMEOUT
-
-        if use_pos_list is None:
-            use_pos_list = []
-
-        if adaptation_metric is None:
-            if task_type == "regression":
-                logger.warning("Metric is not specified. Use 'r2' by default.")
-            else:
-                logger.warning("Metric is not specified. Use 'f1' by default.")
-            adaptation_metric = macros.Metric.get_default_value(task_type)
-
         logger.info("Loading dataset...")
 
-        with tempfile.TemporaryDirectory() as tmpdir_path_str:
-            tmpdir = Path(tmpdir_path_str).absolute()
+        with tempfile.TemporaryDirectory() as temp_dir_path_str:
+            tmpdir = Path(temp_dir_path_str).absolute()
             tmpdir.mkdir(exist_ok=True)
-
-            dataset = Dataset(
+            self.dataset = Dataset(
                 training_data=training_data,
                 validation_data=validation_data,
-                test_data=test_data,
                 csv_encoding=csv_encoding,
                 csv_delimiter=csv_delimiter,
                 save_datasets_format=save_datasets_format,
                 ignore_columns=ignore_columns,
-                output_dir=str(tmpdir),
+                output_dir=tmpdir,
             )
-            dataset.check_dataframes(target_columns)
+            self.dataset.check_dataframes(self.task.target_columns)
 
-            training_dataframe, validation_dataframe, test_dataframe = dataset.get_dataframes()
+            if self.task.task_type is None:
+                self.task.task_type = SapientMLSuggestion(
+                    self.task.target_columns, self.dataset.training_dataframe
+                ).suggest_task()
+
+            if self.task.adaptation_metric is None and self.task.task_type:
+                if self.task.task_type == "regression":
+                    logger.warning("Metric is not specified. Use 'r2' by default.")
+                else:
+                    logger.warning("Metric is not specified. Use 'f1' by default.")
+                self.task.adaptation_metric = Metric.get_default_value(self.task.task_type)
+
+            self.task.adaptation_metric = Metric.get(self.task.adaptation_metric)
+
+            if not Metric.metric_match_task_type(self.task.adaptation_metric, self.task.task_type):
+                logger.warning(f"{self.task.adaptation_metric} is not a metric for {self.task.task_type}")
+
+            if self.task.task_type == "classification":
+                is_multioutput = False
+                if len(self.task.target_columns) > 1:
+                    is_multioutput = True
+                for column in self.task.target_columns:
+                    if isinstance(training_data, pd.DataFrame) and len(training_data[column].unique()) > 2:
+                        self.task.is_multiclass = True
+
+                if is_multioutput:
+                    if self.task.is_multiclass and not Metric.metric_support_multiclass_multioutput(
+                        self.task.adaptation_metric
+                    ):
+                        logger.warning(
+                            f"{self.task.adaptation_metric} does not support Multiclass-Multioutput classification. Execution of candidate script raises an exception."
+                        )
+                    elif not Metric.metric_support_multioutput(self.task.adaptation_metric):
+                        logger.warning(
+                            f"{self.task.adaptation_metric} does not support Multioutput (Multilabel) classification. Execution of candidate script raises an exception."
+                        )
+
+            training_dataframe, validation_dataframe, test_dataframe = self.dataset.get_dataframes()
             stratify_threshold = 3
             if validation_dataframe is not None:
                 stratify_threshold -= 1
             if test_dataframe is not None:
                 stratify_threshold -= 1
-            split_stratify = False
-            if len(target_columns) == 1:
-                split_stratify = check_stratification(
+            if len(self.task.target_columns) == 1:
+                self.task.split_stratification = _check_stratification(
                     training_dataframe,
-                    target_columns,
-                    task_type,
-                    adaptation_metric,
-                    split_stratification,
+                    self.task.target_columns,
+                    self.task.task_type,
+                    self.task.adaptation_metric,
+                    self.task.split_stratification,
                     stratify_threshold,
                 )
-            elif task_type == "classification" and split_stratification:
+            elif self.task.task_type == "classification" and self.task.split_stratification:
                 raise ValueError("Stratification for multiple target columns is not supported.")
 
-            # Generate the meta-features
-            logger.info("Generating meta features ...")
-            task = Task(
-                target_columns=target_columns,
-                task_type=task_type,
-                ignore_columns=ignore_columns,
-                split_method=split_method,
-                split_seed=split_seed,
-                split_train_size=split_train_size,
-                split_column_name=split_column_name,
-                time_split_num=time_split_num,
-                time_split_index=time_split_index,
-                adaptation_metric=adaptation_metric,
-                n_models=n_models,
-                seed_for_model=model_seed,
-                id_columns_for_prediction=id_columns_for_prediction,
-                use_word_list=use_word_list,
-                use_pos_list=use_pos_list,
-                use_word_stemming=use_word_stemming,
-                split_stratify=split_stratify,
-            )
+            self.generator.generate_pipeline(self.dataset, self.task)
 
-            adaptation_metric = macros.Metric.get(adaptation_metric)
+            self.output_dir = Path(output_dir).resolve()
+            self.output_dir.mkdir(parents=True, exist_ok=True)
 
-            if not macros.Metric.metric_match_task_type(adaptation_metric, task_type):
-                logger.warning(f"{adaptation_metric} is not a metric for {task_type}")
+            if dry_run:
+                return
 
-            if task_type == "classification":
-                is_multiclass = False
-                is_multioutput = False
-                if len(target_columns) > 1:
-                    is_multioutput = True
-                for column in target_columns:
-                    if len(training_data[column].unique()) > 2:
-                        is_multiclass = True
-                task.is_multiclass = is_multiclass
+            self.dataset.save(self.output_dir)
+            self.generator.save(self.output_dir)
 
-                if is_multioutput:
-                    if is_multiclass and not macros.Metric.metric_support_multiclass_multioutput(adaptation_metric):
-                        logger.warning(
-                            f"{adaptation_metric} does not support Multiclass-Multioutput classification. Execution of candidate script raises an exception."
-                        )
-                    elif not macros.Metric.metric_support_multioutput(adaptation_metric):
-                        logger.warning(
-                            f"{adaptation_metric} does not support Multioutput (Multilabel) classification. Execution of candidate script raises an exception."
-                        )
-
-            config_instance = Config(
-                use_hyperparameters=use_hyperparameters,
-                impute_all=True,
-                hyperparameter_tuning=hyperparameter_tuning,
-                hyperparameter_tuning_n_trials=hyperparameter_tuning_n_trials,
-                hyperparameter_tuning_timeout=hyperparameter_tuning_timeout,
-                hyperparameter_tuning_random_state=hyperparameter_tuning_random_state,
-                predict_option=predict_option,
-                permutation_importance=permutation_importance,
-            )
-
-            self.dataset = dataset
-            self.task = task
-            self.config = config_instance
-            eps = entry_points(group="pipeline_generator")
-            self._generator = eps["sapientml_core"].load()(self.config)
-            pipelines = self._generator.generate_pipeline(dataset, task)
-
-            logger.info("Executing generated pipelines ...")
-            executor = PipelineExecutor()
-            pipeline_results = executor.execute(
-                pipelines,
-                initial_timeout,
-                tmpdir,
-                cancel,
-            )
-
-            lower_is_better = self.task.adaptation_metric in macros.metric_lower_is_better
-            self._generator.evaluate(pipeline_results, lower_is_better)
-            logger.info("Done.")
-
-            final_script, candidate_scripts = self._generator.get_result()
-
-            self.result = SapientMLGeneratorResult(
-                final_script=final_script,
-                candidate_scripts=candidate_scripts,
-                training_data=training_data,
-                validation_data=validation_data,
-                test_data=test_data,
-                training_data_path=dataset.training_data_path,
-                validation_data_path=dataset.validation_data_path,
-                test_data_path=dataset.test_data_path,
-                csv_encoding=csv_encoding,
-                tmpdir_path=tmpdir,
-                target_columns=target_columns,
-                task_type=task_type,
-                ignore_columns=dataset.ignore_columns,
-                split_method=split_method,
-                split_seed=split_seed,
-                split_train_size=split_train_size,
-                split_column_name=split_column_name,
-                time_split_num=time_split_num,
-                time_split_index=time_split_index,
-                n_models=n_models,
-                seed_for_model=model_seed,
-                adaptation_metric=adaptation_metric,
-                csv_delimiter=csv_delimiter,
-                initial_timeout=initial_timeout,
-                timeout_for_test=timeout_for_test,
-                use_hyperparameters=use_hyperparameters,
-                predict_option=predict_option,
-                hyperparameter_tuning=hyperparameter_tuning,
-                hyperparameter_tuning_n_trials=hyperparameter_tuning_n_trials,
-                hyperparameter_tuning_timeout=hyperparameter_tuning_timeout,
-                hyperparameter_tuning_random_state=hyperparameter_tuning_random_state,
-                id_columns_for_prediction=id_columns_for_prediction,
-                split_stratify=split_stratify,
-            )
-
-            return self.result
-
-    def save(
+    def predict(
         self,
-        output_dir_path: str,
-        project_name: str = "",
-        save_user_scripts: bool = True,
-        save_dev_scripts: bool = True,
-        save_datasets: bool = False,
-        save_run_info: bool = True,
-        save_running_arguments: bool = False,
-        add_explain: bool = True,
-        cancel: Optional[CancellationToken] = None,
+        test_data: Union[pd.DataFrame, str],
     ):
-        self.result.save(
-            output_dir_path=output_dir_path,
-            project_name=project_name,
-            save_user_scripts=save_user_scripts,
-            save_dev_scripts=save_dev_scripts,
-            save_datasets=save_datasets,
-            save_run_info=save_run_info,
-            save_running_arguments=save_running_arguments,
-        )
-        if add_explain:
-            self._generator.save(
-                result=self.result,
-                output_dir_path=output_dir_path,
-                project_name=project_name,
-                cancel=cancel,
-            )
+        logger.info("Building model by generated pipeline...")
+        run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+
+        if isinstance(test_data, pd.DataFrame):
+            test_data.to_pickle(self.output_dir / "test.pkl")
+        else:
+            return
+
+        logger.info("Predicting by built model...")
+        result = run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
+
+        result = pd.read_csv(self.output_dir / "prediction_result.csv")
+        return result
