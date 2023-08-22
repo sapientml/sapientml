@@ -99,25 +99,11 @@ class SapientML:
             Names of target columns
         task_type: 'classification' or 'regression'
             Specify classification or regression.
-        training_data: pandas.DataFrame or str
-            Training dataframe.
-            When str, this is regarded as a file path.
-        validation_data: pandas.DataFrame, str or None
-            Validation dataframe.
-            When str, this is regarded as file paths.
-            When None, validation data is extracted from training data by split.
-        test_data: pandas.DataFrame, str, or None
-            Test dataframes.
-            When str, they are regarded as file paths.
-            When None, test data is extracted from training data by split.
-        save_datasets_format: 'csv' or 'pickle'
-            Data format when the input dataframes are written to files.
-            Ignored when all inputs are specified as file path.
-        csv_encoding: 'UTF-8' or 'SJIS'
-            Encoding method when csv files are involved.
-            Ignored when only pickle files are involved.
-        ignore_columns: list[str]
-            Column names which must not be used and must be dropped.
+        adaptation_metric: str
+            Metric for evaluation.
+            Classification: 'f1', 'auc', 'ROC_AUC', 'accuracy', 'Gini', 'LogLoss',
+            'MCC'(Matthews correlation coefficient), 'QWK'(Quadratic weighted kappa).
+            Regression: 'r2', 'RMSLE', 'RMSE', 'MAE'.
         split_method: 'random', 'time', or 'group'
             Method of train-test split.
             'random' uses random split.
@@ -143,62 +129,9 @@ class SapientML:
         time_split_index: int
             The index of the split from TimeSeriesSplit.
             Valid only when split_method='time'.
-        n_models: int
-            Number of output models to file.
-        model_seed: int
-            Random seed for models such as RandomForestClassifier.
-        adaptation_metric: str
-            Metric for evaluation.
-            Classification: 'f1', 'auc', 'ROC_AUC', 'accuracy', 'Gini', 'LogLoss',
-            'MCC'(Matthews correlation coefficient), 'QWK'(Quadratic weighted kappa).
-            Regression: 'r2', 'RMSLE', 'RMSE', 'MAE'.
-        csv_delimiter: str
-            Delimiter to read csv files
-        initial_timeout: int
-            Timelimit to execute each generated script.
-        timeout_for_test: int
-            Timelimit to execute test script (final_script) and Visualization.
-        eda: bool
-        visualization: bool
-            On/Off of EDA and visualization.
-            Ignored when add_explain=False in the save() function.
-        permutation_importance: bool
-            On/Off of permutation_importance.
-            Ignored when add_explain=True in the save() function.
-        use_hyperparameters: bool
-            Specify whether or not hyperparameters are used.
-        predict_option: 'default' or 'probability'
-            Specify predict method (default: predict(), probability: predict_proba().)
-        hyperparameter_tuning: bool
-            On/Off of hyperparameter tuning.
-        hyperparameter_tuning_n_trials: int
-            The number of trials of hyperparameter tuning.
-        hyperparameter_tuning_timeout: int
-            Time limit for hyperparameter tuning in each generated script.
-        hyperparameter_tuning_random_state: int
-            Random seed for hyperparameter tuning.
-        id_columns_for_prediction: list[str]
-            Specify non-target column names for prediction.
-        cancel: CancellationToken
-            Object to interrupt evaluations.
-        use_word_list: list[str] or dict[str]
-            List of words to be used as features when generating explanatory variables from text.
-            If dict type is specified, key must be a column name and value must be a list of words.
-        use_pos_list: list[str]
-            List of parts-of-speech to be used during text analysis.
-            This variable is used for japanese texts analysis.
-            Select the part of speech below.
-            "名詞", "動詞", "形容詞", "形容動詞", "副詞", "接頭詞", "接続詞", "助詞", "助動詞", "感動詞", "連体詞", "記号", "フィラー"
-        use_stemming: bool
-            Specify whether or not word stemming is used.
-            This variable is used for japanese texts analysis.
         split_stratification: bool
             To perform stratification in train-test split.
 
-        Returns
-        -------
-        SapientMLGeneratorResult
-            SapientMLGeneratorResult.save() must be called to save the generated scripts.
         """
 
         self.task = Task(
@@ -230,13 +163,48 @@ class SapientML:
         self,
         training_data: Union[pd.DataFrame, str],
         validation_data: Optional[Union[pd.DataFrame, str]] = None,
+        test_data: Optional[Union[pd.DataFrame, str]] = None,
         save_datasets_format: Literal["csv", "pickle"] = "pickle",
         csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
-        csv_delimiter: str = ",",
         ignore_columns: Optional[list[str]] = None,
         output_dir: str = DEFAULT_OUTPUT_DIR,
-        dry_run: bool = False,
+        codegen_only: bool = False,
     ):
+        """
+        Generate ML scripts for input data.
+
+        Parameters
+        ----------
+        training_data: pandas.DataFrame or str
+            Training dataframe.
+            When str, this is regarded as a file path.
+        validation_data: pandas.DataFrame, str or None
+            Validation dataframe.
+            When str, this is regarded as file paths.
+            When None, validation data is extracted from training data by split.
+        test_data: pandas.DataFrame, str, or None
+            Test dataframes.
+            When str, they are regarded as file paths.
+            When None, test data is extracted from training data by split.
+        save_datasets_format: 'csv' or 'pickle'
+            Data format when the input dataframes are written to files.
+            Ignored when all inputs are specified as file path.
+        csv_encoding: 'UTF-8' or 'SJIS'
+            Encoding method when csv files are involved.
+            Ignored when only pickle files are involved.
+        csv_delimiter: str
+            Delimiter to read csv files
+        ignore_columns: list[str]
+            Column names which must not be used and must be dropped.
+        output_dir: str
+            Output dir
+        codegen_only: bool
+            Generated code is not saved if True
+
+        Returns
+        -------
+        """
+
         if ignore_columns is None:
             ignore_columns = []
 
@@ -248,8 +216,8 @@ class SapientML:
             self.dataset = Dataset(
                 training_data=training_data,
                 validation_data=validation_data,
+                test_data=test_data,
                 csv_encoding=csv_encoding,
-                csv_delimiter=csv_delimiter,
                 save_datasets_format=save_datasets_format,
                 ignore_columns=ignore_columns,
                 output_dir=tmpdir,
@@ -316,21 +284,25 @@ class SapientML:
             self.output_dir = Path(output_dir).resolve()
             self.output_dir.mkdir(parents=True, exist_ok=True)
 
-            if dry_run:
-                return
-
             self.dataset.save(self.output_dir)
             self.generator.save(self.output_dir)
+
+            if codegen_only:
+                return
+
+            logger.info("Building model by generated pipeline...")
+            run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+            logger.info("Done.")
 
     def predict(
         self,
         test_data: Union[pd.DataFrame, str],
     ):
-        logger.info("Building model by generated pipeline...")
-        run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
-
         if isinstance(test_data, pd.DataFrame):
-            test_data.to_pickle(self.output_dir / "test.pkl")
+            if self.dataset.save_datasets_format == "pickle":
+                test_data.to_pickle(self.output_dir / "test.pkl")
+            else:
+                test_data.to_csv(self.output_dir / "test.pkl", encoding=self.dataset.csv_encoding, index=False)
         else:
             return
 
@@ -339,3 +311,6 @@ class SapientML:
 
         result = pd.read_csv(self.output_dir / "prediction_result.csv")
         return result
+
+    def get_config(self):
+        return self.config

@@ -49,99 +49,89 @@ def create_missing_dataframe():
 
 
 def test_sapientml_works(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
     )
-
-    assert ret.final_script[0] and ret.final_script[1].score
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 def test_sapientml_works_with_two_target(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number", "target_number_large_scale"],
+    cls_ = SapientML(
+        ["target_number", "target_number_large_scale"],
         task_type="regression",
         initial_timeout=60,
     )
-
-    assert ret.final_script[0] and ret.final_script[1].score
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 def test_sapientml_works_in_classification(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_category_binary_num"],
+    cls_ = SapientML(
+        ["target_category_binary_num"],
         task_type="classification",
     )
-
-    assert ret.final_script[0] and ret.final_script[1].score
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 def test_sapientml_with_hpo_works(testdata_df_light, caplog):
     testdata_df_light = testdata_df_light[["target_number", "explanatory_multi_category_nonnum"]]
     logging.disable(logging.NOTSET)
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         n_models=14,
         hyperparameter_tuning=True,
         hyperparameter_tuning_n_trials=1,
         hyperparameter_tuning_timeout=120,
     )
-    assert ret.final_script[0] and "Error" not in caplog.text
+    cls_.fit(
+        testdata_df_light,
+    )
+    assert "Error" not in caplog.text
     caplog.clear()
     logging.disable(logging.FATAL)
 
 
 def test_raise_error_if_undefined_tasktype_is_specified(testdata_df_light):
-    cls_ = SapientML()
     with pytest.raises(ValueError):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
+        SapientML(
+            ["target_number"],
             task_type="undefined_task_type",  # type: ignore
         )
 
 
 def test_raise_error_if_undefined_metric_is_specified(testdata_df_light):
-    cls_ = SapientML()
     with pytest.raises(ValueError):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
+        SapientML(
+            ["target_number"],
             task_type="regression",
             adaptation_metric="undefined_metric",
         )
 
 
 def test_sapientml_works_with_group_split(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         split_method="group",
         split_column_name="explanatory_groupId",
         task_type="regression",
     )
-    assert ret.final_script[0] and ret.final_script[1].score
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 def test_sapientml_works_with_time_split(testdata_df_light):
     # Check if the class works with no exceptions
     # FIXME This testcase has multiple targets
-    cls_ = SapientML()
-
-    # The configuration is not correct, so the script has an error
-    cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         split_method="time",
         split_column_name="explanatory_datetime",
@@ -149,28 +139,39 @@ def test_sapientml_works_with_time_split(testdata_df_light):
         time_split_index=0,
     )
 
+    # The configuration is not correct, so the script has an error
+    cls_.fit(
+        testdata_df_light,
+    )
+
 
 def test_sapientml_generate_code_returns_candidates_even_if_all_the_candidates_failed_to_run(testdata_df_light):
-    cls_ = SapientML()
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        split_method="time",
+        split_column_name="explanatory_datetime",
+        time_split_num=4,
+        time_split_index=0,
+    )
     with mock.patch("subprocess.Popen") as process:
         attrs = {"return_value.communicate.return_value": (b"", b"Error!"), "return_value.returncode": 1}
         process.configure_mock(**attrs)
-
-        ret = cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
-            task_type="regression",
-            split_method="time",
-            split_column_name="explanatory_datetime",
-            time_split_num=4,
-            time_split_index=0,
-        )
-
-    assert ret.candidate_scripts and ret.final_script[1].score is None
+        with pytest.raises(RuntimeError):
+            cls_.fit(
+                testdata_df_light,
+            )
 
 
 def test_sapientml_generate_code_returns_top_script_if_any_one_script_ran_successfully(testdata_df_light):
-    cls_ = SapientML()
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        split_method="time",
+        split_column_name="explanatory_datetime",
+        time_split_num=4,
+        time_split_index=0,
+    )
     with mock.patch("subprocess.Popen") as process:
         side_effects = [
             mock.Mock(communicate=mock.Mock(return_value=x[0]), returncode=x[1])
@@ -198,26 +199,18 @@ def test_sapientml_generate_code_returns_top_script_if_any_one_script_ran_succes
 
         process.side_effect = _side_effect
 
-        ret = cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
-            task_type="regression",
-            split_method="time",
-            split_column_name="explanatory_datetime",
-            time_split_num=4,
-            time_split_index=0,
+        cls_.fit(
+            testdata_df_light,
         )
-
-    assert ret.final_script[0] and ret.final_script[1].score
 
 
 def test_sapientml_set_logger_handler_only_once():
     logger = setup_logger()
     assert len(logger.handlers) == 1
-    _ = SapientML()
+    _ = SapientML([""])
     logger = setup_logger()
     assert len(logger.handlers) == 1
-    _ = SapientML()
+    _ = SapientML([""])
     assert len(logger.handlers) == 1
 
 
@@ -226,73 +219,77 @@ def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
 
     testdata_df_light.loc[[1, 4, 7, 9, 11, 16, 19, 20], "target_number"] = np.inf
     with pytest.raises(Exception):
-        cls_ = SapientML()
-
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
+        cls_ = SapientML(
+            ["target_number"],
             task_type="regression",
+        )
+
+        cls_.fit(
+            testdata_df_light,
         )
 
 
 def test_sapientml_adaptation_metric_is_None_regression(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
     )
-    assert ret.adaptation_metric == "r2"
+    cls_.fit(
+        testdata_df_light,
+    )
+    assert cls_.task.adaptation_metric == "r2"
 
 
 def test_sapientml_adaptation_metric_is_None_classification(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_category_binary_num"],
+    cls_ = SapientML(
+        ["target_category_binary_num"],
         task_type="classification",
     )
-    assert ret.adaptation_metric == "f1"
+    cls_.fit(
+        testdata_df_light,
+    )
+    assert cls_.task.adaptation_metric == "f1"
 
 
 def test_sapientml_works_with_timeCol_incorrect_value(testdata_df_light):
     testdata_df_light_str = testdata_df_light.copy()
     testdata_df_light_str["explanatory_datetime"] = testdata_df_light_str["explanatory_datetime"].astype(str)
     testdata_df_light_str.loc[[2, 4, 6, 8, 10], "explanatory_datetime"] = " "
-    cls_ = SapientML()
-
-    ret1 = cls_.generate_code(
-        training_data=testdata_df_light_str,
-        target_columns=["target_number"],
+    cls1_ = SapientML(
+        ["target_number"],
         task_type="regression",
     )
-    assert ret1.final_script and ret1.final_script[1].score
+
+    cls1_.fit(
+        testdata_df_light_str,
+    )
 
     testdata_df_light_date = testdata_df_light.copy()
     testdata_df_light_date["explanatory_datetime"] = pd.to_datetime(testdata_df_light_date["explanatory_datetime"])
     assert pd.api.types.is_datetime64_any_dtype(testdata_df_light_date["explanatory_datetime"])
 
     testdata_df_light_date.loc[[2, 4, 6, 8, 10], "explanatory_datetime"] = " "
-    cls_ = SapientML()
-
-    ret2 = cls_.generate_code(
-        training_data=testdata_df_light_date,
-        target_columns=["target_number"],
+    cls2_ = SapientML(
+        ["target_number"],
         task_type="regression",
     )
-    assert ret2.final_script and ret2.final_script[1].score
-    assert ret1.final_script[1].score == ret2.final_script[1].score
+
+    cls2_.fit(
+        testdata_df_light_date,
+    )
+
+    assert cls1_.generator._best_pipeline_score == cls2_.generator._best_pipeline_score
 
 
 def test_sapientml_works_with_ignored_mixed_type_column(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
+    cls_ = SapientML(
+        ["target_category_binary_num"],
         ignore_columns=["explanatory_mixed_type"],
-        target_columns=["target_category_binary_num"],
         task_type="classification",
     )
-    assert ret.final_script[0] and ret.final_script[1].score
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 @pytest.mark.parametrize(
@@ -305,15 +302,16 @@ def test_sapientml_works_with_ignored_mixed_type_column(testdata_df_light):
 def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, use_word_stemming):
     testdata_df.loc[1, "explanatory_text_japanese"] = 1
 
-    cls_ = SapientML()
-    ret1 = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         use_pos_list=use_pos_list,
         use_word_stemming=use_word_stemming,
     )
-    assert "# HANDLE JAPANESE TEXT" in ret1.final_script[0].test
+    cls_.fit(
+        testdata_df,
+    )
+    assert "# HANDLE JAPANESE TEXT" in cls_.generator._best_pipeline.test
 
 
 @pytest.mark.parametrize(
@@ -332,14 +330,17 @@ def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, us
     ],
 )
 def test_sapientml_works_with_specified_word_ja(testdata_df, use_word_list, expected_string):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
+    cls_.fit(
+        testdata_df,
+    )
+    assert (expected_string in cls_.generator._best_pipeline.test) and (
+        expected_string in cls_.generator._best_pipeline.train
+    )
 
 
 @pytest.mark.parametrize(
@@ -354,163 +355,139 @@ def test_sapientml_works_with_specified_word_ja(testdata_df, use_word_list, expe
     ],
 )
 def test_sapientml_works_with_specified_word_en(testdata_df, use_word_list, expected_string):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         use_word_list=use_word_list,
     )
-    assert (expected_string in ret.final_script[0].test) and (expected_string in ret.final_script[0].train)
+    cls_.fit(
+        testdata_df,
+    )
+    assert (expected_string in cls_.generator._best_pipeline.test) and (
+        expected_string in cls_.generator._best_pipeline.train
+    )
 
 
 @pytest.mark.parametrize("exp_col", ["explanatory_json", "explanatory_list"])
 def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
     logging.disable(logging.NOTSET)
     testdata_df = testdata_df[["target_category_multi_num", exp_col]]
-    cls_ = SapientML()
-    ret1 = cls_.generate_code(
-        training_data=testdata_df,
-        target_columns=["target_category_multi_num"],
+    cls_ = SapientML(
+        ["target_category_multi_num"],
         task_type="classification",
     )
-    ret1.save(
-        "./tests/fixtures/outputs",
-        save_dev_scripts=True,
-        save_user_scripts=True,
-        save_datasets=True,
-        save_running_arguments=True,
+    cls_.fit(
+        testdata_df,
     )
-    assert ret1.final_script and ret1.final_script[1].score and "Error" not in caplog.text
+    assert "Error" not in caplog.text
     caplog.clear()
 
     train_df = testdata_df[:200].reset_index(drop=True)
     valid_df = testdata_df[200:250].reset_index(drop=True)
     test_df = testdata_df[250:].reset_index(drop=True)
-    cls_ = SapientML()
-    ret2 = cls_.generate_code(
-        training_data=train_df,
-        validation_data=valid_df,
-        test_data=test_df,
-        target_columns=["target_category_multi_num"],
+    cls_ = SapientML(
+        ["target_category_multi_num"],
         task_type="classification",
     )
-    ret2.save(
-        "./tests/fixtures/outputs",
-        save_dev_scripts=True,
-        save_user_scripts=True,
-        save_datasets=True,
-        save_running_arguments=True,
+    cls_.fit(
+        train_df,
+        validation_data=valid_df,
+        test_data=test_df,
     )
-    assert ret2.final_script and ret1.final_script[1].score and "Error" not in caplog.text
+    assert "Error" not in caplog.text
     caplog.clear()
     logging.disable(logging.FATAL)
 
 
-def test_raise_error_if_target_columns_are_missing_for_regression(testdata_df_light):
-    cls_ = SapientML()
+def test_raise_error_if_target_columns_are_missing_for_regression():
     with pytest.raises(ValueError):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=[],
+        SapientML(
+            [],
             task_type="regression",
         )
 
 
-def test_raise_error_if_target_columns_are_missing_for_classification(testdata_df_light):
-    cls_ = SapientML()
+def test_raise_error_if_target_columns_are_missing_for_classification():
     with pytest.raises(ValueError):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=[],
+        SapientML(
+            [],
             task_type="classification",
         )
 
 
 def test_raise_error_if_target_columns_are_different_for_regression(testdata_df_light):
-    cls_ = SapientML()
+    cls_ = SapientML(
+        ["s1"],
+        task_type="regression",
+    )
     with pytest.raises(Exception):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["s1"],
-            task_type="regression",
+        cls_.fit(
+            testdata_df_light,
         )
 
 
 def test_raise_error_if_target_columns_are_different_for_classification(testdata_df_light):
-    cls_ = SapientML()
+    cls_ = SapientML(
+        ["s1"],
+        task_type="classification",
+    )
     with pytest.raises(Exception):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["s1"],
-            task_type="classification",
+        cls_.fit(
+            testdata_df_light,
         )
 
 
 def test_raise_error_if_columns_name_length_is_above_limit(testdata_df_light):
     testdata_df_light.rename(columns={"explanatory_groupId": "ID" * 1000}, inplace=True)
     with pytest.raises(Exception):
-        cls_ = SapientML()
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
+        cls_ = SapientML(
+            ["target_number"],
             task_type="regression",
+        )
+        cls_.fit(
+            testdata_df_light,
         )
 
 
 def test_raise_error_if_target_columns_are_multiple_with_stratification_true(testdata_df_light):
-    cls_ = SapientML()
+    cls_ = SapientML(
+        ["target_category_binary_nonnum", "target_category_multi_nonnum"],
+        task_type="classification",
+        split_stratification=True,
+    )
     with pytest.raises(Exception):
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_category_binary_nonnum", "target_category_multi_nonnum"],
-            task_type="classification",
-            split_stratification=True,
+        cls_.fit(
+            testdata_df_light,
         )
 
 
 def test_sapientml_raise_error_if_target_has_nan(testdata_df_light):
     with pytest.raises(Exception):
-        cls_ = SapientML()
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number_has_nan"],
+        cls_ = SapientML(
+            ["target_number_has_nan"],
             task_type="regression",
         )
-
-
-def test_sapientml_raise_error_if_number_models_are_zero(testdata_df_light):
-    cls_ = SapientML()
-    with pytest.raises(Exception):
-        cls_.generate_code(
-            training_data=testdata_df_light, target_columns=["target_number"], task_type="regression", n_models=0
+        cls_.fit(
+            testdata_df_light,
         )
+
+
+def test_sapientml_raise_error_if_number_models_are_zero():
+    with pytest.raises(Exception):
+        SapientML(["target_number"], task_type="regression", n_models=0)
 
 
 def test_sapientml_works_with_hyperparameter_tuning_true(testdata_df_light):
-    cls_ = SapientML()
-
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         hyperparameter_tuning=True,
         hyperparameter_tuning_n_trials=1,
     )
 
-    assert ret.final_script and ret.final_script[1].score
-
-
-@pytest.mark.parametrize("delimiter", [" ", ";", "|"])
-def test_raise_error_if_csv_delimiters_are_different(testdata_df_light, delimiter):
-    with pytest.raises(Exception):
-        cls_ = SapientML()
-        cls_.generate_code(
-            training_data=testdata_df_light,
-            target_columns=["target_number"],
-            task_type="regression",
-            adaptation_csv_delimiter=delimiter,
-        )
+    cls_.fit(
+        testdata_df_light,
+    )
 
 
 def test_sapientml_with_hpo_works_for_classification_task(testdata_df_light, caplog):
@@ -518,42 +495,45 @@ def test_sapientml_with_hpo_works_for_classification_task(testdata_df_light, cap
     testdata_df_light = testdata_df_light[
         ["target_category_binary_num", "explanatory_number", "explanatory_multi_category_nonnum"]
     ]
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_category_binary_num"],
+    cls_ = SapientML(
+        ["target_category_binary_num"],
         task_type="classification",
         n_models=16,
         hyperparameter_tuning=True,
         hyperparameter_tuning_n_trials=1,
         hyperparameter_tuning_timeout=120,
     )
+    cls_.fit(
+        testdata_df_light,
+    )
 
-    assert ret.final_script[0] and ret.final_script[1].score and "Error" not in caplog.text
+    assert "Error" not in caplog.text
     caplog.clear()
     logging.disable(logging.FATAL)
 
 
 def test_sapientml_works_for_classification_with_stratification(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_category_binary_num"],
+    cls_ = SapientML(
+        ["target_category_binary_num"],
         task_type="classification",
         split_stratification=True,
         adaptation_metric="LogLoss",
     )
+    cls_.fit(
+        testdata_df_light,
+    )
 
-    assert "stratify" in ret.final_script[0].test
+    assert "stratify" in cls_.generator._best_pipeline.test
 
 
 def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
-    cls_ = SapientML()
-    ret = cls_.generate_code(
-        training_data=testdata_df_light,
-        target_columns=["target_number"],
+    cls_ = SapientML(
+        ["target_number"],
         task_type="regression",
         split_stratification=True,
     )
+    cls_.fit(
+        testdata_df_light,
+    )
 
-    assert "stratify" not in ret.final_script[0].test
+    assert "stratify" not in cls_.generator._best_pipeline.test

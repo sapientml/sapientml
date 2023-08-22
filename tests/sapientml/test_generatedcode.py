@@ -19,7 +19,9 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from sapientml.executor import PipelineExecutor, run
+from sapientml.executor import run
+from sapientml.params import Task
+from sapientml_core import SapientMLConfig
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -47,10 +49,24 @@ def test_df_test():
 @pytest.fixture(scope="function")
 def setup_request_parameters():
     def _request_parameters():
-        with open(fxdir / "params" / "task.pkl", mode="rb") as f:
-            task = pickle.load(f)
-        with open(fxdir / "params" / "config.pkl", mode="rb") as f:
-            config = pickle.load(f)
+        # with open(fxdir / "params" / "task.pkl", mode="rb") as f:
+        #     task = pickle.load(f)
+        task = Task(
+            target_columns=["target_number"],
+            task_type="regression",
+            ignore_columns=[],
+            split_method="random",
+            split_seed=17,
+            split_train_size=0.75,
+            split_column_name=None,
+            time_split_num=5,
+            time_split_index=4,
+            adaptation_metric="r2",
+            split_stratification=False,
+        )
+        # with open(fxdir / "params" / "config.pkl", mode="rb") as f:
+        #     config = pickle.load(f)
+        config = SapientMLConfig()
         with open(fxdir / "params" / "dataset.pkl", mode="rb") as f:
             dataset = pickle.load(f)
         return task, config, dataset
@@ -69,18 +85,14 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
-        eps = entry_points(group="pipeline_generator")
-        generator = eps["sapientml_core"].load()(config)
-        pipelines = generator.generate_pipeline(dataset, task)
+        eps = entry_points(group="sapientml.pipeline_generator")
+        kwargs = config.model_dump()
+        kwargs["initial_timeout"] = initial_timeout
+        dataset.output_dir = temp_dir
+        generator = eps["sapientml"].load()(**kwargs)
+        generator.generate_pipeline(dataset, task)
 
-        executor = PipelineExecutor()
-        pipeline_results = executor.execute(
-            pipeline_list=pipelines,
-            initial_timeout=initial_timeout,
-            output_dir=temp_dir,
-            cancel=None,
-        )
-        return pipeline_results
+        return generator.execution_results
 
     return _execute
 
@@ -123,7 +135,8 @@ def test_regressor(
     # test pattern setting
     df = test_data
     n_models = 14  # Maximum number of types in regressor is 14
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -161,7 +174,8 @@ def test_regressor_preprocess_scaling_log(
     # test pattern setting
     df = test_data
     n_models = 1
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -199,7 +213,8 @@ def test_regressor_notext(
     # test pattern setting
     df = test_data
     n_models = 14  # Maximum number of types in regressor is 14
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -244,8 +259,8 @@ def test_classifier(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -312,8 +327,8 @@ def test_classifier_target_pattern(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -364,7 +379,8 @@ def test_classifier_preprocess(
     # test pattern setting
     df = test_data
     n_models = 1
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -409,7 +425,8 @@ def test_classifier_notext_nonegative_explanatry(
     # test pattern setting
     df = test_data
     n_models = 16
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -455,8 +472,8 @@ def test_classifier_proba(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -511,7 +528,8 @@ def test_preprocess_specify_train_valid_test(
 
     # test pattern setting
     n_models = 3
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -561,8 +579,8 @@ def test_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir,
     # test pattern setting
     df = test_data
     n_models = 3
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "regression"
     task.target_columns = ["target_number"]
 
@@ -586,14 +604,13 @@ def test_timeout_works_hyperparameter_tuning_timeout(
     # test pattern setting
     df = test_data
     n_models = 1
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "regression"
     task.target_columns = ["target_number"]
 
     config.hyperparameter_tuning = True
-    if config.hyperparameter_tuning:
-        initial_timeout = 0
+    initial_timeout = 0 if config.hyperparameter_tuning else 60
     config.hyperparameter_tuning_n_trials = 10
     config.hyperparameter_tuning_timeout = 1
 
