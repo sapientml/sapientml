@@ -48,7 +48,7 @@ def create_missing_dataframe():
     return _create_missing_dataframe
 
 
-def test_sapientml_works(testdata_df_light):
+def test_sapientml_works_in_regression(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -58,7 +58,7 @@ def test_sapientml_works(testdata_df_light):
     )
 
 
-def test_sapientml_works_with_two_target(testdata_df_light):
+def test_sapientml_works_with_two_targets(testdata_df_light):
     cls_ = SapientML(
         ["target_number", "target_number_large_scale"],
         task_type="regression",
@@ -79,7 +79,7 @@ def test_sapientml_works_in_classification(testdata_df_light):
     )
 
 
-def test_sapientml_with_hpo_works(testdata_df_light, caplog):
+def test_misc_sapientml_with_hpo_works(testdata_df_light, caplog):
     testdata_df_light = testdata_df_light[["target_number", "explanatory_multi_category_nonnum"]]
     logging.disable(logging.NOTSET)
     cls_ = SapientML(
@@ -98,7 +98,7 @@ def test_sapientml_with_hpo_works(testdata_df_light, caplog):
     logging.disable(logging.FATAL)
 
 
-def test_raise_error_if_undefined_tasktype_is_specified(testdata_df_light):
+def test_sapientml_raises_error_if_undefined_tasktype_is_specified(testdata_df_light):
     with pytest.raises(ValueError):
         SapientML(
             ["target_number"],
@@ -106,7 +106,7 @@ def test_raise_error_if_undefined_tasktype_is_specified(testdata_df_light):
         )
 
 
-def test_raise_error_if_undefined_metric_is_specified(testdata_df_light):
+def test_sapientml_raises_error_if_undefined_metric_is_specified(testdata_df_light):
     with pytest.raises(ValueError):
         SapientML(
             ["target_number"],
@@ -145,7 +145,7 @@ def test_sapientml_works_with_time_split(testdata_df_light):
     )
 
 
-def test_sapientml_generate_code_returns_candidates_even_if_all_the_candidates_failed_to_run(testdata_df_light):
+def test_misc_sapientml_generate_code_returns_candidates_even_if_all_the_candidates_failed_to_run(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -163,7 +163,7 @@ def test_sapientml_generate_code_returns_candidates_even_if_all_the_candidates_f
             )
 
 
-def test_sapientml_generate_code_returns_top_script_if_any_one_script_ran_successfully(testdata_df_light):
+def test_misc_sapientml_generate_code_returns_top_script_if_any_one_script_ran_successfully(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -204,7 +204,7 @@ def test_sapientml_generate_code_returns_top_script_if_any_one_script_ran_succes
         )
 
 
-def test_sapientml_set_logger_handler_only_once():
+def test_misc_sapientml_set_logger_handler_only_once():
     logger = setup_logger()
     assert len(logger.handlers) == 1
     _ = SapientML([""])
@@ -214,7 +214,7 @@ def test_sapientml_set_logger_handler_only_once():
     assert len(logger.handlers) == 1
 
 
-def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
+def test_sapientml_raises_error_if_target_has_inf(testdata_df_light):
     import numpy as np
 
     testdata_df_light.loc[[1, 4, 7, 9, 11, 16, 19, 20], "target_number"] = np.inf
@@ -229,7 +229,7 @@ def test_sapientml_raise_error_if_target_has_inf(testdata_df_light):
         )
 
 
-def test_sapientml_adaptation_metric_is_None_regression(testdata_df_light):
+def test_misc_sapientml_set_default_adaptation_metric_in_regression(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -240,7 +240,7 @@ def test_sapientml_adaptation_metric_is_None_regression(testdata_df_light):
     assert cls_.task.adaptation_metric == "r2"
 
 
-def test_sapientml_adaptation_metric_is_None_classification(testdata_df_light):
+def test_misc_sapientml_set_default_adaptation_metric_classification(testdata_df_light):
     cls_ = SapientML(
         ["target_category_binary_num"],
         task_type="classification",
@@ -399,7 +399,7 @@ def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
     logging.disable(logging.FATAL)
 
 
-def test_raise_error_if_target_columns_are_missing_for_regression():
+def test_sapientml_raises_error_if_target_columns_are_missing_for_regression():
     with pytest.raises(ValueError):
         SapientML(
             [],
@@ -407,7 +407,7 @@ def test_raise_error_if_target_columns_are_missing_for_regression():
         )
 
 
-def test_raise_error_if_target_columns_are_missing_for_classification():
+def test_sapientml_raises_error_if_target_columns_are_missing_for_classification():
     with pytest.raises(ValueError):
         SapientML(
             [],
@@ -415,7 +415,7 @@ def test_raise_error_if_target_columns_are_missing_for_classification():
         )
 
 
-def test_raise_error_if_target_columns_are_different_for_regression(testdata_df_light):
+def test_sapientml_raises_error_if_target_columns_are_different_for_regression(testdata_df_light):
     cls_ = SapientML(
         ["s1"],
         task_type="regression",
@@ -426,7 +426,7 @@ def test_raise_error_if_target_columns_are_different_for_regression(testdata_df_
         )
 
 
-def test_raise_error_if_target_columns_are_different_for_classification(testdata_df_light):
+def test_sapientml_raises_error_if_target_columns_are_different_for_classification(testdata_df_light):
     cls_ = SapientML(
         ["s1"],
         task_type="classification",
@@ -437,7 +437,7 @@ def test_raise_error_if_target_columns_are_different_for_classification(testdata
         )
 
 
-def test_raise_error_if_columns_name_length_is_above_limit(testdata_df_light):
+def test_sapientml_raises_error_if_columns_name_length_is_above_limit(testdata_df_light):
     testdata_df_light.rename(columns={"explanatory_groupId": "ID" * 1000}, inplace=True)
     with pytest.raises(Exception):
         cls_ = SapientML(
@@ -449,7 +449,7 @@ def test_raise_error_if_columns_name_length_is_above_limit(testdata_df_light):
         )
 
 
-def test_raise_error_if_target_columns_are_multiple_with_stratification_true(testdata_df_light):
+def test_sapientml_raises_error_if_target_columns_are_multiple_with_stratification_true(testdata_df_light):
     cls_ = SapientML(
         ["target_category_binary_nonnum", "target_category_multi_nonnum"],
         task_type="classification",
@@ -461,7 +461,7 @@ def test_raise_error_if_target_columns_are_multiple_with_stratification_true(tes
         )
 
 
-def test_sapientml_raise_error_if_target_has_nan(testdata_df_light):
+def test_sapientml_raises_error_if_target_has_nan(testdata_df_light):
     with pytest.raises(Exception):
         cls_ = SapientML(
             ["target_number_has_nan"],
@@ -472,7 +472,7 @@ def test_sapientml_raise_error_if_target_has_nan(testdata_df_light):
         )
 
 
-def test_sapientml_raise_error_if_number_models_are_zero():
+def test_sapientml_raises_error_if_number_models_are_zero():
     with pytest.raises(Exception):
         SapientML(["target_number"], task_type="regression", n_models=0)
 
@@ -490,7 +490,7 @@ def test_sapientml_works_with_hyperparameter_tuning_true(testdata_df_light):
     )
 
 
-def test_sapientml_with_hpo_works_for_classification_task(testdata_df_light, caplog):
+def test_misc_sapientml_with_hpo_works_for_classification_task(testdata_df_light, caplog):
     logging.disable(logging.NOTSET)
     testdata_df_light = testdata_df_light[
         ["target_category_binary_num", "explanatory_number", "explanatory_multi_category_nonnum"]
@@ -512,7 +512,7 @@ def test_sapientml_with_hpo_works_for_classification_task(testdata_df_light, cap
     logging.disable(logging.FATAL)
 
 
-def test_sapientml_works_for_classification_with_stratification(testdata_df_light):
+def test_sapientml_works_in_classification_with_stratification(testdata_df_light):
     cls_ = SapientML(
         ["target_category_binary_num"],
         task_type="classification",
@@ -526,7 +526,7 @@ def test_sapientml_works_for_classification_with_stratification(testdata_df_ligh
     assert "stratify" in cls_.generator._best_pipeline.test
 
 
-def test_sapientml_works_for_regression_with_stratification(testdata_df_light):
+def test_sapientml_works_in_regression_with_stratification(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",

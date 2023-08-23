@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Lint and Testing
+name: Testing
 
 on:
   pull_request:
@@ -20,33 +20,36 @@ on:
       - main
 
 env:
-  PYTHON_VERSION: "3.10"
   POETRY_VERSION: "1.5.1"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:
   test:
+    strategy:
+      matrix:
+        version: ["3.10", "3.11"]
+        test: [test_sapientml_works_in, test_sapientml_works_with, test_sapientml_raises_error, test_regressor_works, test_classifier_works, test_misc]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache Poetry cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-cache-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ env.POETRY_VERSION }}
+      # - name: Cache Poetry cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/pypoetry
+      #     key: poetry-cache-${{ matrix.os }}-${{ matrix.version }}-${{ env.POETRY_VERSION }}
 
-      - name: Cache Packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.local
-          key: poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
+      # - name: Cache Packages
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.local
+      #     key: poetry-${{ matrix.os }}-${{ matrix.version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Set up Python ${{ matrix.version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.version }}
 
       - name: Install Poetry
         run: |
@@ -65,8 +68,5 @@ jobs:
       - name: Install Dependencies
         run: poetry install
 
-      - name: Pysen run lint
-        run: poetry run -- pysen run lint
-
       - name: Pytest
-        run: poetry run -- pytest
+        run: poetry run -- pytest -k ${{ matrix.test }}

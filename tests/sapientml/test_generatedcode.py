@@ -121,7 +121,7 @@ def execute_code_for_test():
 
 @pytest.mark.parametrize("adaptation_metric", ["r2", "RMSE", "RMSLE", "MAE"])
 @pytest.mark.parametrize("target_col", ["target_number", "target_number_large_scale_neg"])
-def test_regressor(
+def test_regressor_works(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -134,7 +134,7 @@ def test_regressor(
 
     # test pattern setting
     df = test_data
-    n_models = 14  # Maximum number of types in regressor is 14
+    n_models = 14  # Maximum number of types in regressor_works is 14
     config.n_models = n_models
 
     task.task_type = "regression"
@@ -160,7 +160,7 @@ def test_regressor(
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
 @pytest.mark.parametrize("target_col", ["target_number_large_scale"])
-def test_regressor_preprocess_scaling_log(
+def test_regressor_works_with_preprocess_scaling_log(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -198,7 +198,7 @@ def test_regressor_preprocess_scaling_log(
 @pytest.mark.parametrize(
     "target_col", ["target_number", "target_number_large_scale", "target_number_neg", "target_number_large_scale_neg"]
 )
-def test_regressor_notext(
+def test_regressor_works_with_notext(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -212,7 +212,7 @@ def test_regressor_notext(
 
     # test pattern setting
     df = test_data
-    n_models = 14  # Maximum number of types in regressor is 14
+    n_models = 14  # Maximum number of types in regressor_works is 14
     config.n_models = n_models
 
     task.task_type = "regression"
@@ -245,7 +245,7 @@ def test_regressor_notext(
         "target_category_binary_boolean",
     ],
 )
-def test_classifier(
+def test_classifier_works(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -279,6 +279,10 @@ def test_classifier(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if (
             adaptation_metric in metric_needing_predict_proba or adaptation_metric.startswith("MAP_")
         ) and model == "LinearSVC":
@@ -313,7 +317,7 @@ def test_classifier(
         #  "target_category_multi_imbalance",  # SMOTE is not applied to multi-class target data
     ],
 )
-def test_classifier_target_pattern(
+def test_classifier_works_with_target_pattern(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -345,6 +349,10 @@ def test_classifier_target_pattern(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
@@ -365,7 +373,7 @@ def test_classifier_target_pattern(
         "target_category_binary_imbalance",
     ],
 )
-def test_classifier_preprocess(
+def test_classifier_works_with_preprocess(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -411,7 +419,7 @@ def test_classifier_preprocess(
         "target_category_binary_boolean",
     ],
 )
-def test_classifier_notext_nonegative_explanatry(
+def test_classifier_works_with_notext_nonegative_explanatry(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -458,7 +466,7 @@ def test_classifier_notext_nonegative_explanatry(
         "target_category_multi_nonnum",
     ],
 )
-def test_classifier_proba(
+def test_classifier_works_with_proba(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -492,6 +500,10 @@ def test_classifier_proba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if model == "LinearSVC":
             # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
             assert returncode == 1
@@ -513,7 +525,7 @@ def test_classifier_proba(
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
 @pytest.mark.parametrize("target_col", ["target_number_large_scale", "target_number_neg"])
-def test_preprocess_specify_train_valid_test(
+def test_misc_preprocess_specify_train_valid_test(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -550,6 +562,10 @@ def test_preprocess_specify_train_valid_test(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -596,7 +612,7 @@ def test_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir,
             assert (error == "Timeout") and (returncode == -9)
 
 
-def test_timeout_works_hyperparameter_tuning_timeout(
+def test_misc_timeout_works_hyperparameter_tuning_timeout(
     setup_request_parameters, make_tempdir, execute_pipeline, test_data
 ):
     task, config, dataset = setup_request_parameters()
