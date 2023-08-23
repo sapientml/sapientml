@@ -302,7 +302,7 @@ class SapientML:
             if self.dataset.save_datasets_format == "pickle":
                 test_data.to_pickle(self.output_dir / "test.pkl")
             else:
-                test_data.to_csv(self.output_dir / "test.pkl", encoding=self.dataset.csv_encoding, index=False)
+                test_data.to_csv(self.output_dir / "test.csv", encoding=self.dataset.csv_encoding, index=False)
         else:
             return
 
