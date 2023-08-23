@@ -45,7 +45,7 @@ def run(
         f"{sys.executable} {file_path}",
         shell=True,
         executable=executable,
-        cwd=os.path.dirname(file_path),
+        cwd=cwd or os.path.dirname(file_path),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
