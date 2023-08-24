@@ -18,7 +18,7 @@ from typing import List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from .macros import Metric
 from .util.logging import setup_logger
@@ -36,11 +36,11 @@ INITIAL_TIMEOUT = 600
 logger = setup_logger()
 
 
-def _read_file(filepath: str, csv_encoding: str) -> pd.DataFrame:
+def _read_file(filepath: str, csv_encoding: str, csv_delimiter: str) -> pd.DataFrame:
     if filepath.endswith(".pkl"):
         res_df = pd.read_pickle(filepath)
     else:
-        res_df = pd.read_csv(filepath, encoding=csv_encoding)
+        res_df = pd.read_csv(filepath, encoding=csv_encoding, delimiter=csv_delimiter)
     return res_df
 
 
@@ -123,7 +123,7 @@ class Task(BaseModel):
     is_multiclass: bool = False
     split_stratification: Optional[bool] = None
 
-    @validator(
+    @field_validator(
         "target_columns",
         "ignore_columns",
     )
@@ -134,7 +134,7 @@ class Task(BaseModel):
             raise ValueError(f"The number of columns must be smaller than {MAX_NUM_OF_COLUMNS}")
         return v
 
-    @validator("target_columns")
+    @field_validator("target_columns")
     def check_columns_is_not_empty(cls, v):
         if v is None:
             return v
@@ -142,7 +142,7 @@ class Task(BaseModel):
             raise ValueError("Target columns are empty.")
         return v
 
-    @validator(
+    @field_validator(
         "target_columns",
         "ignore_columns",
     )
@@ -154,37 +154,37 @@ class Task(BaseModel):
                 raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("split_seed")
+    @field_validator("split_seed")
     def check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
-    @validator("split_train_size")
+    @field_validator("split_train_size")
     def check_split_train_size(cls, v):
         if v <= 0 or 1 <= v:
             raise ValueError(f"{v} is out of (0, 1)")
         return v
 
-    @validator("split_column_name")
+    @field_validator("split_column_name")
     def check_split_column_name(cls, v):
         if v is not None and len(v) >= MAX_COLUMN_NAME_LENGTH:
             raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
-    @validator("time_split_num")
+    @field_validator("time_split_num")
     def check_time_split_num(cls, v):
         if v < 1 or MAX_TIME_SPLIT_NUM < v:
             raise ValueError(f"{v} is out of [1, {MAX_TIME_SPLIT_NUM}]")
         return v
 
-    @validator("time_split_index")
+    @field_validator("time_split_index")
     def check_time_split_index(cls, v):
         if v < 0 or MAX_TIME_SPLIT_INDEX < v:
             raise ValueError(f"{v} is out of [1, {MAX_TIME_SPLIT_INDEX}].")
         return v
 
-    @validator("adaptation_metric")
+    @field_validator("adaptation_metric")
     def check_metric(cls, v):
         if v is None:
             return v
@@ -210,17 +210,19 @@ class Dataset:
         validation_data: Union[pd.DataFrame, str, None] = None,
         test_data: Union[pd.DataFrame, str, None] = None,
         csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
+        csv_delimiter: str = ",",
         save_datasets_format: Literal["csv", "pickle"] = "pickle",
         ignore_columns: Optional[List[str]] = None,
         output_dir: Path = Path(DEFAULT_OUTPUT_DIR),
     ):
         self.ignore_columns = [] if ignore_columns is None else ignore_columns
         self.csv_encoding = csv_encoding
+        self.csv_delimiter = csv_delimiter
         self.save_datasets_format = save_datasets_format
         self.output_dir = output_dir
 
         if isinstance(training_data, str):
-            self.training_dataframe = _read_file(training_data, csv_encoding)
+            self.training_dataframe = _read_file(training_data, csv_encoding, csv_delimiter)
             self.training_data_path = training_data
         else:
             self.training_dataframe = training_data.copy()
@@ -229,7 +231,9 @@ class Dataset:
                 self.training_dataframe.to_pickle(self.training_data_path)
             else:
                 self.training_data_path = str(self.output_dir / "training.csv")
-                self.training_dataframe.to_csv(self.training_data_path, encoding=csv_encoding, index=False)
+                self.training_dataframe.to_csv(
+                    self.training_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
+                )
 
         # NOTE: self.validation_data and self.test_data can be None
         if validation_data is not None and test_data is None:
@@ -237,7 +241,7 @@ class Dataset:
                 "test_data must not be None when validation_data is specified. test_data should be specified instead of validation_data."
             )
         if isinstance(validation_data, str):
-            self.validation_dataframe = _read_file(validation_data, csv_encoding)
+            self.validation_dataframe = _read_file(validation_data, csv_encoding, csv_delimiter)
             self.validation_data_path = validation_data
         elif isinstance(validation_data, pd.DataFrame):
             self.validation_dataframe = validation_data.copy()
@@ -246,13 +250,15 @@ class Dataset:
                 self.validation_dataframe.to_pickle(self.validation_data_path)
             else:
                 self.validation_data_path = str(self.output_dir / "validation.csv")
-                self.validation_dataframe.to_csv(self.validation_data_path, encoding=csv_encoding, index=False)
+                self.validation_dataframe.to_csv(
+                    self.validation_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
+                )
         else:
             self.validation_dataframe = None
             self.validation_data_path = None
 
         if isinstance(test_data, str):
-            self.test_dataframe = _read_file(test_data, csv_encoding)
+            self.test_dataframe = _read_file(test_data, csv_encoding, csv_delimiter)
             self.test_data_path = test_data
         elif isinstance(test_data, pd.DataFrame):
             self.test_dataframe = test_data.copy()
@@ -261,7 +267,7 @@ class Dataset:
                 self.test_dataframe.to_pickle(self.test_data_path)
             else:
                 self.test_data_path = str(self.output_dir / "test.csv")
-                self.test_dataframe.to_csv(self.test_data_path, encoding=csv_encoding, index=False)
+                self.test_dataframe.to_csv(self.test_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False)
         else:
             self.test_dataframe = None
             self.test_data_path = None
@@ -279,7 +285,10 @@ class Dataset:
                 self.training_dataframe.to_pickle(output_dir / Path(training_data_path).name)
             else:
                 self.training_dataframe.to_csv(
-                    output_dir / Path(training_data_path).name, encoding=self.csv_encoding, index=False
+                    output_dir / Path(training_data_path).name,
+                    encoding=self.csv_encoding,
+                    sep=self.csv_delimiter,
+                    index=False,
                 )
         validation_data_path = self.validation_data_path
         if (
@@ -291,7 +300,10 @@ class Dataset:
                 self.validation_dataframe.to_pickle(output_dir / Path(validation_data_path).name)
             else:
                 self.validation_dataframe.to_csv(
-                    output_dir / Path(validation_data_path).name, encoding=self.csv_encoding, index=False
+                    output_dir / Path(validation_data_path).name,
+                    encoding=self.csv_encoding,
+                    sep=self.csv_delimiter,
+                    index=False,
                 )
         test_data_path = self.test_data_path
         if test_data_path and self.test_dataframe is not None and Path(test_data_path).parent == original_output_dir:
@@ -299,7 +311,10 @@ class Dataset:
                 self.test_dataframe.to_pickle(output_dir / Path(test_data_path).name)
             else:
                 self.test_dataframe.to_csv(
-                    output_dir / Path(test_data_path).name, encoding=self.csv_encoding, index=False
+                    output_dir / Path(test_data_path).name,
+                    encoding=self.csv_encoding,
+                    sep=self.csv_delimiter,
+                    index=False,
                 )
 
     def check_dataframes(
