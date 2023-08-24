@@ -19,7 +19,9 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from sapientml.executor import PipelineExecutor, run
+from sapientml.executor import run
+from sapientml.params import Task
+from sapientml_core import SapientMLConfig
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -47,10 +49,24 @@ def test_df_test():
 @pytest.fixture(scope="function")
 def setup_request_parameters():
     def _request_parameters():
-        with open(fxdir / "params" / "task.pkl", mode="rb") as f:
-            task = pickle.load(f)
-        with open(fxdir / "params" / "config.pkl", mode="rb") as f:
-            config = pickle.load(f)
+        # with open(fxdir / "params" / "task.pkl", mode="rb") as f:
+        #     task = pickle.load(f)
+        task = Task(
+            target_columns=["target_number"],
+            task_type="regression",
+            ignore_columns=[],
+            split_method="random",
+            split_seed=17,
+            split_train_size=0.75,
+            split_column_name=None,
+            time_split_num=5,
+            time_split_index=4,
+            adaptation_metric="r2",
+            split_stratification=False,
+        )
+        # with open(fxdir / "params" / "config.pkl", mode="rb") as f:
+        #     config = pickle.load(f)
+        config = SapientMLConfig()
         with open(fxdir / "params" / "dataset.pkl", mode="rb") as f:
             dataset = pickle.load(f)
         return task, config, dataset
@@ -69,18 +85,14 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
-        eps = entry_points(group="pipeline_generator")
-        generator = eps["sapientml_core"].load()(config)
-        pipelines = generator.generate_pipeline(dataset, task)
+        eps = entry_points(group="sapientml.pipeline_generator")
+        kwargs = config.model_dump()
+        kwargs["initial_timeout"] = initial_timeout
+        dataset.output_dir = temp_dir
+        generator = eps["sapientml"].load()(**kwargs)
+        generator.generate_pipeline(dataset, task)
 
-        executor = PipelineExecutor()
-        pipeline_results = executor.execute(
-            pipeline_list=pipelines,
-            initial_timeout=initial_timeout,
-            output_dir=temp_dir,
-            cancel=None,
-        )
-        return pipeline_results
+        return generator.execution_results
 
     return _execute
 
@@ -109,7 +121,7 @@ def execute_code_for_test():
 
 @pytest.mark.parametrize("adaptation_metric", ["r2", "RMSE", "RMSLE", "MAE"])
 @pytest.mark.parametrize("target_col", ["target_number", "target_number_large_scale_neg"])
-def test_regressor(
+def test_regressor_works(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -122,8 +134,9 @@ def test_regressor(
 
     # test pattern setting
     df = test_data
-    n_models = 14  # Maximum number of types in regressor is 14
-    task.n_models = n_models
+    n_models = 14  # Maximum number of types in regressor_works is 14
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -147,7 +160,7 @@ def test_regressor(
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
 @pytest.mark.parametrize("target_col", ["target_number_large_scale"])
-def test_regressor_preprocess_scaling_log(
+def test_regressor_works_with_preprocess_scaling_log(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -161,7 +174,8 @@ def test_regressor_preprocess_scaling_log(
     # test pattern setting
     df = test_data
     n_models = 1
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -184,7 +198,7 @@ def test_regressor_preprocess_scaling_log(
 @pytest.mark.parametrize(
     "target_col", ["target_number", "target_number_large_scale", "target_number_neg", "target_number_large_scale_neg"]
 )
-def test_regressor_notext(
+def test_regressor_works_with_notext(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -198,8 +212,9 @@ def test_regressor_notext(
 
     # test pattern setting
     df = test_data
-    n_models = 14  # Maximum number of types in regressor is 14
-    task.n_models = n_models
+    n_models = 14  # Maximum number of types in regressor_works is 14
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -230,7 +245,7 @@ def test_regressor_notext(
         "target_category_binary_boolean",
     ],
 )
-def test_classifier(
+def test_classifier_works(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -244,8 +259,8 @@ def test_classifier(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -264,6 +279,10 @@ def test_classifier(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if (
             adaptation_metric in metric_needing_predict_proba or adaptation_metric.startswith("MAP_")
         ) and model == "LinearSVC":
@@ -298,7 +317,7 @@ def test_classifier(
         #  "target_category_multi_imbalance",  # SMOTE is not applied to multi-class target data
     ],
 )
-def test_classifier_target_pattern(
+def test_classifier_works_with_target_pattern(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -312,8 +331,8 @@ def test_classifier_target_pattern(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -330,6 +349,10 @@ def test_classifier_target_pattern(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
@@ -350,7 +373,7 @@ def test_classifier_target_pattern(
         "target_category_binary_imbalance",
     ],
 )
-def test_classifier_preprocess(
+def test_classifier_works_with_preprocess(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -364,7 +387,8 @@ def test_classifier_preprocess(
     # test pattern setting
     df = test_data
     n_models = 1
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -395,7 +419,7 @@ def test_classifier_preprocess(
         "target_category_binary_boolean",
     ],
 )
-def test_classifier_notext_nonegative_explanatry(
+def test_classifier_works_with_notext_nonegative_explanatry(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -409,7 +433,8 @@ def test_classifier_notext_nonegative_explanatry(
     # test pattern setting
     df = test_data
     n_models = 16
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -441,7 +466,7 @@ def test_classifier_notext_nonegative_explanatry(
         "target_category_multi_nonnum",
     ],
 )
-def test_classifier_proba(
+def test_classifier_works_with_proba(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -455,8 +480,8 @@ def test_classifier_proba(
     # test pattern setting
     df = test_data
     n_models = 16
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "classification"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -475,6 +500,10 @@ def test_classifier_proba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
         if model == "LinearSVC":
             # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
             assert returncode == 1
@@ -496,7 +525,7 @@ def test_classifier_proba(
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
 @pytest.mark.parametrize("target_col", ["target_number_large_scale", "target_number_neg"])
-def test_preprocess_specify_train_valid_test(
+def test_misc_preprocess_specify_train_valid_test(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -511,7 +540,8 @@ def test_preprocess_specify_train_valid_test(
 
     # test pattern setting
     n_models = 3
-    task.n_models = n_models
+    config.n_models = n_models
+
     task.task_type = "regression"
     task.adaptation_metric = adaptation_metric
     task.target_columns = [target_col]
@@ -532,6 +562,10 @@ def test_preprocess_specify_train_valid_test(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
+        result = test_result_df.loc[i, "result"]
+        print(model)
+        if result.error:
+            print(result.error)
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -561,8 +595,8 @@ def test_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir,
     # test pattern setting
     df = test_data
     n_models = 3
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "regression"
     task.target_columns = ["target_number"]
 
@@ -578,7 +612,7 @@ def test_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir,
             assert (error == "Timeout") and (returncode == -9)
 
 
-def test_timeout_works_hyperparameter_tuning_timeout(
+def test_misc_timeout_works_hyperparameter_tuning_timeout(
     setup_request_parameters, make_tempdir, execute_pipeline, test_data
 ):
     task, config, dataset = setup_request_parameters()
@@ -586,14 +620,13 @@ def test_timeout_works_hyperparameter_tuning_timeout(
     # test pattern setting
     df = test_data
     n_models = 1
+    config.n_models = n_models
 
-    task.n_models = n_models
     task.task_type = "regression"
     task.target_columns = ["target_number"]
 
     config.hyperparameter_tuning = True
-    if config.hyperparameter_tuning:
-        initial_timeout = 0
+    initial_timeout = 0 if config.hyperparameter_tuning else 60
     config.hyperparameter_tuning_n_trials = 10
     config.hyperparameter_tuning_timeout = 1
 

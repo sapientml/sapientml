@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from pathlib import Path
+from typing import Tuple, Union
 
-from .params import Code, Config, Dataset, Task
+from .params import Code, Dataset, Task
 
 
 class CodeBlockGenerator(ABC):
-    def __init__(self, config: Config):
-        self.config = config
+    def __init__(self, **kwargs):
+        pass
 
     @abstractmethod
     def generate_code(self, dataset: Dataset, task: Task) -> Tuple[Dataset, Code]:
@@ -15,5 +16,9 @@ class CodeBlockGenerator(ABC):
 
 class PipelineGenerator(ABC):
     @abstractmethod
-    def generate_pipeline(self, dataset: Dataset, task: Task) -> list[Code]:
+    def generate_pipeline(self, dataset: Dataset, task: Task):
+        pass
+
+    @abstractmethod
+    def save(self, output_dir: Union[Path, str]):
         pass
