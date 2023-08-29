@@ -112,7 +112,6 @@ class PipelineResult(BaseModel):
 class Task(BaseModel):
     target_columns: list[str]
     task_type: Optional[Literal["classification", "regression"]]
-    ignore_columns: list[str]
     split_method: Literal["random", "time", "group"]
     split_seed: int
     split_train_size: float
@@ -123,10 +122,7 @@ class Task(BaseModel):
     is_multiclass: bool = False
     split_stratification: Optional[bool] = None
 
-    @field_validator(
-        "target_columns",
-        "ignore_columns",
-    )
+    @field_validator("target_columns")
     def check_num_of_column_names(cls, v):
         if v is None:
             return v
@@ -142,10 +138,7 @@ class Task(BaseModel):
             raise ValueError("Target columns are empty.")
         return v
 
-    @field_validator(
-        "target_columns",
-        "ignore_columns",
-    )
+    @field_validator("target_columns")
     def check_column_name_length(cls, v):
         if v is None:
             return v
