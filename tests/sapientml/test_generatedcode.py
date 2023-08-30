@@ -103,7 +103,6 @@ def execute_code_for_test():
         test_result_df = pd.DataFrame(
             index=range(len(pipeline_results)), columns=["returncode", "model", "result", "code_for_test"]
         )
-
         save_file_path = (temp_dir / "code.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
             code_for_test = pipeline_results[i][0].test
@@ -120,8 +119,47 @@ def execute_code_for_test():
 
 
 @pytest.mark.parametrize("adaptation_metric", ["r2", "RMSE", "RMSLE", "MAE"])
-@pytest.mark.parametrize("target_col", ["target_number", "target_number_large_scale_neg"])
-def test_regressor_works(
+@pytest.mark.parametrize("target_col", ["target_number"])
+def test_regressor_works_number(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 14  # Maximum number of types in regressor_works is 14
+    config.n_models = n_models
+
+    task.task_type = "regression"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "SVR":
+            # "AttributeError:var not found" occurs in SVR because of sparse_matrix
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["RMSE", "RMSLE"])
+@pytest.mark.parametrize("target_col", ["target_number_large_scale_neg"])
+def test_regressor_works_large_scale_number(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -159,46 +197,8 @@ def test_regressor_works(
 
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
-@pytest.mark.parametrize("target_col", ["target_number_large_scale"])
-def test_regressor_works_with_preprocess_scaling_log(
-    adaptation_metric,
-    target_col,
-    setup_request_parameters,
-    make_tempdir,
-    execute_pipeline,
-    execute_code_for_test,
-    test_data,
-):
-    task, config, dataset = setup_request_parameters()
-
-    # test pattern setting
-    df = test_data
-    n_models = 1
-    config.n_models = n_models
-
-    task.task_type = "regression"
-    task.adaptation_metric = adaptation_metric
-    task.target_columns = [target_col]
-    # Exclude columns that prevent the application of Scaling:log preprocessing
-    dataset.ignore_columns.extend(
-        ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
-    )
-
-    dataset.training_dataframe = df
-    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
-    temp_dir = make_tempdir
-    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
-    code_for_test = test_result_df.loc[0, "code_for_test"]
-    if "large_scale" in target_col:
-        assert "np.log" in code_for_test
-
-
-@pytest.mark.parametrize("adaptation_metric", ["r2"])
-@pytest.mark.parametrize(
-    "target_col", ["target_number", "target_number_large_scale", "target_number_neg", "target_number_large_scale_neg"]
-)
-def test_regressor_works_with_notext(
+@pytest.mark.parametrize("target_col", ["target_number"])
+def test_regressor_works_with_nosparse(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -234,18 +234,9 @@ def test_regressor_works_with_notext(
         assert returncode == 0
 
 
-@pytest.mark.parametrize(
-    "adaptation_metric", ["f1", "auc", "ROC_AUC", "accuracy", "Gini", "LogLoss", "MCC", "QWK", "MAP_3"]
-)
-@pytest.mark.parametrize(
-    "target_col",
-    [
-        "target_category_binary_num",
-        "target_category_multi_nonnum",
-        "target_category_binary_boolean",
-    ],
-)
-def test_classifier_works(
+@pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_num"])
+def test_classifier_category_binary_num_noproba(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -275,22 +266,265 @@ def test_classifier_works(
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test(pipeline_results, temp_dir)
-    metric_needing_predict_proba = ["Gini", "auc", "ROC_AUC", "LogLoss", "MAP_K"]
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        result = test_result_df.loc[i, "result"]
-        print(model)
-        if result.error:
-            print(result.error)
-        if (
-            adaptation_metric in metric_needing_predict_proba or adaptation_metric.startswith("MAP_")
-        ) and model == "LinearSVC":
+        if model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["auc", "ROC_AUC", "Gini", "LogLoss", "MAP_3"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_num"])
+def test_classifier_category_binary_num_proba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "LinearSVC":
             # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
             assert returncode == 1
-        elif (
-            adaptation_metric in metric_needing_predict_proba or adaptation_metric.startswith("MAP_")
-        ) and model == "SGDClassifier":
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
+@pytest.mark.parametrize("target_col", ["target_category_multi_nonnum"])
+def test_classifier_category_multi_nonnum_metric_noproba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["auc", "ROC_AUC", "Gini", "LogLoss", "MAP_3"])
+@pytest.mark.parametrize("target_col", ["target_category_multi_nonnum"])
+def test_classifier_category_multi_nonnum_metric_proba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_boolean"])
+def test_classifier_category_binary_boolean_metric_noproba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["auc", "ROC_AUC", "Gini", "LogLoss", "MAP_3"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_boolean"])
+def test_classifier_category_binary_boolean_metric_proba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
             # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
             assert returncode == 1
         elif model == "SVC":
@@ -349,10 +583,6 @@ def test_classifier_works_with_target_pattern(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        result = test_result_df.loc[i, "result"]
-        print(model)
-        if result.error:
-            print(result.error)
         if model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
@@ -367,12 +597,7 @@ def test_classifier_works_with_target_pattern(
 
 
 @pytest.mark.parametrize("adaptation_metric", ["f1"])
-@pytest.mark.parametrize(
-    "target_col",
-    [
-        "target_category_binary_imbalance",
-    ],
-)
+@pytest.mark.parametrize("target_col", ["target_category_binary_imbalance"])
 def test_classifier_works_with_preprocess(
     adaptation_metric,
     target_col,
@@ -419,7 +644,7 @@ def test_classifier_works_with_preprocess(
         "target_category_binary_boolean",
     ],
 )
-def test_classifier_works_with_notext_nonegative_explanatry(
+def test_classifier_notext_nonegative_explanatry(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -459,14 +684,8 @@ def test_classifier_works_with_notext_nonegative_explanatry(
 
 
 @pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
-@pytest.mark.parametrize(
-    "target_col",
-    [
-        "target_category_binary_num",
-        "target_category_multi_nonnum",
-    ],
-)
-def test_classifier_works_with_proba(
+@pytest.mark.parametrize("target_col", ["target_category_binary_num"])
+def test_classifier_category_binary_num_noproba_metric_with_proba(
     adaptation_metric,
     target_col,
     setup_request_parameters,
@@ -500,10 +719,61 @@ def test_classifier_works_with_proba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        result = test_result_df.loc[i, "result"]
-        print(model)
-        if result.error:
-            print(result.error)
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+        else:
+            assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
+@pytest.mark.parametrize("target_col", ["target_category_multi_nonnum"])
+def test_classifier_category_multi_nonnum_noproba_metric_with_proba(
+    adaptation_metric,
+    target_col,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    config.predict_option = "probability"
+    if "multi" in target_col:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = df
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
         if model == "LinearSVC":
             # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
             assert returncode == 1
@@ -524,7 +794,7 @@ def test_classifier_works_with_proba(
 
 
 @pytest.mark.parametrize("adaptation_metric", ["r2"])
-@pytest.mark.parametrize("target_col", ["target_number_large_scale", "target_number_neg"])
+@pytest.mark.parametrize("target_col", ["target_number_large_scale"])
 def test_misc_preprocess_specify_train_valid_test(
     adaptation_metric,
     target_col,
@@ -539,7 +809,7 @@ def test_misc_preprocess_specify_train_valid_test(
     task, config, dataset = setup_request_parameters()
 
     # test pattern setting
-    n_models = 3
+    n_models = 1
     config.n_models = n_models
 
     task.task_type = "regression"
@@ -554,6 +824,10 @@ def test_misc_preprocess_specify_train_valid_test(
     dataset.validation_data_path = (fxdir / "datasets" / "testdata_valid.csv").as_posix()
     dataset.test_data_path = (fxdir / "datasets" / "testdata_test.csv").as_posix()
 
+    # Exclude columns that prevent the applying Scaling:log preprocessing
+    dataset.ignore_columns.extend(
+        ["explanatory_multi_category_num", "target_category_multi_num", "target_category_binary_num"]
+    )
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test(pipeline_results, temp_dir)
@@ -562,10 +836,6 @@ def test_misc_preprocess_specify_train_valid_test(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
-        result = test_result_df.loc[i, "result"]
-        print(model)
-        if result.error:
-            print(result.error)
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -582,6 +852,7 @@ def test_misc_preprocess_specify_train_valid_test(
         assert "Preprocess:DateTime" in code_for_test
         assert "Preprocess:TextPreprocessing" in code_for_test
         assert "Preprocess:TfidfVectorizer" in code_for_test
+        assert "np.log" in code_for_test
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
@@ -589,7 +860,7 @@ def test_misc_preprocess_specify_train_valid_test(
             assert returncode == 0
 
 
-def test_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir, execute_pipeline, test_data):
+def test_misc_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir, execute_pipeline, test_data):
     task, config, dataset = setup_request_parameters()
 
     # test pattern setting

@@ -28,7 +28,14 @@ jobs:
     strategy:
       matrix:
         version: ["3.10", "3.11"]
-        test: [test_sapientml_works_in, test_sapientml_works_with, test_sapientml_raises_error, test_regressor_works, test_classifier_works, test_misc]
+        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc,
+          test_regressor_works_number, test_regressor_works_large_scale_number, test_regressor_works_with_nosparse,
+          test_classifier_category_binary_num_noproba, test_classifier_category_binary_num_proba,
+          test_classifier_category_multi_nonnum_metric_noproba, test_classifier_category_multi_nonnum_metric_proba,
+          test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
+          test_classifier_category_binary_num_noproba_metric_with_proba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
+          test_classifier_notext_nonegative_explanatry, test_classifier_works_with
+          ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

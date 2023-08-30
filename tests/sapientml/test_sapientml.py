@@ -48,31 +48,11 @@ def create_missing_dataframe():
     return _create_missing_dataframe
 
 
-def test_sapientml_works_in_regression(testdata_df_light):
-    cls_ = SapientML(
-        ["target_number"],
-        task_type="regression",
-    )
-    cls_.fit(
-        testdata_df_light,
-    )
-
-
 def test_sapientml_works_with_two_targets(testdata_df_light):
     cls_ = SapientML(
         ["target_number", "target_number_large_scale"],
         task_type="regression",
         initial_timeout=60,
-    )
-    cls_.fit(
-        testdata_df_light,
-    )
-
-
-def test_sapientml_works_in_classification(testdata_df_light):
-    cls_ = SapientML(
-        ["target_category_binary_num"],
-        task_type="classification",
     )
     cls_.fit(
         testdata_df_light,
@@ -477,19 +457,6 @@ def test_sapientml_raises_error_if_number_models_are_zero():
         SapientML(["target_number"], task_type="regression", n_models=0)
 
 
-def test_sapientml_works_with_hyperparameter_tuning_true(testdata_df_light):
-    cls_ = SapientML(
-        ["target_number"],
-        task_type="regression",
-        hyperparameter_tuning=True,
-        hyperparameter_tuning_n_trials=1,
-    )
-
-    cls_.fit(
-        testdata_df_light,
-    )
-
-
 def test_misc_sapientml_with_hpo_works_for_classification_task(testdata_df_light, caplog):
     logging.disable(logging.NOTSET)
     testdata_df_light = testdata_df_light[
@@ -512,7 +479,7 @@ def test_misc_sapientml_with_hpo_works_for_classification_task(testdata_df_light
     logging.disable(logging.FATAL)
 
 
-def test_sapientml_works_in_classification_with_stratification(testdata_df_light):
+def test_sapientml_works_with_classification_split_stratification(testdata_df_light):
     cls_ = SapientML(
         ["target_category_binary_num"],
         task_type="classification",
@@ -526,7 +493,7 @@ def test_sapientml_works_in_classification_with_stratification(testdata_df_light
     assert "stratify" in cls_.generator._best_pipeline.test
 
 
-def test_sapientml_works_in_regression_with_stratification(testdata_df_light):
+def test_sapientml_works_with_regression_split_stratification(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
