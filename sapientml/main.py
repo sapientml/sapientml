@@ -137,7 +137,6 @@ class SapientML:
         self.task = Task(
             target_columns=target_columns,
             task_type=task_type,
-            ignore_columns=[],
             split_method=split_method,
             split_seed=split_seed,
             split_train_size=split_train_size,

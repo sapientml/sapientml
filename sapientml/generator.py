@@ -22,3 +22,7 @@ class PipelineGenerator(ABC):
     @abstractmethod
     def save(self, output_dir: Union[Path, str]):
         pass
+
+    @abstractmethod
+    def add_explanation(self):
+        pass

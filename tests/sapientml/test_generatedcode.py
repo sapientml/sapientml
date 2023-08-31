@@ -54,7 +54,6 @@ def setup_request_parameters():
         task = Task(
             target_columns=["target_number"],
             task_type="regression",
-            ignore_columns=[],
             split_method="random",
             split_seed=17,
             split_train_size=0.75,
