@@ -685,7 +685,7 @@ def test_classifier_notext_nonegative_explanatry(
 
 @pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy", "MCC", "QWK"])
 @pytest.mark.parametrize("target_col", ["target_category_binary_num"])
-def test_classifier_category_binary_num_noproba_metric_with_proba(
+def test_classifier_category_binary_num_use_proba_with_metric_default_noproba(
     adaptation_metric,
     target_col,
     setup_request_parameters,

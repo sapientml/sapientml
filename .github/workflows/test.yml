@@ -33,7 +33,7 @@ jobs:
           test_classifier_category_binary_num_noproba, test_classifier_category_binary_num_proba,
           test_classifier_category_multi_nonnum_metric_noproba, test_classifier_category_multi_nonnum_metric_proba,
           test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
-          test_classifier_category_binary_num_noproba_metric_with_proba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
+          test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
           test_classifier_notext_nonegative_explanatry, test_classifier_works_with
           ]
     runs-on: ubuntu-latest
