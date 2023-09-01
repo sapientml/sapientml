@@ -44,6 +44,13 @@ def _read_file(filepath: str, csv_encoding: str, csv_delimiter: str) -> pd.DataF
     return res_df
 
 
+def save_file(dataframe: pd.DataFrame, filepath: str, csv_encoding: str, csv_delimiter: str) -> None:
+    if filepath.endswith(".pkl"):
+        dataframe.to_pickle(filepath)
+    else:
+        dataframe.to_csv(filepath, encoding=csv_encoding, sep=csv_delimiter, index=False)
+
+
 def _is_strnum_column(c):
     c2 = c.loc[c.notnull()]
     c2 = pd.to_numeric(c2, errors="coerce")
@@ -219,14 +226,9 @@ class Dataset:
             self.training_data_path = training_data
         else:
             self.training_dataframe = training_data.copy()
-            if save_datasets_format == "pickle":
-                self.training_data_path = str(self.output_dir / "training.pkl")
-                self.training_dataframe.to_pickle(self.training_data_path)
-            else:
-                self.training_data_path = str(self.output_dir / "training.csv")
-                self.training_dataframe.to_csv(
-                    self.training_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
-                )
+            filename = "training." + ("pkl" if save_datasets_format == "pickle" else "csv")
+            self.training_data_path = str(self.output_dir / filename)
+            save_file(self.training_dataframe, self.training_data_path, csv_encoding, csv_delimiter)
 
         # NOTE: self.validation_data and self.test_data can be None
         if validation_data is not None and test_data is None:
@@ -238,14 +240,9 @@ class Dataset:
             self.validation_data_path = validation_data
         elif isinstance(validation_data, pd.DataFrame):
             self.validation_dataframe = validation_data.copy()
-            if save_datasets_format == "pickle":
-                self.validation_data_path = str(self.output_dir / "validation.pkl")
-                self.validation_dataframe.to_pickle(self.validation_data_path)
-            else:
-                self.validation_data_path = str(self.output_dir / "validation.csv")
-                self.validation_dataframe.to_csv(
-                    self.validation_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False
-                )
+            filename = "validation." + ("pkl" if save_datasets_format == "pickle" else "csv")
+            self.validation_data_path = str(self.output_dir / filename)
+            save_file(self.validation_dataframe, self.validation_data_path, csv_encoding, csv_delimiter)
         else:
             self.validation_dataframe = None
             self.validation_data_path = None
@@ -255,60 +252,17 @@ class Dataset:
             self.test_data_path = test_data
         elif isinstance(test_data, pd.DataFrame):
             self.test_dataframe = test_data.copy()
-            if save_datasets_format == "pickle":
-                self.test_data_path = str(self.output_dir / "test.pkl")
-                self.test_dataframe.to_pickle(self.test_data_path)
-            else:
-                self.test_data_path = str(self.output_dir / "test.csv")
-                self.test_dataframe.to_csv(self.test_data_path, encoding=csv_encoding, sep=csv_delimiter, index=False)
+            filename = "test." + ("pkl" if save_datasets_format == "pickle" else "csv")
+            self.test_data_path = str(self.output_dir / filename)
+            save_file(self.test_dataframe, self.test_data_path, csv_encoding, csv_delimiter)
         else:
             self.test_dataframe = None
             self.test_data_path = None
 
-    def save(self, output_dir: Optional[Union[Path, str]] = None):
-        # script.dataset.training_data_path is '{user specified dir}/{name}.csv' or '{tmpdir}/training.csv' or '{tmpdir}/training.pkl'
-        # We want to save dataset only when the last two ones.
-        if output_dir is None:
-            output_dir = self.output_dir
-        output_dir = Path(output_dir)
-        original_output_dir = Path(self.output_dir)
-        training_data_path = self.training_data_path
-        if Path(training_data_path).parent == original_output_dir:
-            if Path(training_data_path).suffix == ".pkl":
-                self.training_dataframe.to_pickle(output_dir / Path(training_data_path).name)
-            else:
-                self.training_dataframe.to_csv(
-                    output_dir / Path(training_data_path).name,
-                    encoding=self.csv_encoding,
-                    sep=self.csv_delimiter,
-                    index=False,
-                )
-        validation_data_path = self.validation_data_path
-        if (
-            validation_data_path
-            and self.validation_dataframe is not None
-            and Path(validation_data_path).parent == original_output_dir
-        ):
-            if Path(validation_data_path).suffix == ".pkl":
-                self.validation_dataframe.to_pickle(output_dir / Path(validation_data_path).name)
-            else:
-                self.validation_dataframe.to_csv(
-                    output_dir / Path(validation_data_path).name,
-                    encoding=self.csv_encoding,
-                    sep=self.csv_delimiter,
-                    index=False,
-                )
-        test_data_path = self.test_data_path
-        if test_data_path and self.test_dataframe is not None and Path(test_data_path).parent == original_output_dir:
-            if Path(test_data_path).suffix == ".pkl":
-                self.test_dataframe.to_pickle(output_dir / Path(test_data_path).name)
-            else:
-                self.test_dataframe.to_csv(
-                    output_dir / Path(test_data_path).name,
-                    encoding=self.csv_encoding,
-                    sep=self.csv_delimiter,
-                    index=False,
-                )
+    def reload(self):
+        self.training_dataframe = _read_file(self.training_data_path, self.csv_encoding, self.csv_delimiter)
+        self.validation_dataframe = _read_file(self.validation_data_path, self.csv_encoding, self.csv_delimiter)
+        self.test_dataframe = _read_file(self.test_data_path, self.csv_encoding, self.csv_delimiter)
 
     def check_dataframes(
         self,
