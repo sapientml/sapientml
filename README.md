@@ -1,4 +1,4 @@
-![](./static/logo_SapientML_negative@2x.png#gh-dark-mode-only)![](./static/logo_SapientML_positive@2x.png#gh-light-mode-only)
+![](https://raw.githubusercontent.com/sapientml/sapientml/main/static/logo_SapientML_negative@2x.png#gh-dark-mode-only)![](https://raw.githubusercontent.com/sapientml/sapientml/main/static/logo_SapientML_positive@2x.png#gh-light-mode-only)
 <h1 align="center">Generative AutoML for Tabular Data</h1>
 <p align='center'>
 SapientML is an AutoML technology that can learn from a corpus of existing datasets and their human-written pipelines, and efficiently generate a high-quality pipeline for a predictive task on a new dataset.
