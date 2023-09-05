@@ -112,7 +112,7 @@ class PipelineExecutor:
             with open(script_path, "w", encoding="utf-8") as f:
                 f.write(pipeline.validation)
 
-            logger.info(f"Running script ({index}/{len(pipeline_list)}) ...")
+            logger.info(f"Running script ({index}/{len(pipeline_list)})...")
             running_result = run(script_path, initial_timeout, cancel)
             candidate_scripts.append((pipeline, running_result))
             reason = ""
