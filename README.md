@@ -1,13 +1,15 @@
 ![](./static/logo_SapientML_negative@2x.png#gh-dark-mode-only)![](./static/logo_SapientML_positive@2x.png#gh-light-mode-only)
-<div style="text-align:center;">
-<h1>Generative AutoML for Tabular Data</h1>
+<h1 align="center">Generative AutoML for Tabular Data</h1>
+<p align='center'>
+SapientML is an AutoML technology that can learn from a corpus of existing datasets and their human-written pipelines, and efficiently generate a high-quality pipeline for a predictive task on a new dataset.
+</p>
+<p align='center'>
 <a href="https://badge.fury.io/py/sapientml"><img src="https://badge.fury.io/py/sapientml.svg" alt="PyPI version"></a>
 <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/sapientml">
 <a href="https://github.com/sapientml/sapientml/actions/workflows/release.yml"><img alt="Release" src="https://github.com/sapientml/sapientml/actions/workflows/release.yml/badge.svg"></a>
 <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white"></a>
-<a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a><br />
-SapientML is an AutoML technology that can learn from a corpus of existing datasets and their human-written pipelines, and efficiently generate a high-quality pipeline for a predictive task on a new dataset.
-</div>
+<a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a>
+</p>
 
 # Getting Started
 
