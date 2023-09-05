@@ -75,6 +75,9 @@ git commit --amend --no-edit --sign-off
 git push --force-with-lease <remote-name> <branch-name>
 ```
 
+## When you propose a new feature by submitting a Pull Request
+
+When you add a new feature in the source code, you must also add new test cases to test the feature. The test cases should achieve at least the code coverage of over 90 percent of the code for the new feature. For further detail, please contact the mentainers.
 ## Code of Conduct
 
 This project has adopted the [Contributor Covenant Code of Conduct](https://github.com/sapientml/sapientml/blob/main/CODE_OF_CONDUCT.md)
