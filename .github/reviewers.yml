@@ -18,6 +18,10 @@ reviewers:
       - kimusaku
       - AkiraUra
 
+files:
+  '**':
+    - maintainers
+
 options:
   enable_group_assignment: true
   ignore_draft: true
