@@ -30,6 +30,10 @@ poetry install
 
 ### Generate Code in a notebook
 
+<a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/feature/documentation/static/sapientml-example.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
 ```py
 import pandas as pd
 from sapientml import SapientML
