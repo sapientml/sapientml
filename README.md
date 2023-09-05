@@ -1,5 +1,5 @@
 <h1 align="center">
-<img alt="SapientML" src="./static/logo_SapientML_positive%402x.png#gh-light-mode-only">
+<img alt="SapientML" src="https://raw.githubusercontent.com/sapientml/sapientml/main/static/logo_SapientML_positive%402x.png#gh-light-mode-only">
 <img alt="" src="./static/logo_SapientML_negative%402x.png#gh-dark-mode-only">
 </h1>
 <h1 align="center">Generative AutoML for Tabular Data</h1>
