@@ -23,6 +23,9 @@ jobs:
   auto-request-review:
     name: Auto Request Review
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
       - name: Request review based on files changes and/or groups the author belongs to
         uses: necojackarc/auto-request-review@v0.12.0
