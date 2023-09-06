@@ -1,6 +1,6 @@
 <h1 align="center">
-<img alt="SapientML" src="https://raw.githubusercontent.com/sapientml/sapientml/main/static/logo_SapientML_positive%402x.png#gh-light-mode-only">
-<img alt="" src="./static/logo_SapientML_negative%402x.png#gh-dark-mode-only">
+<img alt="SapientML" src="https://raw.githubusercontent.com/sapientml/sapientml/main/static/SapientML_positive_logo.svg#gh-light-mode-only">
+<img alt="" src="./static/SapientML_negative_logo.svg#gh-dark-mode-only">
 </h1>
 <h1 align="center">Generative AutoML for Tabular Data</h1>
 <p align='center'>
@@ -35,7 +35,7 @@ poetry install
 
 ### Run AutoML
 
-<a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/feature/documentation/static/sapientml-example-titanic.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/main/static/sapientml-example-titanic.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
