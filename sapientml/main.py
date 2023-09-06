@@ -295,7 +295,7 @@ class SapientML:
     ):
         if isinstance(test_data, pd.DataFrame):
             filename = "test." + "pkl" if self.dataset.save_datasets_format == "pickle" else "csv"
-            save_file(test_data, self.output_dir / filename, self.dataset.csv_encoding, self.dataset.csv_delimiter)
+            save_file(test_data, str(self.output_dir / filename), self.dataset.csv_encoding, self.dataset.csv_delimiter)
         else:
             return
 
