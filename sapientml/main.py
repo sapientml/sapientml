@@ -222,7 +222,6 @@ class SapientML:
             ignore_columns=ignore_columns,
             output_dir=self.output_dir,
         )
-        self.dataset.check_dataframes(self.task.target_columns)
 
         if self.task.task_type is None:
             self.task.task_type = SapientMLSuggestion(
