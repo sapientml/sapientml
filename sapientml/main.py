@@ -285,7 +285,9 @@ class SapientML:
             return
 
         logger.info("Building model by generated pipeline...")
-        run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+        result = run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+        if result.returncode != 0:
+            raise RuntimeError(f"Training was failed due to the following Error: {result.error}")
         logger.info("Done.")
 
     def predict(
