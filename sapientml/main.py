@@ -292,6 +292,19 @@ class SapientML:
         self,
         test_data: Union[pd.DataFrame, str],
     ):
+        """Predicts the output of the test_data and store in the prediction_result.csv.
+
+        Parameters
+        ---------
+        test_data: Union[pd.DataFrame, str]
+            Dataframe used for predicting the result.
+
+        Returns
+        -------
+        result : pd.DataFrame
+            It returns the prediction_result.csv result in dataframe format.
+
+        """
         if isinstance(test_data, pd.DataFrame):
             filename = "test." + "pkl" if self.dataset.save_datasets_format == "pickle" else "csv"
             save_file(test_data, str(self.output_dir / filename), self.dataset.csv_encoding, self.dataset.csv_delimiter)
