@@ -299,9 +299,11 @@ class SapientML:
             return
 
         logger.info("Predicting by built model...")
-        run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
-        result = pd.read_csv(self.output_dir / "prediction_result.csv")
-        return result
+        result = run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
+        if result.returncode != 0:
+            raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
+        result_df = pd.read_csv(self.output_dir / "prediction_result.csv")
+        return result_df
 
     def get_config(self):
         return self.config
