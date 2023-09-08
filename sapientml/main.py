@@ -317,4 +317,5 @@ class SapientML:
         return result
 
     def get_config(self):
+        """get_config method."""
         return self.config
