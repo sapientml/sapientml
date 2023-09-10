@@ -206,9 +206,9 @@ class Config(BaseModel):
 class Dataset:
     def __init__(
         self,
-        training_data: Union[pd.DataFrame, str],
-        validation_data: Union[pd.DataFrame, str, None] = None,
-        test_data: Union[pd.DataFrame, str, None] = None,
+        training_data: Optional[Union[pd.DataFrame, str]] = None,
+        validation_data: Optional[Union[pd.DataFrame, str]] = None,
+        test_data: Optional[Union[pd.DataFrame, str]] = None,
         csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
         csv_delimiter: str = ",",
         save_datasets_format: Literal["csv", "pickle"] = "pickle",
@@ -224,7 +224,7 @@ class Dataset:
         if isinstance(training_data, str):
             self.training_dataframe = _read_file(training_data, csv_encoding, csv_delimiter)
             self.training_data_path = training_data
-        else:
+        elif isinstance(training_data, pd.DataFrame):
             self.training_dataframe = training_data.copy()
             filename = "training." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.training_data_path = str(self.output_dir / filename)

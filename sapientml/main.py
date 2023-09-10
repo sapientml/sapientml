@@ -18,11 +18,11 @@ from pathlib import Path
 from typing import Literal, Optional, Union
 
 import pandas as pd
+from sapientml.model import GeneratedModel
 from sapientml.suggestion import SapientMLSuggestion
 
-from .executor import run
 from .macros import Metric
-from .params import Dataset, Task, save_file
+from .params import Dataset, Task
 from .util.logging import setup_logger
 
 logger = setup_logger()
@@ -153,6 +153,7 @@ class SapientML:
         else:
             raise ValueError(f"Model '{model_type}' is invalid.")
 
+        self.model_type = model_type
         self.generator = self._Generator(**kwargs)
         self.config = self.generator.config
         self.config.postinit()
@@ -281,31 +282,23 @@ class SapientML:
         self.generator.generate_pipeline(self.dataset, self.task)
         self.generator.save(self.output_dir)
 
-        if codegen_only:
-            return
+        self.model = GeneratedModel(
+            output_dir=self.output_dir,
+            save_datasets_format=save_datasets_format,
+            csv_encoding=csv_encoding,
+            csv_delimiter=csv_delimiter,
+            timeout=self.config.timeout_for_test,
+        )
 
-        logger.info("Building model by generated pipeline...")
-        result = run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
-        if result.returncode != 0:
-            raise RuntimeError(f"Training was failed due to the following Error: {result.error}")
+        if not codegen_only:
+            self.model.fit(training_dataframe)
+
         logger.info("Done.")
+
+        return self
 
     def predict(
         self,
         test_data: Union[pd.DataFrame, str],
     ):
-        if isinstance(test_data, pd.DataFrame):
-            filename = "test." + "pkl" if self.dataset.save_datasets_format == "pickle" else "csv"
-            save_file(test_data, str(self.output_dir / filename), self.dataset.csv_encoding, self.dataset.csv_delimiter)
-        else:
-            return
-
-        logger.info("Predicting by built model...")
-        result = run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
-        if result.returncode != 0:
-            raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
-        result_df = pd.read_csv(self.output_dir / "prediction_result.csv")
-        return result_df
-
-    def get_config(self):
-        return self.config
+        return self.model.predict(test_data)
