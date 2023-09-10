@@ -34,7 +34,7 @@ class GeneratedModel:
         with open(filepath, "rb") as f:
             self.files[str(filepath.relative_to(output_dir))] = f.read()
 
-    def _writefiles(self, output_dir):
+    def save(self, output_dir):
         (output_dir / "lib").mkdir(exist_ok=True)
         for filename, content in self.files.items():
             with open(output_dir / filename, "wb") as f:
@@ -50,7 +50,7 @@ class GeneratedModel:
                 csv_encoding=self.csv_encoding,
                 output_dir=temp_dir,
             )
-            self._writefiles(temp_dir)
+            self.save(temp_dir)
             logger.info("Building model by generated pipeline...")
             result = run(str(temp_dir / "final_train.py"), self.timeout)
             if result.returncode != 0:
@@ -72,7 +72,7 @@ class GeneratedModel:
                 output_dir=temp_dir,
             )
 
-            self._writefiles(temp_dir)
+            self.save(temp_dir)
 
             logger.info("Predicting by built model...")
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
