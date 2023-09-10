@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pickle
+
 # from msilib.schema import Error
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -132,6 +134,20 @@ class SapientML:
             To perform stratification in train-test split.
 
         """
+        self.params = {
+            "target_columns": target_columns,
+            "task_type": task_type,
+            "split_method": split_method,
+            "split_seed": split_seed,
+            "split_train_size": split_train_size,
+            "split_column_name": split_column_name,
+            "time_split_num": time_split_num,
+            "time_split_index": time_split_index,
+            "adaptation_metric": adaptation_metric,
+            "split_stratification": split_stratification,
+            "model_type": model_type,
+            **kwargs,
+        }
 
         self.task = Task(
             target_columns=target_columns,
@@ -157,6 +173,27 @@ class SapientML:
         self.generator = self._Generator(**kwargs)
         self.config = self.generator.config
         self.config.postinit()
+
+    @staticmethod
+    def from_pretrained(model):
+        try:
+            if isinstance(model, GeneratedModel):
+                pass
+            else:
+                if isinstance(model, str):
+                    with open(model, "rb") as f:
+                        model = pickle.load(f)
+                else:
+                    model = pickle.loads(model)
+                if not isinstance(model, GeneratedModel):
+                    raise RuntimeError("model is not an instance of GeneratedModel")
+        except Exception as e:
+            raise ValueError(
+                "model must be either pickle filename, pickle bytes-like object, or deserialized object"
+            ) from e
+        sml = SapientML(**model.params)
+        sml.model = model
+        return sml
 
     def fit(
         self,
@@ -288,6 +325,7 @@ class SapientML:
             csv_encoding=csv_encoding,
             csv_delimiter=csv_delimiter,
             timeout=self.config.timeout_for_test,
+            params=self.params,
         )
 
         if not codegen_only:

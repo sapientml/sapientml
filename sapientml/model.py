@@ -11,12 +11,13 @@ logger = setup_logger()
 
 
 class GeneratedModel:
-    def __init__(self, output_dir, save_datasets_format, timeout, csv_encoding, csv_delimiter):
+    def __init__(self, output_dir, save_datasets_format, timeout, csv_encoding, csv_delimiter, params):
         self.files = dict()
         self.save_datasets_format = save_datasets_format
         self.timeout = timeout
         self.csv_encoding = csv_encoding
         self.csv_delimiter = csv_delimiter
+        self.params = params
 
         self._readfile(output_dir / "final_train.py", output_dir)
         self._readfile(output_dir / "final_predict.py", output_dir)
