@@ -254,7 +254,7 @@ class SapientML:
         output_dir: str
             Output dir
         codegen_only: bool
-            Generated code is not saved if True
+            Do not conduct fit() of GeneratedModel if True
 
         Returns
         -------
