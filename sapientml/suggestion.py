@@ -27,6 +27,18 @@ class SapientMLSuggestion:
         self.dataframe = dataframe
 
     def suggest_task(self, th_val=30):
+        """suggest task method.
+
+        Parameters
+        ----------
+        th_val : int
+
+        Returns
+        -------
+        str
+            It returns task_suggestion as regression or classification.
+
+        """
         if self.dataframe is None:
             raise ValueError("`dataframe` is not specified.")
         task_suggestion_dict = {}
