@@ -58,35 +58,19 @@ y_pred = sml.predict(test_data)
 print(f"F1 score: {f1_score(y_true, y_pred)}")
 ```
 
-## Running Generated Code Manually
+### Obtain and Run Generated Code
 
-You can get generated code in the output folder after executing `fit` method.
+You can access `model` field to get a model consisting of generated code after executing `fit` method.
+`model` provides `fit`, `predict`, and `save` method to train a model by generated code, predict from a test data by generated code, and save generated code to a designated folder.
 
-### Hold-out Validation
+```py
+model = sml.fit(train_data).model
 
-Run `outputs/final_script.py`, then you will see a result of the hold-out validation using the train data
+model.fit(another_train_data) # build a model by using another data and the same generated code
 
-```
-cd outputs/
-python final_script.py
-```
+y_pred = model.predict(test_data) # prediction by using generated code
 
-### Train a Model by Generated Code
-
-Run `outputs/final_train.py`, then you will get several `.pkl` files containing a trained model and some components for preprocessing.
-
-```
-cd outputs/
-python final_train.py
-```
-
-### Prediction by using Trained Model
-
-Run `outputs/final_predict.py` with `outputs/test.pkl` exist already or prepared manually if not exist. `test.pkl` must contain a `pandas.DataFrame` object created from a CSV file fto be predited.
-
-```
-cd outputs/
-python final_predict.py
+model.save("/path/to/output") # save generated code to `path/to/output`
 ```
 
 # Publications
