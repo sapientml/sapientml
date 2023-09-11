@@ -20,7 +20,24 @@ import numpy as np
 
 
 class JSONEncoder(json.JSONEncoder):
+    """Encoding Json"""
+
     def default(self, obj):
+        """default method for JSONEncoder.
+
+        Parameters
+        ----------
+        obj : Instance of the object
+
+        Results
+        ------
+        Depends upon the instance type
+            if instance is integer, it will return int.
+            if instance is float, it will return float.
+            if instance is string, it will return string.
+            if instance is UUID, it will returns string.
+
+        """
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
@@ -39,7 +56,23 @@ class JSONEncoder(json.JSONEncoder):
 
 
 class JSONDecoder(json.JSONDecoder):
+    """Decoding Json"""
+
     def default(self, obj):
+        """default method for JSONEncoder.
+
+        Parameters
+        ----------
+        obj : Instance of the object
+
+        Results
+        ------
+        Depends upon the instance
+            if instance is nan, it will return np.nan.
+            if instance is inf, it will return np.inf.
+            if instance is -inf, it will return -np.inf.
+
+        """
         if obj == "nan":
             return np.nan
         if obj == "inf":
