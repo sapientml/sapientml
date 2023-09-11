@@ -41,6 +41,19 @@ class GeneratedModel:
                 f.write(content)
 
     def fit(self, training_data):
+        """
+        Generate ML scripts for input data.
+
+        Parameters
+        ----------
+        training_data: pandas.DataFrame
+            Training dataframe.
+
+        Returns
+        -------
+        self: GeneratedModel
+            GeneratedModel object itself
+        """
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
@@ -62,6 +75,18 @@ class GeneratedModel:
         return self
 
     def predict(self, test_data):
+        """Predicts the output of the test_data and store in the prediction_result.csv.
+
+        Parameters
+        ---------
+        test_data: Union[pd.DataFrame, str]
+            Dataframe used for predicting the result.
+
+        Returns
+        -------
+        result_df : pd.DataFrame
+            It returns the prediction_result.csv result in dataframe format.
+        """
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
