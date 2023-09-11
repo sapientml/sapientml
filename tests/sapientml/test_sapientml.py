@@ -179,9 +179,10 @@ def test_misc_sapientml_generate_code_returns_top_script_if_any_one_script_ran_s
 
         process.side_effect = _side_effect
 
-        cls_.fit(
-            testdata_df_light,
-        )
+        with pytest.raises(RuntimeError):
+            cls_.fit(
+                testdata_df_light,
+            )
 
 
 def test_misc_sapientml_set_logger_handler_only_once():
