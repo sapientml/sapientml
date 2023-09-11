@@ -45,6 +45,20 @@ def _read_file(filepath: str, csv_encoding: str, csv_delimiter: str) -> pd.DataF
 
 
 def save_file(dataframe: pd.DataFrame, filepath: str, csv_encoding: str, csv_delimiter: str) -> None:
+    """Saving dataframe to pickle or csv files
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        The data to output
+    filepath : str
+        The path of output file
+    csv_encoding : 'UTF-8' or 'SJIS'
+        Encoding method when csv files are involved.
+        Ignored when only pickle files are involved.
+    csv_delimiter : str
+        Delimiter to read csv files
+    """
     if filepath.endswith(".pkl"):
         dataframe.to_pickle(filepath)
     else:
@@ -85,10 +99,29 @@ def _is_date_column(c):
 
 
 class CancellationToken(BaseModel):
+    """CancellationToken class.
+
+    Attributes
+    ----------
+    is_triggered : bool
+
+    """
+
     is_triggered: bool = False
 
 
 class Code(BaseModel):
+    """Code class.
+
+    Attributes
+    ----------
+    validation : str
+    test : str
+    train : str
+    predict : str
+
+    """
+
     validation: str = ""
     test: str = ""
     train: str = ""
@@ -104,6 +137,17 @@ class Code(BaseModel):
 
 
 class RunningResult(BaseModel):
+    """RunningResult class.
+
+    Attributes
+    ----------
+    output : str
+    error : str
+    returncode : int
+    time : int
+
+    """
+
     output: str
     error: str
     returncode: int
@@ -111,12 +155,69 @@ class RunningResult(BaseModel):
 
 
 class PipelineResult(BaseModel):
+    """PipelineResult class.
+
+    Attributes
+    ----------
+    score : float, optional
+    metric : str, optional
+    best_params : dict, optional
+
+    """
+
     score: Optional[float]
     metric: Optional[str]
     best_params: Optional[dict]
 
 
 class Task(BaseModel):
+    """Task class.
+
+    Attributes
+    ----------
+    target_columns : list[str]
+        Names of target columns
+    task_type : 'classification' or 'regression'
+        Specify classification or regression.
+    ignore_columns: list[str]
+        list of columns which are not necessary or ignored.
+    split_method : 'random', 'time', or 'group'
+        Method of train-test split.
+        'random' uses random split.
+        'time' requires 'split_column_name'.
+        This sorts the data rows based on the column, and then splits data.
+        'group' requires 'split_column_name'.
+        This split the data so as not to split rows with the same value of 'split_column_name'
+        into train and test data.
+        Currently, this option is not valid in the hyperparameter tuning.
+        Don't set time or group when hyperparameter_tuning=True.
+    split_seed : int
+        Random seed for train-test split.
+        Ignored when split_method='time'.
+    split_train_size : float
+        The ratio of training size to input data.
+        Ignored when split_method='time'.
+    split_column_name : str
+        Name of the column used to split.
+        Ignored when split_method='random'
+    time_split_num : int
+        Passed to TimeSeriesSplit's n_splits.
+        Valid only when split_method='time'.
+    time_split_index : int
+        The index of the split from TimeSeriesSplit.
+        Valid only when split_method='time'.
+    adaptation_metric : str
+        Metric for evaluation.
+        Classification: 'f1', 'auc', 'ROC_AUC', 'accuracy', 'Gini', 'LogLoss',
+        'MCC'(Matthews correlation coefficient), 'QWK'(Quadratic weighted kappa).
+        Regression: 'r2', 'RMSLE', 'RMSE', 'MAE'.
+    is_multiclass: bool
+        To check whether it is a multiclass or not.
+    split_stratification : bool
+        To perform stratification in train-test split.
+
+    """
+
     target_columns: list[str]
     task_type: Optional[Literal["classification", "regression"]]
     split_method: Literal["random", "time", "group"]
@@ -130,7 +231,7 @@ class Task(BaseModel):
     split_stratification: Optional[bool] = None
 
     @field_validator("target_columns")
-    def check_num_of_column_names(cls, v):
+    def _check_num_of_column_names(cls, v):
         if v is None:
             return v
         if len(v.keys() if isinstance(v, dict) else v) >= MAX_NUM_OF_COLUMNS:
@@ -138,7 +239,7 @@ class Task(BaseModel):
         return v
 
     @field_validator("target_columns")
-    def check_columns_is_not_empty(cls, v):
+    def _check_columns_is_not_empty(cls, v):
         if v is None:
             return v
         if len(v) == 0:
@@ -146,7 +247,7 @@ class Task(BaseModel):
         return v
 
     @field_validator("target_columns")
-    def check_column_name_length(cls, v):
+    def _check_column_name_length(cls, v):
         if v is None:
             return v
         for _v in v.keys() if isinstance(v, dict) else v:
@@ -155,37 +256,37 @@ class Task(BaseModel):
         return v
 
     @field_validator("split_seed")
-    def check_seed(cls, v):
+    def _check_seed(cls, v):
         if v < 0 or MAX_SEED < v:
             raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
         return v
 
     @field_validator("split_train_size")
-    def check_split_train_size(cls, v):
+    def _check_split_train_size(cls, v):
         if v <= 0 or 1 <= v:
             raise ValueError(f"{v} is out of (0, 1)")
         return v
 
     @field_validator("split_column_name")
-    def check_split_column_name(cls, v):
+    def _check_split_column_name(cls, v):
         if v is not None and len(v) >= MAX_COLUMN_NAME_LENGTH:
             raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
     @field_validator("time_split_num")
-    def check_time_split_num(cls, v):
+    def _check_time_split_num(cls, v):
         if v < 1 or MAX_TIME_SPLIT_NUM < v:
             raise ValueError(f"{v} is out of [1, {MAX_TIME_SPLIT_NUM}]")
         return v
 
     @field_validator("time_split_index")
-    def check_time_split_index(cls, v):
+    def _check_time_split_index(cls, v):
         if v < 0 or MAX_TIME_SPLIT_INDEX < v:
             raise ValueError(f"{v} is out of [1, {MAX_TIME_SPLIT_INDEX}].")
         return v
 
     @field_validator("adaptation_metric")
-    def check_metric(cls, v):
+    def _check_metric(cls, v):
         if v is None:
             return v
         try:
@@ -196,6 +297,23 @@ class Task(BaseModel):
 
 
 class Config(BaseModel):
+    """Config class.
+
+    Attributes
+    ----------
+    initial_timeout : int
+        Timelimit to execute each generated script.
+        Ignored when hyperparameter_tuning=True and hyperparameter_tuning_timeout is set.
+    timeout_for_test : int
+        Timelimit to execute test script (final_script) and Visualization.
+    cancel : CancellationToken, optional
+        Object to interrupt evaluations.
+    project_name : str, optional
+        Project name.
+    debug : bool
+        Debug mode or not.
+    """
+
     initial_timeout: int = INITIAL_TIMEOUT
     timeout_for_test: int = 0
     cancel: Optional[CancellationToken] = None
@@ -215,6 +333,35 @@ class Dataset:
         ignore_columns: Optional[List[str]] = None,
         output_dir: Path = Path(DEFAULT_OUTPUT_DIR),
     ):
+        """Checking/Preparing the dataset.
+
+        Parameters
+        ----------
+        training_data: pandas.DataFrame or str
+            Training dataframe.
+            When str, this is regarded as a file path.
+        validation_data: pandas.DataFrame, str or None
+            Validation dataframe.
+            When str, this is regarded as file paths.
+            When None, validation data is extracted from training data by split.
+        test_data: pandas.DataFrame, str, or None
+            Test dataframes.
+            When str, they are regarded as file paths.
+            When None, test data is extracted from training data by split.
+        csv_encoding: 'UTF-8' or 'SJIS'
+            Encoding method when csv files are involved.
+            Ignored when only pickle files are involved.
+        csv_delimiter: str
+            Delimiter to read csv files
+        save_datasets_format: 'csv' or 'pickle'
+            Data format when the input dataframes are written to files.
+            Ignored when all inputs are specified as file path.
+        ignore_columns: list[str]
+            Column names which must not be used and must be dropped.
+        output_dir: str
+            Output dir
+
+        """
         self.ignore_columns = [] if ignore_columns is None else ignore_columns
         self.csv_encoding = csv_encoding
         self.csv_delimiter = csv_delimiter
@@ -271,6 +418,14 @@ class Dataset:
         self,
         target_columns: List[str],
     ):
+        """Checking dataframes method.
+
+        Parameters
+        ----------
+        target_columns : List[str]
+            Names of target columns.
+
+        """
         # 1. Check status of each dataframe
         self._check_single_dataframe(self.training_dataframe, target_columns, "train")
         if self.validation_dataframe is not None:
@@ -415,4 +570,12 @@ class Dataset:
         return True
 
     def get_dataframes(self) -> tuple[pd.DataFrame, Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+        """get_dataframes method.
+
+        Results
+        ----------
+        tuple
+            returns traning, validation, test dataframes in tuple format.
+
+        """
         return (self.training_dataframe, self.validation_dataframe, self.test_dataframe)

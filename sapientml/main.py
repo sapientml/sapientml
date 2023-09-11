@@ -357,6 +357,20 @@ class SapientML:
 
     def predict(
         self,
-        test_data: Union[pd.DataFrame, str],
+        test_data: pd.DataFrame,
     ):
+        """
+        Predicts the output of the test_data and store in the prediction_result.csv.
+
+        Parameters
+        ---------
+        test_data: pd.DataFrame
+            Dataframe used for predicting the result.
+
+        Returns
+        -------
+        result : pd.DataFrame
+            It returns the prediction_result.csv result in dataframe format.
+
+        """
         return self.model.predict(test_data)
