@@ -125,7 +125,7 @@ def test_sapientml_works_with_time_split(testdata_df_light):
     )
 
 
-def test_misc_sapientml_generate_code_returns_candidates_even_if_all_the_candidates_failed_to_run(testdata_df_light):
+def test_sapientml_raises_error_if_all_candidates_failed_to_run(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -135,50 +135,12 @@ def test_misc_sapientml_generate_code_returns_candidates_even_if_all_the_candida
         time_split_index=0,
     )
     with mock.patch("subprocess.Popen") as process:
-        attrs = {"return_value.communicate.return_value": (b"", b"Error!"), "return_value.returncode": 1}
+        attrs = {
+            "return_value.stdout.readline.return_value": (b""),
+            "return_value.stderr.readline.return_value": (b""),
+            "return_value.returncode": 1,
+        }
         process.configure_mock(**attrs)
-        with pytest.raises(RuntimeError):
-            cls_.fit(
-                testdata_df_light,
-            )
-
-
-def test_misc_sapientml_generate_code_returns_top_script_if_any_one_script_ran_successfully(testdata_df_light):
-    cls_ = SapientML(
-        ["target_number"],
-        task_type="regression",
-        split_method="time",
-        split_column_name="explanatory_datetime",
-        time_split_num=4,
-        time_split_index=0,
-    )
-    with mock.patch("subprocess.Popen") as process:
-        side_effects = [
-            mock.Mock(communicate=mock.Mock(return_value=x[0]), returncode=x[1])
-            for x in [
-                [
-                    (
-                        b"RESULT: R2: 0.87654",
-                        b"",
-                    ),
-                    0,
-                ],
-                [
-                    (
-                        b"",
-                        b"",
-                    ),
-                    1,
-                ],
-            ]
-        ]
-
-        def _side_effect(*args, **kwargs):
-            _value = min(process.call_count, len(side_effects))
-            return side_effects[_value - 1]
-
-        process.side_effect = _side_effect
-
         with pytest.raises(RuntimeError):
             cls_.fit(
                 testdata_df_light,

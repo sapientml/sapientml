@@ -17,6 +17,7 @@ import os
 import platform
 import subprocess
 import sys
+import threading
 import time
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -65,28 +66,54 @@ def run(
         stderr=subprocess.PIPE,
     )
 
+    stdout_lines = []
+    stderr_lines = []
     endtime = time.time() + timeout if timeout > 0 else None
     interrupted_reason = None
+
+    def read_stream(stream, output_buffer, name, terminate_flag, endtime):
+        for line in iter(stream.readline, b""):
+            if terminate_flag.is_set() or (endtime is not None and time.time() > endtime):
+                print(f"{name} thread: Terminating due to timeout or cancellation")
+                break
+
+            output_buffer.append(line.decode(encoding))
+
+    terminate_flag = threading.Event()
+    stdout_thread = threading.Thread(
+        target=read_stream, args=(process.stdout, stdout_lines, "stdout", terminate_flag, endtime)
+    )
+    stderr_thread = threading.Thread(
+        target=read_stream, args=(process.stderr, stderr_lines, "stderr", terminate_flag, endtime)
+    )
+
+    stdout_thread.start()
+    stderr_thread.start()
 
     while process.poll() is None:
         if endtime is not None and time.time() > endtime:
             interrupted_reason = "Timeout"
+            terminate_flag.set()
             process.kill()
+            _ = process.wait()
             break
         if cancel is not None and cancel.is_triggered:
             interrupted_reason = "Cancelled by user"
+            terminate_flag.set()
             process.kill()
+            _ = process.wait()
             break
         time.sleep(1)
 
-    output, error = process.communicate(timeout=timeout if timeout > 0 else None)
+    stdout_thread.join()
+    stderr_thread.join()
 
     if interrupted_reason is not None:
         output = ""
         error = interrupted_reason
     else:
-        output = output.decode(encoding)
-        error = error.decode(encoding)
+        output = "".join(stdout_lines)
+        error = "".join(stderr_lines)
 
     result = RunningResult(
         output=output,

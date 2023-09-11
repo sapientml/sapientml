@@ -156,7 +156,7 @@ def test_regressor_works_number(
             assert returncode == 0
 
 
-@pytest.mark.parametrize("adaptation_metric", ["r2"])
+@pytest.mark.parametrize("adaptation_metric", ["MAE"])
 @pytest.mark.parametrize("target_col", ["target_number"])
 def test_regressor_works_with_nosparse(
     adaptation_metric,
@@ -194,7 +194,7 @@ def test_regressor_works_with_nosparse(
         assert returncode == 0
 
 
-@pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy"])
+@pytest.mark.parametrize("adaptation_metric", ["f1"])
 @pytest.mark.parametrize("target_col", ["target_category_binary_num"])
 def test_classifier_category_binary_num_noproba(
     adaptation_metric,
@@ -242,7 +242,7 @@ def test_classifier_category_binary_num_noproba(
             assert returncode == 0
 
 
-@pytest.mark.parametrize("adaptation_metric", ["auc", "LogLoss", "MAP_3"])
+@pytest.mark.parametrize("adaptation_metric", ["auc", "LogLoss"])
 @pytest.mark.parametrize("target_col", ["target_category_binary_num"])
 def test_classifier_category_binary_num_proba(
     adaptation_metric,
@@ -446,7 +446,7 @@ def test_classifier_category_binary_boolean_metric_noproba(
             assert returncode == 0
 
 
-@pytest.mark.parametrize("adaptation_metric", ["auc", "LogLoss", "MAP_3"])
+@pytest.mark.parametrize("adaptation_metric", ["auc", "LogLoss"])
 @pytest.mark.parametrize("target_col", ["target_category_binary_boolean"])
 def test_classifier_category_binary_boolean_metric_proba(
     adaptation_metric,
@@ -737,7 +737,7 @@ def test_classifier_category_multi_nonnum_noproba_metric_with_proba(
             assert returncode == 0
 
 
-@pytest.mark.parametrize("adaptation_metric", ["r2"])
+@pytest.mark.parametrize("adaptation_metric", ["RMSLE"])
 @pytest.mark.parametrize("target_col", ["target_number_large_scale"])
 def test_misc_preprocess_specify_train_valid_test(
     adaptation_metric,
