@@ -72,7 +72,7 @@ class GeneratedModel:
                 output_dir=temp_dir,
             )
 
-            self._writefiles(temp_dir)
+            self.save(temp_dir)
 
             logger.info("Predicting by built model...")
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
