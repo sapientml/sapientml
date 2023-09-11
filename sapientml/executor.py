@@ -32,6 +32,21 @@ logger = setup_logger()
 def run(
     file_path: str, timeout: int, cancel: Optional[CancellationToken] = None, cwd: Optional[str] = None
 ) -> RunningResult:
+    """Executing run() function based on operating system.
+
+    Parameters
+    ----------
+    filepath : str
+    timeout : int
+    cancel : CancellationToken, optional
+    cwd : str, optional
+        It is a working directory which can be optional parameter.
+
+    Returns
+    -------
+    result : RunningResult
+
+    """
     start_time = time.time()
 
     if platform.system() == "Windows":
@@ -83,6 +98,8 @@ def run(
 
 
 class PipelineExecutor:
+    """PipelineExecutor class for executing the generated pipelines."""
+
     def __init__(
         self,
     ):
@@ -95,6 +112,25 @@ class PipelineExecutor:
         output_dir: Path,
         cancel: Optional[CancellationToken],
     ) -> list[tuple[Code, RunningResult]]:
+        """execute func.
+
+        Executes the generated pipelines.
+
+        Parameters
+        ----------
+        pipeline_list: list[Code]
+            List of generated pipeline code
+        initial_timeout: int
+        output_dir: Path
+            output directory to store the results
+        cancel : CancellationToken, optional
+
+        Returns
+        -------
+        candidate_scripts: list[tuple[Code, RunningResult]]
+            It stores both the results and the code in list of tuples format.
+
+        """
         candidate_scripts: list[tuple[Code, RunningResult]] = []
 
         # copy libs
