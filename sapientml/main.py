@@ -340,7 +340,7 @@ class SapientML:
         self.generator.save(self.output_dir)
 
         self.model = GeneratedModel(
-            output_dir=self.output_dir,
+            input_dir=self.output_dir,
             save_datasets_format=save_datasets_format,
             csv_encoding=csv_encoding,
             csv_delimiter=csv_delimiter,
@@ -349,7 +349,7 @@ class SapientML:
         )
 
         if not codegen_only:
-            self.model.fit(training_dataframe)
+            self.model.fit(pd.concat([training_dataframe, validation_dataframe]))
 
         logger.info("Done.")
 

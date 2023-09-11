@@ -206,7 +206,7 @@ class Config(BaseModel):
 class Dataset:
     def __init__(
         self,
-        training_data: Optional[Union[pd.DataFrame, str]] = None,
+        training_data: Union[pd.DataFrame, str],
         validation_data: Optional[Union[pd.DataFrame, str]] = None,
         test_data: Optional[Union[pd.DataFrame, str]] = None,
         csv_encoding: Literal["UTF-8", "SJIS"] = "UTF-8",
