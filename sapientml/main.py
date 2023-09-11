@@ -222,7 +222,6 @@ class SapientML:
             ignore_columns=ignore_columns,
             output_dir=self.output_dir,
         )
-        self.dataset.check_dataframes(self.task.target_columns)
 
         if self.task.task_type is None:
             self.task.task_type = SapientMLSuggestion(
@@ -286,23 +285,41 @@ class SapientML:
             return
 
         logger.info("Building model by generated pipeline...")
-        run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+        result = run(str(self.output_dir / "final_train.py"), self.config.timeout_for_test)
+        if result.returncode != 0:
+            raise RuntimeError(f"Training was failed due to the following Error: {result.error}")
         logger.info("Done.")
 
     def predict(
         self,
         test_data: Union[pd.DataFrame, str],
     ):
+        """Predicts the output of the test_data and store in the prediction_result.csv.
+
+        Parameters
+        ---------
+        test_data: Union[pd.DataFrame, str]
+            Dataframe used for predicting the result.
+
+        Returns
+        -------
+        result : pd.DataFrame
+            It returns the prediction_result.csv result in dataframe format.
+
+        """
         if isinstance(test_data, pd.DataFrame):
             filename = "test." + "pkl" if self.dataset.save_datasets_format == "pickle" else "csv"
-            save_file(test_data, self.output_dir / filename, self.dataset.csv_encoding, self.dataset.csv_delimiter)
+            save_file(test_data, str(self.output_dir / filename), self.dataset.csv_encoding, self.dataset.csv_delimiter)
         else:
             return
 
         logger.info("Predicting by built model...")
-        run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
-        result = pd.read_csv(self.output_dir / "prediction_result.csv")
-        return result
+        result = run(str(self.output_dir / "final_predict.py"), self.config.timeout_for_test)
+        if result.returncode != 0:
+            raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
+        result_df = pd.read_csv(self.output_dir / "prediction_result.csv")
+        return result_df
 
     def get_config(self):
+        """get_config method."""
         return self.config
