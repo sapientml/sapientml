@@ -36,15 +36,10 @@ class GeneratedModel:
         csv_delimiter: str,
         params: dict,
     ):
-        self.files = dict()
-        self.save_datasets_format = save_datasets_format
-        self.timeout = timeout
-        self.csv_encoding = csv_encoding
-        self.csv_delimiter = csv_delimiter
-        self.params = params
         """
         The constructor of GeneratedModel.
         Instantiating this class by yourself is not intended.
+
         Parameters
         ----------
         target_columns: list[str]
@@ -83,8 +78,14 @@ class GeneratedModel:
             Valid only when split_method='time'.
         split_stratification: bool
             To perform stratification in train-test split.
-
         """
+
+        self.files = dict()
+        self.save_datasets_format = save_datasets_format
+        self.timeout = timeout
+        self.csv_encoding = csv_encoding
+        self.csv_delimiter = csv_delimiter
+        self.params = params
         input_dir = Path(input_dir)
         self._readfile(input_dir / "final_train.py", input_dir)
         self._readfile(input_dir / "final_predict.py", input_dir)

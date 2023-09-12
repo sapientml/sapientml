@@ -297,7 +297,8 @@ class Task(BaseModel):
 
 
 class Config(BaseModel):
-    """Config class.
+    """
+    Config class.
 
     Attributes
     ----------
@@ -333,7 +334,8 @@ class Dataset:
         ignore_columns: Optional[List[str]] = None,
         output_dir: Path = Path(DEFAULT_OUTPUT_DIR),
     ):
-        """Checking/Preparing the dataset.
+        """
+        Checking/Preparing the dataset.
 
         Parameters
         ----------
