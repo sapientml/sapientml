@@ -788,10 +788,10 @@ def test_misc_preprocess_specify_train_valid_test(
         assert "HANDLE JAPANESE TEXT" in code_for_test
         assert "DISCARD IRRELEVANT COLUMNS" in code_for_test
         assert "Preprocess:SimpleImputer" in code_for_test
-        assert "_NUMERIC_COLS_WITH_MISSING_VALUES" in code_for_test
-        assert "_NUMERIC_ALMOST_MISSING_COLS" in code_for_test
-        assert "_STRING_COLS_WITH_MISSING_VALUES" in code_for_test
-        assert "_STRING_ALMOST_MISSING_COLS" in code_for_test
+        assert "NUMERIC_COLS_WITH_MISSING_VALUES" in code_for_test
+        assert "NUMERIC_ALMOST_MISSING_COLS" in code_for_test
+        assert "STRING_COLS_WITH_MISSING_VALUES" in code_for_test
+        assert "STRING_ALMOST_MISSING_COLS" in code_for_test
         assert "Preprocess:OrdinalEncoder" in code_for_test
         assert "Preprocess:DateTime" in code_for_test
         assert "Preprocess:TextPreprocessing" in code_for_test
