@@ -13,5 +13,7 @@
 # limitations under the License.
 
 from .main import SapientML
+from .model import GeneratedModel
+from .params import Config, Dataset, Task
 
-__all__ = ["SapientML"]
+__all__ = ["SapientML", "GeneratedModel", "Config", "Dataset", "Task"]
