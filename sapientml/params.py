@@ -378,7 +378,6 @@ class Dataset:
             filename = "training." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.training_data_path = str(self.output_dir / filename)
             save_file(self.training_dataframe, self.training_data_path, csv_encoding, csv_delimiter)
-            self.training_data_path = str(Path(self.training_data_path).relative_to(self.output_dir))
 
         # NOTE: self.validation_data and self.test_data can be None
         if validation_data is not None and test_data is None:
@@ -393,7 +392,6 @@ class Dataset:
             filename = "validation." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.validation_data_path = str(self.output_dir / filename)
             save_file(self.validation_dataframe, self.validation_data_path, csv_encoding, csv_delimiter)
-            self.validation_data_path = str(Path(self.validation_data_path).relative_to(self.output_dir))
         else:
             self.validation_dataframe = None
             self.validation_data_path = None
@@ -406,15 +404,16 @@ class Dataset:
             filename = "test." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.test_data_path = str(self.output_dir / filename)
             save_file(self.test_dataframe, self.test_data_path, csv_encoding, csv_delimiter)
-            self.test_data_path = str(Path(self.test_data_path).relative_to(self.output_dir))
         else:
             self.test_dataframe = None
             self.test_data_path = None
 
     def reload(self):
         self.training_dataframe = _read_file(self.training_data_path, self.csv_encoding, self.csv_delimiter)
-        self.validation_dataframe = _read_file(self.validation_data_path, self.csv_encoding, self.csv_delimiter)
-        self.test_dataframe = _read_file(self.test_data_path, self.csv_encoding, self.csv_delimiter)
+        if self.validation_data_path:
+            self.validation_dataframe = _read_file(self.validation_data_path, self.csv_encoding, self.csv_delimiter)
+        if self.test_data_path:
+            self.test_dataframe = _read_file(self.test_data_path, self.csv_encoding, self.csv_delimiter)
 
     def check_dataframes(
         self,
