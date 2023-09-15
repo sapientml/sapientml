@@ -53,12 +53,14 @@ def run(
     if platform.system() == "Windows":
         executable = None
         encoding = "cp932"
+        cmd = f'{sys.executable} "{file_path}"'
     else:
         executable = "/bin/bash"
         encoding = "utf-8"
+        cmd = f"{sys.executable} {file_path}"
 
     process = subprocess.Popen(
-        f"{sys.executable} {file_path}",
+        cmd,
         shell=True,
         executable=executable,
         cwd=cwd or os.path.dirname(file_path),
