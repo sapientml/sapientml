@@ -46,10 +46,10 @@ train_data, test_data = train_test_split(train_data)
 y_true = test_data["survived"].reset_index(drop=True)
 test_data.drop(["survived"], axis=1, inplace=True)
 
-sml = SapientML(["survived"])
+cls = SapientML(["survived"])
 
-sml.fit(train_data)
-y_pred = sml.predict(test_data)
+cls.fit(train_data)
+y_pred = cls.predict(test_data)
 
 print(f"F1 score: {f1_score(y_true, y_pred)}")
 ```
