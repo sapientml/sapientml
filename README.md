@@ -14,9 +14,7 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 <a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a>
 </p>
 
-# Getting Started
-
-## Installation
+# Installation
 
 From PyPI repository
 
@@ -32,12 +30,10 @@ cd sapientml
 pip install poetry
 poetry install
 ```
+# Getting Started
 
-### Run AutoML
-
-<a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/main/static/sapientml-example-titanic.ipynb">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
+Please see our [Documentation](https://sapientml.readthedocs.io/en/latest/user/usage.html) for further details.
+## Run AutoML
 
 ```py
 import pandas as pd
@@ -58,7 +54,7 @@ y_pred = sml.predict(test_data)
 print(f"F1 score: {f1_score(y_true, y_pred)}")
 ```
 
-### Obtain and Run Generated Code
+## Obtain and Run Generated Code
 
 You can access `model` field to get a model consisting of generated code after executing `fit` method.
 `model` provides `fit`, `predict`, and `save` method to train a model by generated code, predict from a test data by generated code, and save generated code to a designated folder.
@@ -72,6 +68,14 @@ y_pred = model.predict(test_data) # prediction by using generated code
 
 model.save("/path/to/output") # save generated code to `path/to/output`
 ```
+
+# Examples
+
+| Dataset | Task | Target | Code |
+|---------|------|--------|------|
+| [Titanic Dataset](https://www.openml.org/d/40945) | `classification` | `survived` | <a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/main/static/sapientml-example-titanic.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> |
+| Hotel Cancellation | `classification` | `Status` | <a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/main/static/sapientml-example-hotel-candel-prediction.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> |
+| Housing Prices | `regression` | `SalePrice` | <a target="_blank" href="https://colab.research.google.com/github/sapientml/sapientml/blob/main/static/sapientml-example-housing-prices.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> |
 
 # Publications
 
