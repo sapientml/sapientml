@@ -99,7 +99,7 @@ class SapientML:
         Parameters
         ----------
         target_columns: list[str]
-            Names of target columns
+            Names of target columns.
         task_type: 'classification' or 'regression'
             Specify classification or regression.
         adaptation_metric: str
@@ -113,10 +113,8 @@ class SapientML:
             'time' requires 'split_column_name'.
             This sorts the data rows based on the column, and then splits data.
             'group' requires 'split_column_name'.
-            This split the data so as not to split rows with the same value of 'split_column_name'
-            into train and test data.
-            Currently, this option is not valid in the hyperparameter tuning.
-            Don't set time or group when hyperparameter_tuning=True.
+            This splits the data so that rows with the same value of 'split_column_name'
+            are not placed in both training and test data.
         split_seed: int
             Random seed for train-test split.
             Ignored when split_method='time'.
@@ -134,6 +132,7 @@ class SapientML:
             Valid only when split_method='time'.
         split_stratification: bool
             To perform stratification in train-test split.
+            Valid only when task_type='classification'.
 
         """
         self.params = {
@@ -248,18 +247,18 @@ class SapientML:
             Encoding method when csv files are involved.
             Ignored when only pickle files are involved.
         csv_delimiter: str
-            Delimiter to read csv files
+            Delimiter to read csv files.
         ignore_columns: list[str]
             Column names which must not be used and must be dropped.
         output_dir: str
-            Output dir
+            Output directory.
         codegen_only: bool
-            Do not conduct fit() of GeneratedModel if True
+            Do not conduct fit() of GeneratedModel if True.
 
         Returns
         -------
         self: SapientML
-            SapientML object itself
+            SapientML object itself.
         """
 
         if ignore_columns is None:
@@ -360,7 +359,7 @@ class SapientML:
         test_data: pd.DataFrame,
     ):
         """
-        Predicts the output of the test_data and store in the prediction_result.csv.
+        Predicts the output of the test_data.
 
         Parameters
         ---------
