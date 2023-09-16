@@ -51,6 +51,7 @@ cls = SapientML(["survived"])
 cls.fit(train_data)
 y_pred = cls.predict(test_data)
 
+y_pred = y_pred["survived"].rename("survived_pred")
 print(f"F1 score: {f1_score(y_true, y_pred)}")
 ```
 
