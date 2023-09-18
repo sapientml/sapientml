@@ -63,6 +63,7 @@ class GeneratedModel:
         self.csv_delimiter = csv_delimiter
         self.params = params
         input_dir = Path(input_dir)
+        self._readfile(input_dir / "final_script.py", input_dir)
         self._readfile(input_dir / "final_train.py", input_dir)
         self._readfile(input_dir / "final_predict.py", input_dir)
 
