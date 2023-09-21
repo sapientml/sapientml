@@ -70,11 +70,13 @@ def test_explain(test_data, make_tempdir, caplog):
         n_models=2,
         target_columns=["target_category_binary_num"],
         task_type="classification",
+        id_columns_for_prediction=["explanatory_Id"],
         split_stratification=True,
         add_explanation=True,
     )
     cls_.fit(
         test_data.drop(["target_number_large_scale", "target_number_large_scale_neg"], axis=1),
+        ignore_columns=["target_number_copy"],
         output_dir=make_tempdir.as_posix(),
     )
     assert os.path.exists(make_tempdir / output_script_name)
@@ -87,5 +89,41 @@ def test_explain(test_data, make_tempdir, caplog):
     assert "Finding Intresting Datapoints" in text
     assert "Visualization for data distribution of columns" in text
     assert "Visualization for feature heatmap" in text
+    assert "target_number_copy" not in text.split("# LOAD DATA")[1].split("# DROP IGNORED COLUMNS")[0]
+    caplog.clear()
+    logging.disable(logging.FATAL)
+
+
+def test_explain_specify_train_test(test_data, make_tempdir, caplog):
+    output_script_name = "final_script.ipynb"
+    test_data = test_data.drop(["target_number_large_scale", "target_number_large_scale_neg"], axis=1)
+    train_df = test_data[:200]
+    test_df = test_data[200:]
+    logging.disable(logging.NOTSET)
+    cls_ = SapientML(
+        n_models=2,
+        target_columns=["target_category_binary_num"],
+        id_columns_for_prediction=["explanatory_Id"],
+        task_type="classification",
+        split_stratification=True,
+        add_explanation=True,
+    )
+    cls_.fit(
+        training_data=train_df,
+        test_data=test_df,
+        ignore_columns=["target_number_copy"],
+        output_dir=make_tempdir.as_posix(),
+    )
+    assert os.path.exists(make_tempdir / output_script_name)
+    assert "Error" not in caplog.text
+    with open(make_tempdir / output_script_name, "rt", encoding="UTF-8") as f:
+        text = f.read()
+    assert "General Structure" in text
+    assert "Exploratory Data Analysis (EDA)" in text
+    assert "Skewness" in text
+    assert "Finding Intresting Datapoints" in text
+    assert "Visualization for data distribution of columns" in text
+    assert "Visualization for feature heatmap" in text
+    assert "target_number_copy" not in text.split("# LOAD DATA")[1].split("# DROP IGNORED COLUMNS")[0]
     caplog.clear()
     logging.disable(logging.FATAL)
