@@ -29,6 +29,8 @@ license = "Apache-2.0"
 readme = "README.md"
 keywords = ["automl"]
 repository = "https://github.com/sapientml/sapientml"
+homepage = "https://sapientml.io/"
+documentation = "https://sapientml.readthedocs.io/"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"

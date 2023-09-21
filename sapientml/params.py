@@ -298,7 +298,8 @@ class Task(BaseModel):
 
 class Config(BaseModel):
     """
-    Config class.
+    Configuration arguments for sapientml.generator.CodeBlockGenerator
+    and/or sapientml.generator.PipelineGenerator.
 
     Attributes
     ----------

@@ -38,10 +38,13 @@ def run(
     Parameters
     ----------
     filepath : str
+        Path of the file executed.
     timeout : int
+        Timeout for the execution.
     cancel : CancellationToken, optional
+        Object for cancellation.
     cwd : str, optional
-        It is a working directory which can be optional parameter.
+        Working directory.
 
     Returns
     -------
@@ -141,19 +144,18 @@ class PipelineExecutor:
         output_dir: Path,
         cancel: Optional[CancellationToken],
     ) -> list[tuple[Code, RunningResult]]:
-        """execute func.
-
-        Executes the generated pipelines.
+        """Executes the generated pipelines.
 
         Parameters
         ----------
         pipeline_list: list[Code]
-            List of generated pipeline code
+            List of generated pipeline code.
         initial_timeout: int
+            Timeout for the execution.
         output_dir: Path
-            output directory to store the results
+            Output directory to store the results.
         cancel : CancellationToken, optional
-
+            Object for cancellation.
         Returns
         -------
         candidate_scripts: list[tuple[Code, RunningResult]]
