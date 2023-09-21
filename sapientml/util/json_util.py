@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import math
 from datetime import date, datetime, timedelta
 from uuid import UUID
 
@@ -33,7 +34,7 @@ class JSONEncoder(json.JSONEncoder):
         ------
         Depends upon the instance type
             if instance is integer, it will return int.
-            if instance is float, it will return float.
+            if instance is float, it will return float or None if it's a NaN value.
             if instance is string, it will return string.
             if instance is UUID, it will returns string.
 
@@ -41,6 +42,8 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
+            if np.isnan(obj):
+                return None
             return float(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -53,6 +56,31 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, Exception):
             return repr(obj)
         return super(JSONEncoder, self).default(obj)
+
+    def encode(self, obj):
+        """encode method for JSONEncoder.
+
+        Parameters
+        ----------
+        obj : The object to be encoded as a JSON string.
+
+        Results
+        ------
+        Replaces any float 'nan' values with 'None' in the input object.
+
+        """
+
+        def replace_nan(o):
+            if isinstance(o, float) and math.isnan(o):
+                return None
+            if isinstance(o, list):
+                return [replace_nan(item) for item in o]
+            if isinstance(o, dict):
+                return {key: replace_nan(value) for key, value in o.items()}
+            return o
+
+        obj = replace_nan(obj)
+        return super().encode(obj)
 
 
 class JSONDecoder(json.JSONDecoder):
