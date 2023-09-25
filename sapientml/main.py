@@ -336,6 +336,7 @@ class SapientML:
             raise ValueError("Stratification for multiple target columns is not supported.")
 
         self.generator.generate_pipeline(self.dataset, self.task)
+        self.dataset.reload()
         self.generator.save(self.output_dir)
 
         self.model = GeneratedModel(
