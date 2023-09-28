@@ -34,7 +34,7 @@ documentation = "https://sapientml.readthedocs.io/"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-sapientml-core = "^0.4.4"
+sapientml-core = "^0.4.9"
 numpy = "^1.19.5"
 pandas = "^2.0.3"
 pydantic = "^2.1.1"
