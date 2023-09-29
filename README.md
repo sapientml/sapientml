@@ -81,12 +81,12 @@ model.save("/path/to/output") # save generated code to `path/to/output`
 
 The technologies of the software originates from the following research paper published at the International Conference on Software Engineering (ICSE), which is one of the premier conferences on Software Engineering.
 
-**Ripon K. Saha, Akira Ura, Sonal Mahajan, Chenguang Zhu, Linyi Li, Yang Hu, Hiroaki Yoshida, Sarfraz Khurshid, Mukul R. Prasad (2022, May). [SapientML: synthesizing machine learning pipelines by learning from human-writen solutions](https://arxiv.org/abs/2202.10451). In *[Proceedings of the 44th International Conference on Software Engineering](https://conf.researchr.org/home/icse-2022)* (pp. 1932-1944).**
+**Ripon K. Saha, Akira Ura, Sonal Mahajan, Chenguang Zhu, Linyi Li, Yang Hu, Hiroaki Yoshida, Sarfraz Khurshid, Mukul R. Prasad (2022, May). [SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Written Solutions](https://arxiv.org/abs/2202.10451). In *[Proceedings of the 44th International Conference on Software Engineering](https://conf.researchr.org/home/icse-2022)* (pp. 1932-1944).**
 
 ```bibtex
 @inproceedings{10.1145/3510003.3510226,
 author = {Saha, Ripon K. and Ura, Akira and Mahajan, Sonal and Zhu, Chenguang and Li, Linyi and Hu, Yang and Yoshida, Hiroaki and Khurshid, Sarfraz and Prasad, Mukul R.},
-title = {SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Writen Solutions},
+title = {SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Written Solutions},
 year = {2022},
 isbn = {9781450392211},
 publisher = {Association for Computing Machinery},
