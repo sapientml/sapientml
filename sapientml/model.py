@@ -36,56 +36,34 @@ class GeneratedModel:
         csv_delimiter: str,
         params: dict,
     ):
+        """
+        The constructor of GeneratedModel.
+        Instantiating this class by yourself is not intended.
+
+        Parameters
+        ----------
+        input_dir: PathLike
+            Directory path containing training/prediction scripts and trained models.
+        save_datasets_format: 'csv' or 'pickle'
+            Data format when the input dataframes are written to files.
+            Ignored when all inputs are specified as file path.
+        timeout: int
+            Timeout for the execution of training and prediction.
+        csv_encoding: 'UTF-8' or 'SJIS'
+            Encoding method when csv files are involved.
+            Ignored when only pickle files are involved.
+        csv_delimiter: str
+            Delimiter to read csv files.
+        """
+
         self.files = dict()
         self.save_datasets_format = save_datasets_format
         self.timeout = timeout
         self.csv_encoding = csv_encoding
         self.csv_delimiter = csv_delimiter
         self.params = params
-        """
-        The constructor of GeneratedModel.
-        Instantiating this class by yourself is not intended.
-        Parameters
-        ----------
-        target_columns: list[str]
-            Names of target columns
-        task_type: 'classification' or 'regression'
-            Specify classification or regression.
-        adaptation_metric: str
-            Metric for evaluation.
-            Classification: 'f1', 'auc', 'ROC_AUC', 'accuracy', 'Gini', 'LogLoss',
-            'MCC'(Matthews correlation coefficient), 'QWK'(Quadratic weighted kappa).
-            Regression: 'r2', 'RMSLE', 'RMSE', 'MAE'.
-        split_method: 'random', 'time', or 'group'
-            Method of train-test split.
-            'random' uses random split.
-            'time' requires 'split_column_name'.
-            This sorts the data rows based on the column, and then splits data.
-            'group' requires 'split_column_name'.
-            This split the data so as not to split rows with the same value of 'split_column_name'
-            into train and test data.
-            Currently, this option is not valid in the hyperparameter tuning.
-            Don't set time or group when hyperparameter_tuning=True.
-        split_seed: int
-            Random seed for train-test split.
-            Ignored when split_method='time'.
-        split_train_size: float
-            The ratio of training size to input data.
-            Ignored when split_method='time'.
-        split_column_name: str
-            Name of the column used to split.
-            Ignored when split_method='random'
-        time_split_num: int
-            Passed to TimeSeriesSplit's n_splits.
-            Valid only when split_method='time'.
-        time_split_index: int
-            The index of the split from TimeSeriesSplit.
-            Valid only when split_method='time'.
-        split_stratification: bool
-            To perform stratification in train-test split.
-
-        """
         input_dir = Path(input_dir)
+        self._readfile(input_dir / "final_script.py", input_dir)
         self._readfile(input_dir / "final_train.py", input_dir)
         self._readfile(input_dir / "final_predict.py", input_dir)
 

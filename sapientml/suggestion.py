@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+from typing import List
 
 import pandas as pd
 
@@ -21,13 +21,24 @@ class SapientMLSuggestion:
     def __init__(
         self,
         target_columns: List[str],
-        dataframe: Optional[pd.DataFrame] = None,
+        dataframe: pd.DataFrame,
     ):
+        """
+        Suggest classification or regression for the input target_columns.
+
+        Parameters
+        ----------
+        target_columns: list[str]
+            Names of target columns.
+        dataframe: pandas.DataFrame
+            Input dataframe.
+        """
+
         self.target_columns = target_columns
         self.dataframe = dataframe
 
     def suggest_task(self, th_val=30):
-        """suggest task method.
+        """Suggest classification or regression.
 
         Parameters
         ----------
@@ -39,8 +50,6 @@ class SapientMLSuggestion:
             It returns task_suggestion as regression or classification.
 
         """
-        if self.dataframe is None:
-            raise ValueError("`dataframe` is not specified.")
         task_suggestion_dict = {}
         for target_column in self.target_columns:
             unique_num = self.dataframe[target_column][self.dataframe[target_column].notna()].nunique()
