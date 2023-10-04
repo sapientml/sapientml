@@ -18,9 +18,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    tags:
-      - '*.*.*'
 
 env:
   POETRY_VERSION: "1.5.1"
@@ -59,7 +56,7 @@ jobs:
       #     key: poetry-${{ matrix.os }}-${{ matrix.version }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
 
       - name: Set up Python ${{ matrix.version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
 
@@ -82,47 +79,37 @@ jobs:
 
       - name: Pytest
         run: poetry run -- pytest -k ${{ matrix.test }}
-  additional_test:
-    if: github.event_name == 'push'
-    strategy:
-      matrix:
-        version: ["3.10", "3.11"]
-        test: [test_additional_misc,
-          test_additional_regressor_works_number, test_additional_regressor_works_with_nosparse,
-          test_additional_classifier_category_binary_nonnum_noproba, test_additional_classifier_category_binary_nonnum_proba,
-          test_additional_classifier_category_binary_num_noproba, test_additional_classifier_category_binary_num_proba,
-          test_additional_classifier_category_multi_nonnum_metric_noproba, test_additional_classifier_category_multi_nonnum_metric_proba,
-          test_additional_classifier_category_multi_num_metric_noproba, test_additional_classifier_category_multi_num_metric_proba,
-          test_additional_classifier_category_binary_boolean_metric_noproba, test_additional_classifier_category_binary_boolean_metric_proba,
-          test_additional_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_additional_classifier_category_multi_nonnum_noproba_metric_with_proba,
-          test_additional_classifier_works_with
-          ]
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name:  ${{ matrix.test }}
+          path: .coverage
+          retention-days: 1
+
+  report_coverage:
     runs-on: ubuntu-latest
+    needs:
+      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.version }}
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.version }}
+          python-version: 3.11
 
-      - name: Install Poetry
-        run: |
-          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Download Coverage Files
+        uses: actions/download-artifact@v3
 
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
+      - name: Install coverage
+        run: pip install coverage
 
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
+      - name: Combine Coverage Files
+        run: coverage combine
 
-      - name: Install Packages
-        run: sudo apt install -y graphviz
-
-      - name: Install Dependencies
-        run: poetry install
-
-      - name: Pytest
-        run: poetry run -- pytest -k ${{ matrix.test }}
+      - name: Report Coverage to CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
