@@ -373,4 +373,5 @@ class SapientML:
             It returns the prediction_result.csv result in dataframe format.
 
         """
+        logger.info("Predicting by built model...")
         return self.model.predict(test_data)

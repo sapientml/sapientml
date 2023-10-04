@@ -149,9 +149,8 @@ class GeneratedModel:
             filename = "test." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
             save_file(test_dataframe, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             self.save(temp_dir)
-            logger.info("Predicting by built model...")
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
             result_df = pd.read_csv(temp_dir / "prediction_result.csv")
-            return result_df
+            return result_df[self.params["target_columns"]]
