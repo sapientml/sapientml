@@ -107,7 +107,9 @@ jobs:
         run: pip install coverage
 
       - name: Combine Coverage Files
-        run: coverage combine
+        run: |
+          mv --backup=t */.coverage .
+          coverage combine
 
       - name: Report Coverage to CodeCov
         uses: codecov/codecov-action@v3
