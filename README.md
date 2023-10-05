@@ -10,6 +10,7 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 <a href="https://github.com/sapientml/sapientml/actions/workflows/release.yml"><img alt="Release" src="https://github.com/sapientml/sapientml/actions/workflows/release.yml/badge.svg"></a>
 <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white"></a>
 <a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a>
+<a href="https://codecov.io/gh/sapientml/sapientml" ><img src="https://codecov.io/gh/sapientml/sapientml/graph/badge.svg?token=STVPNF5X25"/></a>
 </p>
 
 # Installation
