@@ -19,10 +19,148 @@ on:
     tags:
       - '*.*.*'
 
+env:
+  POETRY_VERSION: "1.5.1"
+  POETRY_URL: https://install.python-poetry.org
+
 jobs:
+  test:
+    strategy:
+      matrix:
+        version: ["3.10", "3.11"]
+        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc,
+          test_regressor_works_number, test_regressor_works_with_nosparse,
+          test_classifier_category_binary_num_noproba, test_classifier_category_binary_num_proba,
+          test_classifier_category_multi_nonnum_metric_noproba, test_classifier_category_multi_nonnum_metric_proba,
+          test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
+          test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
+          test_classifier_notext_nonegative_explanatry, test_classifier_works_with,
+          test_explain
+          ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.version }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install mecab
+        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
+
+      - name: Set up mecab
+        run: sudo cp /etc/mecabrc /usr/local/etc/
+
+      - name: Install Packages
+        run: sudo apt install -y graphviz
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Pytest
+        run: poetry run -- pytest -k ${{ matrix.test }}
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name:  ${{ matrix.test }}
+          path: .coverage
+          retention-days: 1
+
+  additional_test:
+    strategy:
+      matrix:
+        version: ["3.10", "3.11"]
+        test: [test_additional_misc,
+          test_additional_regressor_works_number, test_additional_regressor_works_with_nosparse,
+          test_additional_classifier_category_binary_nonnum_noproba, test_additional_classifier_category_binary_nonnum_proba,
+          test_additional_classifier_category_binary_num_noproba, test_additional_classifier_category_binary_num_proba,
+          test_additional_classifier_category_multi_nonnum_metric_noproba, test_additional_classifier_category_multi_nonnum_metric_proba,
+          test_additional_classifier_category_multi_num_metric_noproba, test_additional_classifier_category_multi_num_metric_proba,
+          test_additional_classifier_category_binary_boolean_metric_noproba, test_additional_classifier_category_binary_boolean_metric_proba,
+          test_additional_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_additional_classifier_category_multi_nonnum_noproba_metric_with_proba,
+          test_additional_classifier_works_with
+          ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.version }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install mecab
+        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
+
+      - name: Set up mecab
+        run: sudo cp /etc/mecabrc /usr/local/etc/
+
+      - name: Install Packages
+        run: sudo apt install -y graphviz
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Pytest
+        run: poetry run -- pytest -k ${{ matrix.test }}
+
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name:  ${{ matrix.test }}
+          path: .coverage
+          retention-days: 1
+
+  report_coverage:
+    runs-on: ubuntu-latest
+    needs:
+      - test
+      - additional_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Download Coverage Files
+        uses: actions/download-artifact@v3
+
+      - name: Install coverage
+        run: pip install coverage
+
+      - name: Combine Coverage Files
+        run: |
+          mv --backup=t */.coverage .
+          coverage combine
+
+      - name: Report Coverage to CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs:
+      - test
+      - additional_test
     steps:
       - name: Checkout
         uses: actions/checkout@v3
