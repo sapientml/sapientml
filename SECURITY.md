@@ -2,7 +2,7 @@
 
 ## Security Announcements
 
-Join our [Discord] server and see `#security-announce` channel for security and vulnerability announcements.
+Join our [Discord](https://discord.gg/59yshERFD9) server and see `#security-announce` channel for security and vulnerability announcements.
 
 ## Reporting a Vulnerability
 
