@@ -10,6 +10,7 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 <a href="https://github.com/sapientml/sapientml/actions/workflows/release.yml"><img alt="Release" src="https://github.com/sapientml/sapientml/actions/workflows/release.yml/badge.svg"></a>
 <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white"></a>
 <a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a>
+<a href="https://codecov.io/gh/sapientml/sapientml" ><img src="https://codecov.io/gh/sapientml/sapientml/graph/badge.svg?token=STVPNF5X25"/></a>
 </p>
 
 # Installation
@@ -81,12 +82,12 @@ model.save("/path/to/output") # save generated code to `path/to/output`
 
 The technologies of the software originates from the following research paper published at the International Conference on Software Engineering (ICSE), which is one of the premier conferences on Software Engineering.
 
-**Ripon K. Saha, Akira Ura, Sonal Mahajan, Chenguang Zhu, Linyi Li, Yang Hu, Hiroaki Yoshida, Sarfraz Khurshid, Mukul R. Prasad (2022, May). [SapientML: synthesizing machine learning pipelines by learning from human-writen solutions](https://arxiv.org/abs/2202.10451). In *[Proceedings of the 44th International Conference on Software Engineering](https://conf.researchr.org/home/icse-2022)* (pp. 1932-1944).**
+**Ripon K. Saha, Akira Ura, Sonal Mahajan, Chenguang Zhu, Linyi Li, Yang Hu, Hiroaki Yoshida, Sarfraz Khurshid, Mukul R. Prasad (2022, May). [SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Written Solutions](https://arxiv.org/abs/2202.10451). In *[Proceedings of the 44th International Conference on Software Engineering](https://conf.researchr.org/home/icse-2022)* (pp. 1932-1944).**
 
 ```bibtex
 @inproceedings{10.1145/3510003.3510226,
 author = {Saha, Ripon K. and Ura, Akira and Mahajan, Sonal and Zhu, Chenguang and Li, Linyi and Hu, Yang and Yoshida, Hiroaki and Khurshid, Sarfraz and Prasad, Mukul R.},
-title = {SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Writen Solutions},
+title = {SapientML: Synthesizing Machine Learning Pipelines by Learning from Human-Written Solutions},
 year = {2022},
 isbn = {9781450392211},
 publisher = {Association for Computing Machinery},
