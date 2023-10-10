@@ -3309,13 +3309,13 @@ files = [
 
 [[package]]
 name = "sapientml-core"
-version = "0.4.9"
+version = "0.4.10"
 description = "A SapientML plugin of SapientMLGenerator"
 optional = false
 python-versions = ">=3.10,<3.13"
 files = [
-    {file = "sapientml_core-0.4.9-py3-none-any.whl", hash = "sha256:800b5efe507cde4f86915c067ba07dfb50e1af78a846b57e9b9aca4657e6a4cc"},
-    {file = "sapientml_core-0.4.9.tar.gz", hash = "sha256:c17f67916f2f1f617d5f803b71a81a6ffff71622e52c1906ad292df94ab241b2"},
+    {file = "sapientml_core-0.4.10-py3-none-any.whl", hash = "sha256:9ffceda818e2faf6907bec57a13f7fffaee50971f738b3e6337b4671d1b35ccb"},
+    {file = "sapientml_core-0.4.10.tar.gz", hash = "sha256:78f1262eb73f53aad36f8e9d3a6b461ce19b3a063911ce6e4ad34da077fc0fa5"},
 ]
 
 [package.dependencies]
