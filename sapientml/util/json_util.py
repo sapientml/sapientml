@@ -71,7 +71,7 @@ class JSONEncoder(json.JSONEncoder):
         """
 
         def replace_nan(o):
-            if isinstance(o, float) and math.isnan(o):
+            if isinstance(obj, float) and math.isnan(obj):
                 return None
             if isinstance(o, list):
                 return [replace_nan(item) for item in o]
@@ -86,8 +86,8 @@ class JSONEncoder(json.JSONEncoder):
 class JSONDecoder(json.JSONDecoder):
     """Decoding Json"""
 
-    def default(self, obj):
-        """default method for JSONEncoder.
+    def decode(self, obj):
+        """default method for JSONDecoder.
 
         Parameters
         ----------
@@ -96,15 +96,15 @@ class JSONDecoder(json.JSONDecoder):
         Results
         ------
         Depends upon the instance
-            if instance is nan, it will return np.nan.
-            if instance is inf, it will return np.inf.
-            if instance is -inf, it will return -np.inf.
+            if instance is None, it will return np.nan.
+            if instance is Infinity, it will return np.inf.
+            if instance is -Infinity, it will return -np.inf.
 
         """
-        if obj == "nan":
+        if obj == "null":
             return np.nan
-        if obj == "inf":
+        if obj == "Infinity":
             return np.inf
-        if obj == "-inf":
+        if obj == "-Infinity":
             return -np.inf
         return super(JSONDecoder, self).decode(obj)
