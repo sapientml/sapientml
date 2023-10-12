@@ -62,11 +62,11 @@ You can access `model` field to get a model consisting of generated code after e
 `model` provides `fit`, `predict`, and `save` method to train a model by generated code, predict from a test data by generated code, and save generated code to a designated folder.
 
 ```py
-model = sml.fit(train_data).model
+model = sml.fit(train_data, codegen_only=True).model
 
-model.fit(another_train_data) # build a model by using another data and the same generated code
+model.fit(X_train, y_train) # build a model by using another data and the same generated code
 
-y_pred = model.predict(test_data) # prediction by using generated code
+y_pred = model.predict(X_test) # prediction by using generated code
 
 model.save("/path/to/output") # save generated code to `path/to/output`
 ```
