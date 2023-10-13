@@ -1,0 +1,36 @@
+import numpy as np
+from {{import_library}} import {{ model_name }}
+
+{% if model_arg == "HPO_noRandomSeed" %}
+__model = {{ model_name }}(**best_params)
+{% elif model_arg == "HPO_RandomSeed" %}
+random_state_model = {{ pipeline.task.model_seed}}
+__model = {{ model_name }}(random_state=random_state_model, **best_params)
+{% elif model_arg == "noHPO_noRandomSeed" %}
+__model = {{ model_name }}({{ params }})
+{% elif model_arg == "noHPO_RandomSeed" %}
+random_state_model = {{ pipeline.task.model_seed}}
+__model = {{ model_name }}(random_state=random_state_model, {{ params }})
+{% endif %}
+
+{% if is_multioutput_regression%}
+from sklearn.multioutput import MultiOutputRegressor
+
+__model = MultiOutputRegressor(__model)
+{% elif is_multioutput_classification %}
+from sklearn.multioutput import MultiOutputClassifier
+
+__model = MultiOutputClassifier(__model)
+{% endif %}
+{% set xgbclassifier = "XGBClassifier" %}
+{% if model_name == xgbclassifier %}
+from sklearn.preprocessing import LabelEncoder
+
+_le = LabelEncoder()
+__target_train = __target_train.transform(lambda col: _le.fit_transform(col))
+{% endif %}
+__model.fit(__feature_train, __target_train)
+__y_pred = __model.predict(__feature_test)
+{% if model_name == xgbclassifier and not flag_predict_proba %}
+__y_pred = _le.inverse_transform(__y_pred)
+{% endif %}
