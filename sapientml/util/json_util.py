@@ -71,7 +71,7 @@ class JSONEncoder(json.JSONEncoder):
         """
 
         def replace_nan(o):
-            if isinstance(obj, float) and math.isnan(obj):
+            if isinstance(o, float) and math.isnan(o):
                 return None
             if isinstance(o, list):
                 return [replace_nan(item) for item in o]
