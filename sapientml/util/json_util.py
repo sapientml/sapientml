@@ -42,8 +42,6 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, np.integer):
             return int(obj)
         if isinstance(obj, np.floating):
-            if np.isnan(obj):
-                return None
             return float(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -86,8 +84,11 @@ class JSONEncoder(json.JSONEncoder):
 class JSONDecoder(json.JSONDecoder):
     """Decoding Json"""
 
-    def decode(self, obj):
-        """default method for JSONDecoder.
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+        """object_hook for JSONDecoder.
 
         Parameters
         ----------
@@ -95,16 +96,24 @@ class JSONDecoder(json.JSONDecoder):
 
         Results
         ------
-        Depends upon the instance
-            if instance is None, it will return np.nan.
-            if instance is Infinity, it will return np.inf.
-            if instance is -Infinity, it will return -np.inf.
+        obj conducted the following replacement:
+        - "nan" with np.nan
+        - "inf" with np.inf
+        - "-inf" with -np.inf
 
         """
-        if obj == "null":
-            return np.nan
-        if obj == "Infinity":
-            return np.inf
-        if obj == "-Infinity":
-            return -np.inf
-        return super(JSONDecoder, self).decode(obj)
+
+        def replace(obj, original, replaced):
+            if isinstance(obj, dict):
+                return {k: replace(v, original, replaced) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [replace(v, original, replaced) for v in obj]
+            elif obj == original:
+                return replaced
+            return obj
+
+        obj = replace(obj, "nan", np.nan)
+        obj = replace(obj, "inf", np.inf)
+        obj = replace(obj, "-inf", -np.inf)
+
+        return obj
