@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import pickle
 from pathlib import Path
 from unittest import mock
 
@@ -55,6 +56,86 @@ def test_sapientml_works_with_two_targets(testdata_df_light):
         initial_timeout=60,
     )
     cls_.fit(
+        testdata_df_light,
+    )
+
+
+def test_sapientml_works_with_suggestion(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+        codegen_only=True,
+    )
+
+
+def test_sapientml_works_with_generated_model(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+        codegen_only=True,
+    )
+    model = cls_.model
+    X = testdata_df_light.drop(["target_number"], axis=1)
+    y = testdata_df_light["target_number"]
+    model.fit(X, y)
+    model.predict(X)
+
+
+def test_sapientml_works_with_pickled_model_bytes_like_object(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
+    pkl = pickle.dumps(cls_.model)
+    cls_ = SapientML.from_pretrained(pkl)
+    cls_.predict(
+        testdata_df_light,
+    )
+
+
+def test_sapientml_works_with_pickled_model_filename(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
+    with open("model.pkl", "wb") as f:
+        pickle.dump(cls_.model, f)
+    cls_ = SapientML.from_pretrained("model.pkl")
+    cls_.predict(
+        testdata_df_light,
+    )
+
+
+def test_sapientml_works_with_pickled_model(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
+    with open("model.pkl", "wb") as f:
+        pickle.dump(cls_.model, f)
+    with open("model.pkl", "rb") as f:
+        model = pickle.load(f)
+    cls_ = SapientML.from_pretrained(model)
+    cls_.predict(
         testdata_df_light,
     )
 

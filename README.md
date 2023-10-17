@@ -11,6 +11,8 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 <a href="https://conventionalcommits.org"><img alt="Conventional Commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white"></a>
 <a href="https://www.bestpractices.dev/projects/7781"><img alt="OpenSSF Best Practices" src="https://www.bestpractices.dev/projects/7781/badge"></a>
 <a href="https://codecov.io/gh/sapientml/sapientml" ><img src="https://codecov.io/gh/sapientml/sapientml/graph/badge.svg?token=STVPNF5X25"/></a>
+<a href="https://pepy.tech/project/sapientml"><img src="https://static.pepy.tech/badge/sapientml"/></a>
+<a href="https://pepy.tech/project/sapientml"><img src="https://static.pepy.tech/badge/sapientml/month"/></a>
 </p>
 
 # Installation
@@ -60,11 +62,11 @@ You can access `model` field to get a model consisting of generated code after e
 `model` provides `fit`, `predict`, and `save` method to train a model by generated code, predict from a test data by generated code, and save generated code to a designated folder.
 
 ```py
-model = sml.fit(train_data).model
+model = sml.fit(train_data, codegen_only=True).model
 
-model.fit(another_train_data) # build a model by using another data and the same generated code
+model.fit(X_train, y_train) # build a model by using another data and the same generated code
 
-y_pred = model.predict(test_data) # prediction by using generated code
+y_pred = model.predict(X_test) # prediction by using generated code
 
 model.save("/path/to/output") # save generated code to `path/to/output`
 ```

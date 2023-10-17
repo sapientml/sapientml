@@ -100,8 +100,8 @@ class SapientML:
         ----------
         target_columns: list[str]
             Names of target columns.
-        task_type: 'classification' or 'regression'
-            Specify classification or regression.
+        task_type: 'classification', 'regression' or None
+            Specify task type classification, regression.
         adaptation_metric: str
             Metric for evaluation.
             Classification: 'f1', 'auc', 'ROC_AUC', 'accuracy', 'Gini', 'LogLoss',
@@ -373,4 +373,5 @@ class SapientML:
             It returns the prediction_result.csv result in dataframe format.
 
         """
+        logger.info("Predicting by built model...")
         return self.model.predict(test_data)
