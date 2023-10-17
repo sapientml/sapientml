@@ -15,7 +15,7 @@
 import tempfile
 from os import PathLike
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional, Union
 
 import pandas as pd
 
@@ -100,26 +100,31 @@ class GeneratedModel:
             with open(output_dir / filename, "wb") as f:
                 f.write(content)
 
-    def fit(self, training_dataframe: pd.DataFrame):
+    def fit(self, X: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series]] = None):
         """
         Generate ML scripts for input data.
 
         Parameters
         ----------
-        training_dataframe: pandas.DataFrame
-            Training dataframe.
+        X: pandas.DataFrame
+            Training dataframe. Contains target values if `y` is `None`.
+        y: pandas.DataFrame or pandas.Series
+            The target values.
 
         Returns
         -------
         self: GeneratedModel
             GeneratedModel object itself
         """
+        if y is not None:
+            X = pd.concat([X, y], axis=1)
+
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
-            filename = "training." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
-            save_file(training_dataframe, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             self.save(temp_dir)
+            filename = "training." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
+            save_file(X, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             logger.info("Building model by generated pipeline...")
             result = run(str(temp_dir / "final_train.py"), self.timeout)
             if result.returncode != 0:
@@ -130,12 +135,12 @@ class GeneratedModel:
                 self._readfile(filepath, temp_dir)
         return self
 
-    def predict(self, test_dataframe: pd.DataFrame):
+    def predict(self, X: pd.DataFrame):
         """Predicts the output of the test_data and store in the prediction_result.csv.
 
         Parameters
         ---------
-        test_dataframe: pd.DataFrame
+        X: pd.DataFrame
             Dataframe used for predicting the result.
 
         Returns
@@ -146,12 +151,12 @@ class GeneratedModel:
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
-            filename = "test." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
-            save_file(test_dataframe, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             self.save(temp_dir)
-            logger.info("Predicting by built model...")
+            filename = "test." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
+            save_file(X, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
             result_df = pd.read_csv(temp_dir / "prediction_result.csv")
+            result_df = result_df[self.params["target_columns"]]
             return result_df
