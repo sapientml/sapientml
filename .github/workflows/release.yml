@@ -148,7 +148,8 @@ jobs:
       - name: Combine Coverage Files
         run: |
           mv --backup=t */.coverage .
-          coverage combine
+          coverage combine -a
+          coverage report
 
       - name: Report Coverage to CodeCov
         uses: codecov/codecov-action@v3
