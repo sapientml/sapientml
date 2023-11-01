@@ -81,13 +81,12 @@ def run(
         async def _read_stream(stream, encoding, replace_newline):
             lines = []
             while True:
-                async for line in stream:
-                    if line:
-                        lines.append(line.decode(encoding).replace(replace_newline, ""))
-
+                line = await stream.readline()
+                if line:
+                    lines.append(line.decode(encoding).replace(replace_newline, ""))
                 if stream.at_eof():
                     break
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.1)
             return lines
 
         async def _wait_timeout_or_cancel(proc, endtime, cancel):
