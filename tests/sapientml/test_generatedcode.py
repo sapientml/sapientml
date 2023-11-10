@@ -153,10 +153,10 @@ def test_regressor_works_number(
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
-        elif model == "XGBRegressor" and 'shap.utils._exceptions.ExplainerError' in result.error:
-            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library, 
-            # which may cause SHAP to add slightly incorrect values. 
-            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking. 
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
             # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
@@ -200,10 +200,10 @@ def test_regressor_works_with_nosparse(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         result = test_result_df.loc[i, "result"]
-        if model == "XGBRegressor" and 'shap.utils._exceptions.ExplainerError' in result.error:
-            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library, 
-            # which may cause SHAP to add slightly incorrect values. 
-            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking. 
+        if model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
             # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
@@ -817,10 +817,10 @@ def test_misc_preprocess_specify_train_valid_test(
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
-        elif model == "XGBRegressor" and 'shap.utils._exceptions.ExplainerError' in result.error:
-            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library, 
-            # which may cause SHAP to add slightly incorrect values. 
-            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking. 
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
             # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
