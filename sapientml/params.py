@@ -215,7 +215,8 @@ class Task(BaseModel):
         To check whether it is a multiclass or not.
     split_stratification : bool
         To perform stratification in train-test split.
-
+    export_preprocess_dataset : bool, default False
+        export pre-processed (feature engineered) the input dataset
     """
 
     target_columns: list[str]
@@ -229,6 +230,7 @@ class Task(BaseModel):
     adaptation_metric: Optional[str]
     is_multiclass: bool = False
     split_stratification: Optional[bool] = None
+    export_preprocess_dataset: bool = False
 
     @field_validator("target_columns")
     def _check_num_of_column_names(cls, v):
