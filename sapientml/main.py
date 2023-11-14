@@ -262,7 +262,6 @@ class SapientML:
         self: SapientML
             SapientML object itself.
         """
-        self.task.export_preprocess_dataset = export_preprocess_dataset
         if ignore_columns is None:
             ignore_columns = []
 
