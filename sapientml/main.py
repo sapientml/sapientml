@@ -223,6 +223,7 @@ class SapientML:
         ignore_columns: Optional[list[str]] = None,
         output_dir: str = DEFAULT_OUTPUT_DIR,
         codegen_only: bool = False,
+        export_preprocess_dataset: bool = False,
     ):
         """
         Generate ML scripts for input data.
@@ -254,13 +255,14 @@ class SapientML:
             Output directory.
         codegen_only: bool
             Do not conduct fit() of GeneratedModel if True.
-
+        export_preprocess_dataset: bool
+            export preprocessed datasets (executing pipeline on raw dataset).
         Returns
         -------
         self: SapientML
             SapientML object itself.
         """
-
+        self.task.export_preprocess_dataset = export_preprocess_dataset
         if ignore_columns is None:
             ignore_columns = []
 
