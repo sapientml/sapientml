@@ -102,7 +102,7 @@ def execute_code_for_test():
         test_result_df = pd.DataFrame(
             index=range(len(pipeline_results)), columns=["returncode", "model", "result", "code_for_test"]
         )
-        save_file_path = (temp_dir / "code.py").absolute().as_posix()
+        save_file_path = (temp_dir / "code_test.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
             code_for_test = pipeline_results[i][0].test
             with open(save_file_path, "w", encoding="utf-8") as f:
