@@ -1178,4 +1178,3 @@ def test_additional_classifier_predict_option(
             elif adaptation_metric == "auc":
                 assert "prediction = pd.DataFrame(y_prob" in code_for_test
                 assert "prediction = pd.DataFrame(y_prob" in code_for_predict
-
