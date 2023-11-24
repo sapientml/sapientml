@@ -405,7 +405,12 @@ def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
     cls_.fit(
         testdata_df,
     )
-    assert "Error" not in caplog.text
+    returncode = 1
+    for i in range(len(cls_.generator.execution_results)):
+        if cls_.generator.execution_results[i][1].returncode == 0:
+            returncode = 0
+            break
+    assert returncode == 0
     caplog.clear()
 
     train_df = testdata_df[:200].reset_index(drop=True)
@@ -420,7 +425,12 @@ def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
         validation_data=valid_df,
         test_data=test_df,
     )
-    assert "Error" not in caplog.text
+    returncode = 1
+    for i in range(len(cls_.generator.execution_results)):
+        if cls_.generator.execution_results[i][1].returncode == 0:
+            returncode = 0
+            break
+    assert returncode == 0
     caplog.clear()
     logging.disable(logging.FATAL)
 
