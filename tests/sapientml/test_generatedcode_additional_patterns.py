@@ -121,8 +121,8 @@ def execute_code_for_test():
 @pytest.fixture(scope="function")
 def execute_code_for_train_and_predict():
     def _execute(pipeline_results, temp_dir, dataset):
-        shutil.copy(dataset.training_data_path, (temp_dir / f"training.csv").absolute().as_posix())
-        shutil.copy(dataset.test_data_path, (temp_dir / f"test.csv").absolute().as_posix())
+        shutil.copy(dataset.training_data_path, (temp_dir / "training.csv").absolute().as_posix())
+        shutil.copy(dataset.test_data_path, (temp_dir / "test.csv").absolute().as_posix())
         result_df = pd.DataFrame(
             index=range(len(pipeline_results)),
             columns=[
@@ -134,8 +134,8 @@ def execute_code_for_train_and_predict():
                 "code_for_predict",
             ],
         )
-        code_train_path = (temp_dir / f"code_train.py").absolute().as_posix()
-        code_predict_path = (temp_dir / f"code_predict.py").absolute().as_posix()
+        code_train_path = (temp_dir / "code_train.py").absolute().as_posix()
+        code_predict_path = (temp_dir / "code_predict.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
             code_for_train = pipeline_results[i][0].train
             with open(code_train_path, "w", encoding="utf-8") as f:
