@@ -149,8 +149,15 @@ def test_regressor_works_number(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
+            assert returncode == 1
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
             assert returncode == 0
@@ -190,8 +197,17 @@ def test_regressor_works_with_nosparse(
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        assert returncode == 0
+        result = test_result_df.loc[i, "result"]
+        if model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
+            assert returncode == 1
+        else:
+            assert returncode == 0
 
 
 @pytest.mark.parametrize("adaptation_metric", ["f1"])
@@ -780,6 +796,7 @@ def test_misc_preprocess_specify_train_valid_test(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
+        result = test_result_df.loc[i, "result"]
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -799,6 +816,12 @@ def test_misc_preprocess_specify_train_valid_test(
         assert "np.log" in code_for_test
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
+            assert returncode == 1
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
             assert returncode == 0
