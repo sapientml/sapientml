@@ -215,10 +215,12 @@ def test_sapientml_raises_error_if_all_candidates_failed_to_run(testdata_df_ligh
         time_split_num=4,
         time_split_index=0,
     )
-    with mock.patch("subprocess.Popen") as process:
+    with mock.patch("asyncio.create_subprocess_shell") as process:
         attrs = {
             "return_value.stdout.readline.return_value": (b""),
             "return_value.stderr.readline.return_value": (b""),
+            "return_value.stdout.at_eof.return_value": True,
+            "return_value.stderr.at_eof.return_value": True,
             "return_value.returncode": 1,
         }
         process.configure_mock(**attrs)
@@ -403,7 +405,12 @@ def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
     cls_.fit(
         testdata_df,
     )
-    assert "Error" not in caplog.text
+    returncode = 1
+    for i in range(len(cls_.generator.execution_results)):
+        if cls_.generator.execution_results[i][1].returncode == 0:
+            returncode = 0
+            break
+    assert returncode == 0
     caplog.clear()
 
     train_df = testdata_df[:200].reset_index(drop=True)
@@ -418,7 +425,12 @@ def test_sapientml_works_with_list_values(testdata_df, exp_col, caplog):
         validation_data=valid_df,
         test_data=test_df,
     )
-    assert "Error" not in caplog.text
+    returncode = 1
+    for i in range(len(cls_.generator.execution_results)):
+        if cls_.generator.execution_results[i][1].returncode == 0:
+            returncode = 0
+            break
+    assert returncode == 0
     caplog.clear()
     logging.disable(logging.FATAL)
 

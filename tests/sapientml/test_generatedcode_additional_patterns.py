@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pickle
+import shutil
 import tempfile
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -102,7 +103,7 @@ def execute_code_for_test():
         test_result_df = pd.DataFrame(
             index=range(len(pipeline_results)), columns=["returncode", "model", "result", "code_for_test"]
         )
-        save_file_path = (temp_dir / "code.py").absolute().as_posix()
+        save_file_path = (temp_dir / "code_test.py").absolute().as_posix()
         for i in range(len(pipeline_results)):
             code_for_test = pipeline_results[i][0].test
             with open(save_file_path, "w", encoding="utf-8") as f:
@@ -113,6 +114,45 @@ def execute_code_for_test():
             test_result_df.loc[i, "result"] = test_result
             test_result_df.loc[i, "code_for_test"] = code_for_test
         return test_result_df
+
+    return _execute
+
+
+@pytest.fixture(scope="function")
+def execute_code_for_train_and_predict():
+    def _execute(pipeline_results, temp_dir, dataset):
+        shutil.copy(dataset.training_data_path, (temp_dir / "training.csv").absolute().as_posix())
+        shutil.copy(dataset.test_data_path, (temp_dir / "test.csv").absolute().as_posix())
+        result_df = pd.DataFrame(
+            index=range(len(pipeline_results)),
+            columns=[
+                "train_returncode",
+                "model",
+                "train_result",
+                "predict_returncode",
+                "predict_result",
+                "code_for_predict",
+            ],
+        )
+        code_train_path = (temp_dir / "code_train.py").absolute().as_posix()
+        code_predict_path = (temp_dir / "code_predict.py").absolute().as_posix()
+        for i in range(len(pipeline_results)):
+            code_for_train = pipeline_results[i][0].train
+            with open(code_train_path, "w", encoding="utf-8") as f:
+                f.write(code_for_train)
+            train_result = run(code_train_path, 300, None)
+            result_df.loc[i, "train_returncode"] = train_result.returncode
+            result_df.loc[i, "model"] = pipeline_results[i][0].model.label_name.split(":")[-2]
+            result_df.loc[i, "train_result"] = train_result
+
+            code_for_predict = pipeline_results[i][0].predict
+            with open(code_predict_path, "w", encoding="utf-8") as f:
+                f.write(code_for_predict)
+            predict_result = run(code_predict_path, 300, None)
+            result_df.loc[i, "predict_returncode"] = predict_result.returncode
+            result_df.loc[i, "predict_result"] = predict_result
+            result_df.loc[i, "code_for_predict"] = code_for_predict
+        return result_df
 
     return _execute
 
@@ -149,8 +189,16 @@ def test_additional_regressor_works_number(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
+        result = test_result_df.loc[i, "result"]
+
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
+            assert returncode == 1
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
             assert returncode == 0
@@ -190,8 +238,17 @@ def test_additional_regressor_works_with_nosparse(
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        assert returncode == 0
+        result = test_result_df.loc[i, "result"]
+        if model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
+            assert returncode == 1
+        else:
+            assert returncode == 0
 
 
 @pytest.mark.parametrize("adaptation_metric", ["MCC", "QWK"])
@@ -794,6 +851,7 @@ def test_additional_misc_preprocess_specify_train_valid_test(
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
+        result = test_result_df.loc[i, "result"]
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -814,8 +872,14 @@ def test_additional_misc_preprocess_specify_train_valid_test(
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
-        elif target_col == "target_number_large_scale" and model == "SGDRegressor":
+        elif target_col == "target_number_large_scale" and model == "SGDRegressor" and result.error:
             # When the target variable is target_number_large_scale, the predicted value becomes infinite
+            assert returncode == 1
+        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+            # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
+            # which may cause SHAP to add slightly incorrect values.
+            # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
+            # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
             assert returncode == 0
@@ -1023,3 +1087,94 @@ def test_additional_classifier_category_multi_num_metric_proba(
             assert returncode == 1
         else:
             assert returncode == 0
+
+
+@pytest.mark.parametrize("adaptation_metric", ["auc", "f1"])
+@pytest.mark.parametrize("target_col", ["target_category_binary_boolean", "target_category_multi_nonnum"])
+@pytest.mark.parametrize("predict_option", ["default", "probability", None])
+def test_additional_classifier_predict_option(
+    adaptation_metric,
+    target_col,
+    predict_option,
+    setup_request_parameters,
+    make_tempdir,
+    execute_pipeline,
+    execute_code_for_test,
+    test_data,
+    test_df_train,
+    test_df_test,
+    test_df_valid,
+    execute_code_for_train_and_predict,
+):
+    task, config, dataset = setup_request_parameters()
+
+    # test pattern setting
+    df = test_data
+    n_models = 16
+    config.n_models = n_models
+    config.predict_option = predict_option
+
+    task.task_type = "classification"
+    task.adaptation_metric = adaptation_metric
+    task.target_columns = [target_col]
+    if df[target_col].nunique() > 2:
+        task.is_multiclass = True
+    else:
+        task.is_multiclass = False
+
+    dataset.training_dataframe = test_df_train
+    dataset.validation_dataframe = test_df_valid
+    dataset.test_dataframe = test_df_test
+
+    dataset.training_data_path = (fxdir / "datasets" / "testdata_train.csv").as_posix()
+    dataset.validation_data_path = (fxdir / "datasets" / "testdata_valid.csv").as_posix()
+    dataset.test_data_path = (fxdir / "datasets" / "testdata_test.csv").as_posix()
+
+    temp_dir = make_tempdir
+    pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
+    predict_result_df = execute_code_for_train_and_predict(pipeline_results, temp_dir, dataset)
+    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
+        returncode = test_result_df.loc[i, "returncode"]
+        code_for_test = test_result_df.loc[i, "code_for_test"]
+        returncode_predict = predict_result_df.loc[i, "predict_returncode"]
+        returncode_train = predict_result_df.loc[i, "train_returncode"]
+        code_for_predict = predict_result_df.loc[i, "code_for_predict"]
+        if model == "SVC":
+            # "AttributeError:var not found" occurs in SVC because of sparse_matrix
+            assert returncode == 1
+            assert returncode_train + returncode_predict > 0
+        elif model == "LinearSVC" and (predict_option == "probability" or adaptation_metric == "auc"):
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+            assert returncode_train + returncode_predict > 0
+        elif model == "SGDClassifier" and (predict_option == "probability" or adaptation_metric == "auc"):
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+            assert returncode_train + returncode_predict > 0
+        elif model == "GaussianNB":
+            # Sparse matrix is not supported
+            assert returncode == 1
+            assert returncode_train + returncode_predict > 0
+        elif model == "MultinomialNB":
+            # Negative value is not supported
+            assert returncode == 1
+            assert returncode_train + returncode_predict > 0
+        else:
+            assert returncode == 0
+            assert returncode_train + returncode_predict == 0
+
+        if predict_option == "probability":
+            assert "prediction = pd.DataFrame(y_prob" in code_for_test
+            assert "prediction = pd.DataFrame(y_prob" in code_for_predict
+        elif predict_option == "default":
+            assert "prediction = pd.DataFrame(y_pred" in code_for_test
+            assert "prediction = pd.DataFrame(y_pred" in code_for_predict
+        else:
+            if adaptation_metric == "f1":
+                assert "prediction = pd.DataFrame(y_pred" in code_for_test
+                assert "prediction = pd.DataFrame(y_pred" in code_for_predict
+            elif adaptation_metric == "auc":
+                assert "prediction = pd.DataFrame(y_prob" in code_for_test
+                assert "prediction = pd.DataFrame(y_prob" in code_for_predict

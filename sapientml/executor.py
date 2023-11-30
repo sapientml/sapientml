@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import glob
 import os
 import platform
-import subprocess
 import sys
-import threading
 import time
 from importlib.metadata import entry_points
 from pathlib import Path
@@ -51,82 +50,99 @@ def run(
     result : RunningResult
 
     """
-    start_time = time.time()
 
     if platform.system() == "Windows":
         executable = None
         encoding = "cp932"
         cmd = f'{sys.executable} "{file_path}"'
+        replace_newline = "\r"
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
     else:
         executable = "/bin/bash"
         encoding = "utf-8"
+        replace_newline = ""
         cmd = f"{sys.executable} {file_path}"
+        loop = asyncio.get_event_loop()
 
-    process = subprocess.Popen(
-        cmd,
-        shell=True,
-        executable=executable,
-        cwd=cwd or os.path.dirname(file_path),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    async def _run() -> RunningResult:
+        start_time = time.time()
 
-    stdout_lines = []
-    stderr_lines = []
-    endtime = time.time() + timeout if timeout > 0 else None
-    interrupted_reason = None
+        process = await asyncio.create_subprocess_shell(
+            cmd,
+            executable=executable,
+            cwd=cwd or os.path.dirname(file_path),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
 
-    def read_stream(stream, output_buffer, name, terminate_flag, endtime):
-        for line in iter(stream.readline, b""):
-            if terminate_flag.is_set() or (endtime is not None and time.time() > endtime):
-                print(f"{name} thread: Terminating due to timeout or cancellation")
-                break
+        endtime = time.time() + timeout if timeout > 0 else None
 
-            output_buffer.append(line.decode(encoding))
+        async def _read_stream(stream, encoding, replace_newline):
+            lines = []
+            while True:
+                line = await stream.readline()
+                if line:
+                    lines.append(line.decode(encoding).replace(replace_newline, ""))
+                if stream.at_eof():
+                    break
+                await asyncio.sleep(0.1)
+            return lines
 
-    terminate_flag = threading.Event()
-    stdout_thread = threading.Thread(
-        target=read_stream, args=(process.stdout, stdout_lines, "stdout", terminate_flag, endtime)
-    )
-    stderr_thread = threading.Thread(
-        target=read_stream, args=(process.stderr, stderr_lines, "stderr", terminate_flag, endtime)
-    )
+        async def _wait_timeout_or_cancel(proc, endtime, cancel):
+            interrupted_reason = None
+            returncode = None
 
-    stdout_thread.start()
-    stderr_thread.start()
+            while True:
+                if proc.stdout.at_eof() and proc.stderr.at_eof():
+                    break
 
-    while process.poll() is None:
-        if endtime is not None and time.time() > endtime:
-            interrupted_reason = "Timeout"
-            terminate_flag.set()
-            process.kill()
-            _ = process.wait()
-            break
-        if cancel is not None and cancel.is_triggered:
-            interrupted_reason = "Cancelled by user"
-            terminate_flag.set()
-            process.kill()
-            _ = process.wait()
-            break
-        time.sleep(1)
+                if endtime is not None and time.time() > endtime:
+                    returncode = -9
+                    interrupted_reason = "Timeout"
+                    print("Terminating due to timeout")
+                    proc.kill()
+                    break
+                if cancel is not None and cancel.is_triggered:
+                    returncode = -9
+                    interrupted_reason = "Cancelled by user"
+                    print("Terminating due to cancellation")
+                    proc.kill()
+                    break
+                await asyncio.sleep(1)
+            return returncode, interrupted_reason
 
-    stdout_thread.join()
-    stderr_thread.join()
+        results = await asyncio.gather(
+            _read_stream(process.stdout, encoding, replace_newline),
+            _read_stream(process.stderr, encoding, replace_newline),
+            _wait_timeout_or_cancel(process, endtime, cancel),
+        )
 
-    if interrupted_reason is not None:
-        output = ""
-        error = interrupted_reason
-    else:
-        output = "".join(stdout_lines)
-        error = "".join(stderr_lines)
+        await process.wait()
 
-    result = RunningResult(
-        output=output,
-        error=error,
-        returncode=process.returncode,
-        time=int(round(time.time() - start_time)),
-    )
-    return result
+        stdout_lines = results[0]
+        stderr_lines = results[1]
+        returncode, interrupted_reason = results[2]
+
+        if not returncode:
+            returncode = process.returncode
+
+        if interrupted_reason is not None:
+            output = ""
+            error = interrupted_reason
+        else:
+            output = "".join(stdout_lines)
+            error = "".join(stderr_lines)
+
+        result = RunningResult(
+            output=output,
+            error=error,
+            returncode=returncode,
+            time=int(round(time.time() - start_time)),
+        )
+        return result
+
+    return loop.run_until_complete(_run())
 
 
 class PipelineExecutor:
