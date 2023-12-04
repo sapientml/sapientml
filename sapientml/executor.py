@@ -23,10 +23,14 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 
+import nest_asyncio
+
 from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
 
 logger = setup_logger()
+
+nest_asyncio.apply()
 
 
 def run(
