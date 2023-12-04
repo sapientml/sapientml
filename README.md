@@ -14,6 +14,10 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 <a href="https://pepy.tech/project/sapientml"><img src="https://static.pepy.tech/badge/sapientml/month"/></a>
 </p>
 
+# NEW: Available on 🤗 HuggingFace Spaces!!
+
+[![Open in Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-a-discussion-xl.svg#gh-light-mode-only)![](static/open-a-discussion-xl-dark.svg#gh-dark-mode-only)](https://huggingface.co/spaces/sapientml/sapientml)
+
 # Installation
 
 From PyPI repository
