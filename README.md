@@ -16,7 +16,8 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 
 # NEW: Available on 🤗 HuggingFace Spaces!!
 
-[![Open in Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-a-discussion-xl.svg#gh-light-mode-only)![](static/open-a-discussion-xl-dark.svg#gh-dark-mode-only)](https://huggingface.co/spaces/sapientml/sapientml)
+[![Open in Spaces](https://raw.githubusercontent.com/sapientml/sapientml/main/static/open-in-hf-spaces-xl.svg#gh-light-mode-only)![](static/open-in-hf-spaces-xl-dark.svg#gh-dark-mode-only)](https://huggingface.co/spaces/sapientml/sapientml)
+
 
 # Installation
 
