@@ -1,5 +1,8 @@
-![SapientML](https://raw.githubusercontent.com/sapientml/sapientml/main/static/SapientML_positive_logo.svg#gh-light-mode-only)
-![](./static/SapientML_negative_logo.svg#gh-dark-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/sapientml/artwork/main/svg/SapientML_negative_logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/sapientml/artwork/main/svg/SapientML_positive_logo.svg">
+  <img alt="SapientML" src="https://raw.githubusercontent.com/sapientml/artwork/main/svg/SapientML_positive_logo.svg">
+</picture>
 <h1 align="center">Generative AutoML for Tabular Data</h1>
 <p align='center'>
 SapientML is an AutoML technology that can learn from a corpus of existing datasets and their human-written pipelines, and efficiently generate a high-quality pipeline for a predictive task on a new dataset.
@@ -16,8 +19,13 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 
 # NEW: Available on 🤗 HuggingFace Spaces!!
 
-[![Open in Spaces](https://raw.githubusercontent.com/sapientml/sapientml/main/static/open-in-hf-spaces-xl.svg#gh-light-mode-only)![](static/open-in-hf-spaces-xl-dark.svg#gh-dark-mode-only)](https://huggingface.co/spaces/sapientml/sapientml)
-
+<a href="https://huggingface.co/spaces/sapientml/sapientml">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl.svg">
+  <img alt="Open in Spaces" src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl.svg">
+</picture>
+</a>
 
 # Installation
 
