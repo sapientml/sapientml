@@ -56,14 +56,12 @@ def run(
     """
 
     if platform.system() == "Windows":
-        executable = None
         encoding = "cp932"
         cmd = f'{sys.executable} "{file_path}"'
         replace_newline = "\r"
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
-        executable = "/bin/bash"
         encoding = "utf-8"
         replace_newline = ""
         cmd = f"{sys.executable} {file_path}"
@@ -74,7 +72,7 @@ def run(
 
         process = await asyncio.create_subprocess_shell(
             cmd,
-            executable=executable,
+            executable=None,
             cwd=cwd or os.path.dirname(file_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
