@@ -192,7 +192,6 @@ def test_regressor_works_number(
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
-    # test_result_df = execute_code_for_test(pipeline_results, temp_dir)
 
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
