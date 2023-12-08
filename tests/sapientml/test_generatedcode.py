@@ -17,11 +17,13 @@ import tempfile
 from importlib.metadata import entry_points
 from pathlib import Path
 
+import nbformat
 import pandas as pd
 import pytest
 from sapientml.executor import run
 from sapientml.params import Task
 from sapientml_core import SapientMLConfig
+from sapientml_core.explain.code_miner import Miner
 
 fxdir = Path("tests/fixtures").absolute()
 
@@ -117,6 +119,50 @@ def execute_code_for_test():
     return _execute
 
 
+@pytest.fixture(scope="function")
+def execute_code_for_test_ipynb():
+    def _make_notebook_object(code):
+        rtjnote = {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 4}
+        cell = {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": code,
+        }
+        rtjnote["cells"].append(cell)
+        return rtjnote
+
+    def _execute(pipeline_results, temp_dir):
+        timeout = 0
+        test_result_df = pd.DataFrame(
+            index=range(len(pipeline_results)), columns=["returncode", "model", "exception", "code_for_test"]
+        )
+
+        save_file_path = (temp_dir / "code_test.ipynb").absolute().as_posix()
+        for i in range(len(pipeline_results)):
+            code_for_test = _make_notebook_object(pipeline_results[i][0].test)
+            Miner.__save__(save_file_path, code_for_test)
+            with open(save_file_path, "r", encoding="utf-8") as f:
+                nb = nbformat.read(f, as_version=4)
+            try:
+                Miner.execute_notebook(nb, {"metadata": {"path": "."}}, timeout, False)
+                test_result_df.loc[i, "returncode"] = 0
+                test_result_df.loc[i, "model"] = pipeline_results[i][0].model.label_name.split(":")[-2]
+                test_result_df.loc[i, "exception"] = None
+                test_result_df.loc[i, "code_for_test"] = pipeline_results[i][0].test
+                with open(f"{save_file_path}.out.ipynb", "w", encoding="utf-8") as f:
+                    nbformat.write(nb, f)
+            except Exception as e:
+                test_result_df.loc[i, "returncode"] = 1
+                test_result_df.loc[i, "model"] = pipeline_results[i][0].model.label_name.split(":")[-2]
+                test_result_df.loc[i, "code_for_test"] = pipeline_results[i][0].test
+                test_result_df.loc[i, "exception"] = e
+        return test_result_df
+
+    return _execute
+
+
 @pytest.mark.parametrize("adaptation_metric", ["r2", "RMSE"])
 @pytest.mark.parametrize("target_col", ["target_number"])
 def test_regressor_works_number(
@@ -126,6 +172,7 @@ def test_regressor_works_number(
     make_tempdir,
     execute_pipeline,
     execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -144,16 +191,17 @@ def test_regressor_works_number(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
+    # test_result_df = execute_code_for_test(pipeline_results, temp_dir)
 
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        result = test_result_df.loc[i, "result"]
+        exception = test_result_df.loc[i, "exception"]
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
-        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+        elif model == "XGBRegressor" and (exception is not None and "ExplainerError" in exception.ename):
             # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
             # which may cause SHAP to add slightly incorrect values.
             # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
@@ -171,7 +219,7 @@ def test_regressor_works_with_nosparse(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     # Test with no sparse df
@@ -195,12 +243,12 @@ def test_regressor_works_with_nosparse(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        result = test_result_df.loc[i, "result"]
-        if model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+        exception = test_result_df.loc[i, "exception"]
+        if model == "XGBRegressor" and (exception is not None and "ExplainerError" in exception.ename):
             # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
             # which may cause SHAP to add slightly incorrect values.
             # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
@@ -218,7 +266,7 @@ def test_classifier_category_binary_num_noproba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -241,7 +289,7 @@ def test_classifier_category_binary_num_noproba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -266,7 +314,7 @@ def test_classifier_category_binary_num_proba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -289,7 +337,7 @@ def test_classifier_category_binary_num_proba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -320,7 +368,7 @@ def test_classifier_category_multi_nonnum_metric_noproba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -343,7 +391,7 @@ def test_classifier_category_multi_nonnum_metric_noproba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -368,7 +416,7 @@ def test_classifier_category_multi_nonnum_metric_proba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -391,7 +439,7 @@ def test_classifier_category_multi_nonnum_metric_proba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -422,7 +470,7 @@ def test_classifier_category_binary_boolean_metric_noproba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -445,7 +493,7 @@ def test_classifier_category_binary_boolean_metric_noproba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -470,7 +518,7 @@ def test_classifier_category_binary_boolean_metric_proba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -493,7 +541,7 @@ def test_classifier_category_binary_boolean_metric_proba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -524,7 +572,7 @@ def test_classifier_works_with_target_pattern(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -546,7 +594,7 @@ def test_classifier_works_with_target_pattern(
     dataset.training_data_path = (fxdir / "datasets" / "testdata_df.csv").as_posix()
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -571,7 +619,7 @@ def test_classifier_works_with_preprocess(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -596,7 +644,7 @@ def test_classifier_works_with_preprocess(
     )
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     code_for_test = test_result_df.loc[0, "code_for_test"]
     assert "SMOTE" in code_for_test
     assert "StandardScaler" in code_for_test
@@ -610,7 +658,7 @@ def test_classifier_notext_nonegative_explanatry(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -637,7 +685,7 @@ def test_classifier_notext_nonegative_explanatry(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         returncode = test_result_df.loc[i, "returncode"]
         assert returncode == 0
@@ -651,7 +699,7 @@ def test_classifier_category_binary_num_use_proba_with_metric_default_noproba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -675,7 +723,7 @@ def test_classifier_category_binary_num_use_proba_with_metric_default_noproba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -706,7 +754,7 @@ def test_classifier_category_multi_nonnum_noproba_metric_with_proba(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_data,
 ):
     task, config, dataset = setup_request_parameters()
@@ -730,7 +778,7 @@ def test_classifier_category_multi_nonnum_noproba_metric_with_proba(
 
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
@@ -761,7 +809,7 @@ def test_misc_preprocess_specify_train_valid_test(
     setup_request_parameters,
     make_tempdir,
     execute_pipeline,
-    execute_code_for_test,
+    execute_code_for_test_ipynb,
     test_df_train,
     test_df_valid,
     test_df_test,
@@ -790,13 +838,13 @@ def test_misc_preprocess_specify_train_valid_test(
     )
     temp_dir = make_tempdir
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-    test_result_df = execute_code_for_test(pipeline_results, temp_dir)
+    test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
 
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
         code_for_test = test_result_df.loc[i, "code_for_test"]
-        result = test_result_df.loc[i, "result"]
+        exception = test_result_df.loc[i, "exception"]
 
         assert "TRAIN-TEST SPLIT" not in code_for_test
         assert "Remove special symbols" in code_for_test
@@ -817,7 +865,7 @@ def test_misc_preprocess_specify_train_valid_test(
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1
-        elif model == "XGBRegressor" and "shap.utils._exceptions.ExplainerError" in result.error:
+        elif model == "XGBRegressor" and (exception is not None and "ExplainerError" in exception.ename):
             # There is a known (rare) issue with the interaction between SHAP and the XGBoost library,
             # which may cause SHAP to add slightly incorrect values.
             # Most XGBoost models generate SHAP values following addition and are validated by automatic checking.
