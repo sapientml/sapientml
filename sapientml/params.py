@@ -215,7 +215,6 @@ class Task(BaseModel):
         To check whether it is a multiclass or not.
     split_stratification : bool
         To perform stratification in train-test split.
-
     """
 
     target_columns: list[str]
