@@ -180,15 +180,6 @@ class PipelineExecutor:
         """
         candidate_scripts: list[tuple[Code, RunningResult]] = []
 
-        # copy libs
-        lib_path = output_dir / "lib"
-        lib_path.mkdir(exist_ok=True)
-
-        eps = entry_points(group="sapientml.export_modules")
-        for ep in eps:
-            for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
-                copyfile(file, lib_path / Path(file).name)
-
         for index, pipeline in enumerate(pipeline_list, start=1):
             script_name = f"{index}_script.py"
             script_path = (output_dir / script_name).absolute().as_posix()
