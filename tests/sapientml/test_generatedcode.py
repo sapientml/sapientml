@@ -86,7 +86,6 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
-
         eps = entry_points(group="sapientml.pipeline_generator")
         kwargs = config.model_dump()
         kwargs["initial_timeout"] = initial_timeout
@@ -94,7 +93,7 @@ def execute_pipeline():
         generator = eps["sapientml"].load()(**kwargs)
 
         # copy libs
-        lib_path = dataset.output_dir  / "lib"
+        lib_path = dataset.output_dir / "lib"
         lib_path.mkdir(exist_ok=True)
 
         eps = entry_points(group="sapientml.export_modules")
