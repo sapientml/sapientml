@@ -13,14 +13,11 @@
 # limitations under the License.
 
 import asyncio
-import glob
 import os
 import platform
 import sys
 import time
-from importlib.metadata import entry_points
 from pathlib import Path
-from shutil import copyfile
 from typing import Optional
 
 import nest_asyncio

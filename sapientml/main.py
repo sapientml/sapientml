@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
 import glob
+import pickle
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Literal, Optional, Union
 from shutil import copyfile
+from typing import Literal, Optional, Union
 
 import pandas as pd
 from sapientml.model import GeneratedModel
@@ -171,7 +171,7 @@ class SapientML:
             self._Config = eps_config[model_type].load()
         else:
             raise ValueError(f"Model '{model_type}' is invalid.")
-        
+
         self.model_type = model_type
         self.generator = self._Generator(**kwargs)
         self.config = self.generator.config
@@ -277,7 +277,7 @@ class SapientML:
 
         eps = entry_points(group="sapientml.export_modules")
         for ep in eps:
-            if ep.name in [self.generator.__class__.__name__, 'sample-dataset']:
+            if ep.name in [self.generator.__class__.__name__, "sample-dataset"]:
                 for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
                     copyfile(file, lib_path / Path(file).name)
 
