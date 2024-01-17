@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import pickle
 import tempfile
 from importlib.metadata import entry_points
 from pathlib import Path
+from shutil import copyfile
 
 import pandas as pd
 import pytest
@@ -84,11 +86,23 @@ def make_tempdir(dir=fxdir / "outputs"):
 @pytest.fixture(scope="function")
 def execute_pipeline():
     def _execute(dataset, task, config, temp_dir, initial_timeout=60):
+
         eps = entry_points(group="sapientml.pipeline_generator")
         kwargs = config.model_dump()
         kwargs["initial_timeout"] = initial_timeout
         dataset.output_dir = temp_dir
         generator = eps["sapientml"].load()(**kwargs)
+
+        # copy libs
+        lib_path = dataset.output_dir  / "lib"
+        lib_path.mkdir(exist_ok=True)
+
+        eps = entry_points(group="sapientml.export_modules")
+        for ep in eps:
+            if ep.name in [generator.__class__.__name__, "sample-dataset"]:
+                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                    copyfile(file, lib_path / Path(file).name)
+
         generator.generate_pipeline(dataset, task)
 
         return generator.execution_results
