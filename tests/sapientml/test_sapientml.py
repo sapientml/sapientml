@@ -215,7 +215,7 @@ def test_sapientml_raises_error_if_all_candidates_failed_to_run(testdata_df_ligh
         time_split_num=4,
         time_split_index=0,
     )
-    with mock.patch("asyncio.create_subprocess_shell") as process:
+    with mock.patch("asyncio.create_subprocess_exec") as process:
         attrs = {
             "return_value.stdout.readline.return_value": (b""),
             "return_value.stderr.readline.return_value": (b""),

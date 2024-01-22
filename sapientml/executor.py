@@ -23,10 +23,14 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 
+import nest_asyncio
+
 from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
 
 logger = setup_logger()
+
+nest_asyncio.apply()
 
 
 def run(
@@ -52,25 +56,21 @@ def run(
     """
 
     if platform.system() == "Windows":
-        executable = None
         encoding = "cp932"
-        cmd = f'{sys.executable} "{file_path}"'
         replace_newline = "\r"
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
-        executable = "/bin/bash"
         encoding = "utf-8"
         replace_newline = ""
-        cmd = f"{sys.executable} {file_path}"
         loop = asyncio.get_event_loop()
 
     async def _run() -> RunningResult:
         start_time = time.time()
 
-        process = await asyncio.create_subprocess_shell(
-            cmd,
-            executable=executable,
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            file_path,
             cwd=cwd or os.path.dirname(file_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
