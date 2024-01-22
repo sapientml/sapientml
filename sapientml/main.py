@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import pickle
+import tempfile
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
 from pathlib import Path
+from shutil import copytree
 from typing import Literal, Optional, Union
 
 import pandas as pd
@@ -266,90 +268,93 @@ class SapientML:
 
         logger.info("Loading dataset...")
 
-        self.output_dir = Path(output_dir).resolve()
-        self.output_dir.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as temp_dir_path_str:
+            self.output_dir = Path(temp_dir_path_str).absolute()
+            self.output_dir.mkdir(exist_ok=True)
 
-        self.dataset = Dataset(
-            training_data=training_data,
-            validation_data=validation_data,
-            test_data=test_data,
-            csv_encoding=csv_encoding,
-            csv_delimiter=csv_delimiter,
-            save_datasets_format=save_datasets_format,
-            ignore_columns=ignore_columns,
-            output_dir=self.output_dir,
-        )
-
-        if self.task.task_type is None:
-            self.task.task_type = SapientMLSuggestion(
-                self.task.target_columns, self.dataset.training_dataframe
-            ).suggest_task()
-
-        if self.task.adaptation_metric is None and self.task.task_type:
-            if self.task.task_type == "regression":
-                logger.warning("Metric is not specified. Use 'r2' by default.")
-            else:
-                logger.warning("Metric is not specified. Use 'f1' by default.")
-            self.task.adaptation_metric = Metric.get_default_value(self.task.task_type)
-
-        self.task.adaptation_metric = Metric.get(self.task.adaptation_metric)
-
-        if not Metric.metric_match_task_type(self.task.adaptation_metric, self.task.task_type):
-            logger.warning(f"{self.task.adaptation_metric} is not a metric for {self.task.task_type}")
-
-        if self.task.task_type == "classification":
-            is_multioutput = False
-            if len(self.task.target_columns) > 1:
-                is_multioutput = True
-            for column in self.task.target_columns:
-                if isinstance(training_data, pd.DataFrame) and len(training_data[column].unique()) > 2:
-                    self.task.is_multiclass = True
-
-            if is_multioutput:
-                if self.task.is_multiclass and not Metric.metric_support_multiclass_multioutput(
-                    self.task.adaptation_metric
-                ):
-                    logger.warning(
-                        f"{self.task.adaptation_metric} does not support Multiclass-Multioutput classification. Execution of candidate script raises an exception."
-                    )
-                elif not Metric.metric_support_multioutput(self.task.adaptation_metric):
-                    logger.warning(
-                        f"{self.task.adaptation_metric} does not support Multioutput (Multilabel) classification. Execution of candidate script raises an exception."
-                    )
-
-        training_dataframe, validation_dataframe, test_dataframe = self.dataset.get_dataframes()
-        stratify_threshold = 3
-        if validation_dataframe is not None:
-            stratify_threshold -= 1
-        if test_dataframe is not None:
-            stratify_threshold -= 1
-        if len(self.task.target_columns) == 1:
-            self.task.split_stratification = _check_stratification(
-                training_dataframe,
-                self.task.target_columns,
-                self.task.task_type,
-                self.task.adaptation_metric,
-                self.task.split_stratification,
-                stratify_threshold,
+            self.dataset = Dataset(
+                training_data=training_data,
+                validation_data=validation_data,
+                test_data=test_data,
+                csv_encoding=csv_encoding,
+                csv_delimiter=csv_delimiter,
+                save_datasets_format=save_datasets_format,
+                ignore_columns=ignore_columns,
+                output_dir=self.output_dir,
             )
-        elif self.task.task_type == "classification" and self.task.split_stratification:
-            raise ValueError("Stratification for multiple target columns is not supported.")
 
-        self.generator.generate_pipeline(self.dataset, self.task)
-        self.dataset.reload()
-        self.generator.save(self.output_dir)
+            if self.task.task_type is None:
+                self.task.task_type = SapientMLSuggestion(
+                    self.task.target_columns, self.dataset.training_dataframe
+                ).suggest_task()
 
-        self.model = GeneratedModel(
-            input_dir=self.output_dir,
-            save_datasets_format=save_datasets_format,
-            csv_encoding=csv_encoding,
-            csv_delimiter=csv_delimiter,
-            timeout=self.config.timeout_for_test,
-            params=self.params,
-        )
+            if self.task.adaptation_metric is None and self.task.task_type:
+                if self.task.task_type == "regression":
+                    logger.warning("Metric is not specified. Use 'r2' by default.")
+                else:
+                    logger.warning("Metric is not specified. Use 'f1' by default.")
+                self.task.adaptation_metric = Metric.get_default_value(self.task.task_type)
 
-        if not codegen_only:
-            self.model.fit(pd.concat([training_dataframe, validation_dataframe]))
+            self.task.adaptation_metric = Metric.get(self.task.adaptation_metric)
+
+            if not Metric.metric_match_task_type(self.task.adaptation_metric, self.task.task_type):
+                logger.warning(f"{self.task.adaptation_metric} is not a metric for {self.task.task_type}")
+
+            if self.task.task_type == "classification":
+                is_multioutput = False
+                if len(self.task.target_columns) > 1:
+                    is_multioutput = True
+                for column in self.task.target_columns:
+                    if isinstance(training_data, pd.DataFrame) and len(training_data[column].unique()) > 2:
+                        self.task.is_multiclass = True
+
+                if is_multioutput:
+                    if self.task.is_multiclass and not Metric.metric_support_multiclass_multioutput(
+                        self.task.adaptation_metric
+                    ):
+                        logger.warning(
+                            f"{self.task.adaptation_metric} does not support Multiclass-Multioutput classification. Execution of candidate script raises an exception."
+                        )
+                    elif not Metric.metric_support_multioutput(self.task.adaptation_metric):
+                        logger.warning(
+                            f"{self.task.adaptation_metric} does not support Multioutput (Multilabel) classification. Execution of candidate script raises an exception."
+                        )
+
+            training_dataframe, validation_dataframe, test_dataframe = self.dataset.get_dataframes()
+            stratify_threshold = 3
+            if validation_dataframe is not None:
+                stratify_threshold -= 1
+            if test_dataframe is not None:
+                stratify_threshold -= 1
+            if len(self.task.target_columns) == 1:
+                self.task.split_stratification = _check_stratification(
+                    training_dataframe,
+                    self.task.target_columns,
+                    self.task.task_type,
+                    self.task.adaptation_metric,
+                    self.task.split_stratification,
+                    stratify_threshold,
+                )
+            elif self.task.task_type == "classification" and self.task.split_stratification:
+                raise ValueError("Stratification for multiple target columns is not supported.")
+
+            self.generator.generate_pipeline(self.dataset, self.task)
+            self.dataset.reload()
+            self.generator.save(self.output_dir)
+
+            self.model = GeneratedModel(
+                input_dir=self.output_dir,
+                save_datasets_format=save_datasets_format,
+                csv_encoding=csv_encoding,
+                csv_delimiter=csv_delimiter,
+                timeout=self.config.timeout_for_test,
+                params=self.params,
+            )
+
+            if not codegen_only:
+                self.model.fit(pd.concat([training_dataframe, validation_dataframe]))
+
+            copytree(self.output_dir, Path(output_dir).resolve(), dirs_exist_ok=True)
 
         logger.info("Done.")
 
