@@ -139,6 +139,7 @@ def test_sapientml_works_with_pickled_model(testdata_df_light):
         testdata_df_light,
     )
 
+
 def test_sapientml_works_with_probability_prediction_for_multiclass_with_id(testdata_df_light):
     cls_ = SapientML(
         ["target_category_multi_nonnum"],
