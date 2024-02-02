@@ -135,21 +135,6 @@ class SapientML:
             Valid only when task_type='classification'.
 
         """
-        self.params = {
-            "target_columns": target_columns,
-            "task_type": task_type,
-            "split_method": split_method,
-            "split_seed": split_seed,
-            "split_train_size": split_train_size,
-            "split_column_name": split_column_name,
-            "time_split_num": time_split_num,
-            "time_split_index": time_split_index,
-            "adaptation_metric": adaptation_metric,
-            "split_stratification": split_stratification,
-            "model_type": model_type,
-            **kwargs,
-        }
-
         self.task = Task(
             target_columns=target_columns,
             task_type=task_type,
@@ -338,6 +323,12 @@ class SapientML:
         self.generator.generate_pipeline(self.dataset, self.task)
         self.dataset.reload()
         self.generator.save(self.output_dir)
+
+        self.params = {
+            "model_type": self.model_type,
+            "task": self.task.model_dump(),
+            "config": self.config.model_dump()
+        }
 
         self.model = GeneratedModel(
             input_dir=self.output_dir,
