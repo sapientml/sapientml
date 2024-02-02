@@ -147,7 +147,7 @@ def test_sapientml_works_with_probability_prediction_for_multiclass_with_id(test
         initial_timeout=60,
     )
     test_df = testdata_df_light.copy()
-    test_df['id'] = np.arange(test_df.shape[0])
+    test_df["id"] = np.arange(test_df.shape[0])
     cls_.fit(
         test_df,
     )
