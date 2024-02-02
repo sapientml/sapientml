@@ -139,6 +139,22 @@ def test_sapientml_works_with_pickled_model(testdata_df_light):
         testdata_df_light,
     )
 
+def test_sapientml_works_with_probability_prediction_for_multiclass_with_id(testdata_df_light):
+    cls_ = SapientML(
+        ["target_category_multi_nonnum"],
+        task_type="classification",
+        id_columns_for_prediction=["id"],
+        initial_timeout=60,
+    )
+    test_df = testdata_df_light.copy()
+    test_df['id'] = np.arange(test_df.shape[0])
+    cls_.fit(
+        test_df,
+    )
+    cls_.predict(
+        test_df,
+    )
+
 
 def test_misc_sapientml_with_hpo_works(testdata_df_light, caplog):
     testdata_df_light = testdata_df_light[["target_number", "explanatory_multi_category_nonnum"]]
