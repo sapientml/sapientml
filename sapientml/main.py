@@ -324,11 +324,11 @@ class SapientML:
         self.dataset.reload()
         self.generator.save(self.output_dir)
 
-        self.params = {
-            "model_type": self.model_type,
-            "task": self.task.model_dump(),
-            "config": self.config.model_dump()
-        }
+        self.params = {"model_type": self.model_type}
+        self.params.update(self.task.model_dump())
+        self.params.update(self.config.model_dump())
+        self.params.update(self.generator.loaddata.config.model_dump())
+        self.params.update(self.generator.preprocess.config.model_dump())
 
         self.model = GeneratedModel(
             input_dir=self.output_dir,

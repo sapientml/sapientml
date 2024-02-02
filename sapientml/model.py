@@ -157,7 +157,7 @@ class GeneratedModel:
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
-            id_columns_for_prediction = self.params['config'].get('id_columns_for_prediction', [])
+            id_columns_for_prediction = self.params.get("id_columns_for_prediction", [])
             if not id_columns_for_prediction:
                 id_columns_for_prediction = [0]
             result_df = pd.read_csv(temp_dir / "prediction_result.csv", index_col=id_columns_for_prediction)
