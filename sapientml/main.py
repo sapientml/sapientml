@@ -171,7 +171,7 @@ class SapientML:
             raise ValueError(f"Model '{model_type}' is invalid.")
 
         self.model_type = model_type
-        self.generator = self._Generator(**kwargs)
+        self.generator = self._Generator(**self.params)
         self.config = self.generator.config
         self.config.postinit()
 
@@ -208,7 +208,9 @@ class SapientML:
             raise ValueError(
                 "model must be either pickle filename, pickle bytes-like object, or deserialized object"
             ) from e
-        sml = SapientML(**model.params)
+
+        params = {k: v if "str" in t else eval(v) for k, t, v in model.params}
+        sml = SapientML(**params)
         sml.model = model
         return sml
 
@@ -339,7 +341,7 @@ class SapientML:
         self.dataset.reload()
         self.generator.save(self.output_dir)
 
-        self.model = GeneratedModel(
+        self.model = GeneratedModel.create(
             input_dir=self.output_dir,
             save_datasets_format=save_datasets_format,
             csv_encoding=csv_encoding,

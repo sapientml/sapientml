@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+import os
 import tempfile
+import time
 from os import PathLike
 from pathlib import Path
 from typing import Literal, Optional, Union
+from uuid import uuid4 as uuid
 
+import lancedb
 import pandas as pd
+from lancedb.pydantic import LanceModel, Vector
 
 from .executor import run
 from .params import save_file
@@ -26,18 +32,40 @@ from .util.logging import setup_logger
 logger = setup_logger()
 
 
-class GeneratedModel:
-    def __init__(
-        self,
+def _readfile(files, filepath: Path, input_dir: Path):
+    _, ext = os.path.splitext(filepath)
+    if ext == ".pkl":
+        with open(filepath, "rb") as f:
+            files.append((str(filepath.relative_to(input_dir)), " ".join(map(str, f.read()))))
+    else:
+        with open(filepath, "r") as f:
+            files.append((str(filepath.relative_to(input_dir)), f.read()))
+
+
+class GeneratedModel(LanceModel):
+    id: str
+    prev_id: str | None = None
+    vector: Vector(1)  # 1-d vector containing timestamp
+    files: list[tuple[str, str]]
+    save_datasets_format: str
+    timeout: int
+    csv_encoding: str
+    csv_delimiter: str
+    params: list[tuple[str, str, str]]
+    score: float
+    metric: str
+
+    @staticmethod
+    def create(
         input_dir: PathLike,
         save_datasets_format: Literal["csv", "pickle"],
         timeout: int,
-        csv_encoding: Literal["UTF-8", "SJIS"],
+        csv_encoding: str,
         csv_delimiter: str,
         params: dict,
     ):
         """
-        The constructor of GeneratedModel.
+        The factory method of GeneratedModel.
         Instantiating this class by yourself is not intended.
 
         Parameters
@@ -49,39 +77,70 @@ class GeneratedModel:
             Ignored when all inputs are specified as file path.
         timeout: int
             Timeout for the execution of training and prediction.
-        csv_encoding: 'UTF-8' or 'SJIS'
+        csv_encoding: str
             Encoding method when csv files are involved.
             Ignored when only pickle files are involved.
         csv_delimiter: str
             Delimiter to read csv files.
         """
-
-        self.files = dict()
-        self.save_datasets_format = save_datasets_format
-        self.timeout = timeout
-        self.csv_encoding = csv_encoding
-        self.csv_delimiter = csv_delimiter
-        self.params = params
         input_dir = Path(input_dir)
-        self._readfile(input_dir / "final_script.py", input_dir)
-        self._readfile(input_dir / "final_train.py", input_dir)
-        self._readfile(input_dir / "final_predict.py", input_dir)
+        files = list()
+        _readfile(files, input_dir / "final_script.py", input_dir)
+        _readfile(files, input_dir / "final_train.py", input_dir)
+        _readfile(files, input_dir / "final_predict.py", input_dir)
 
         for filepath in input_dir.glob("lib/*.py"):
-            self._readfile(filepath, input_dir)
+            _readfile(files, filepath, input_dir)
 
         for filepath in input_dir.glob("**/*.pkl"):
             if save_datasets_format == "pickle" and "training.pkl" == filepath.name:
                 continue
-            self._readfile(filepath, input_dir)
+            _readfile(files, filepath, input_dir)
 
-    def _readfile(self, filepath, input_dir):
-        with open(filepath, "rb") as f:
-            self.files[str(filepath.relative_to(input_dir))] = f.read()
+        with open(input_dir / "final_script.out.json", "r") as f:
+            data = json.load(f)
+            score = float(data["score"])
+            metric = data["metric"]
 
-    def save(self, output_dir: PathLike):
+        id = str(uuid())
+
+        return GeneratedModel(
+            id=id,
+            vector=[time.time()],
+            files=files,
+            save_datasets_format=save_datasets_format,
+            timeout=timeout,
+            csv_encoding=csv_encoding,
+            csv_delimiter=csv_delimiter,
+            params=[(k, str(type(v)), str(v)) for k, v in params.items()],
+            score=score,
+            metric=metric,
+        )
+
+    def save(self):
         """
-        Save generated code to `output_dir` folder
+        Save itself to database
+        """
+        db = lancedb.connect(".lancedb")
+        table = db.create_table("models", schema=GeneratedModel, exist_ok=True)
+        table.add([self])
+        return self.id
+
+    @staticmethod
+    def load(id):
+        """
+        Load a GeneratedModel with id from database
+        """
+        db = lancedb.connect(".lancedb")
+        table = db.open_table("models")
+        model = table.search().where(f"id='{id}'").limit(1).to_pydantic(GeneratedModel)[0]
+        model.prev_id = id
+        model.id = str(uuid())
+        return model
+
+    def export(self, output_dir: Union[str, PathLike]):
+        """
+        Export generated code to `output_dir` folder
 
         Parameters
         ----------
@@ -96,9 +155,14 @@ class GeneratedModel:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "lib").mkdir(exist_ok=True)
-        for filename, content in self.files.items():
-            with open(output_dir / filename, "wb") as f:
-                f.write(content)
+        for filename, content in self.files:
+            _, ext = os.path.splitext(filename)
+            if ext == ".pkl":
+                with open(output_dir / filename, "wb") as f:
+                    f.write(b"".join([int(i).to_bytes(1, "little") for i in content.split(" ")]))
+            else:
+                with open(output_dir / filename, "w") as f:
+                    f.write(content)
 
     def fit(self, X: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series]] = None):
         """
@@ -122,7 +186,7 @@ class GeneratedModel:
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
-            self.save(temp_dir)
+            self.export(temp_dir)
             filename = "training." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
             save_file(X, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             logger.info("Building model by generated pipeline...")
@@ -132,7 +196,7 @@ class GeneratedModel:
             for filepath in temp_dir.glob("**/*.pkl"):
                 if self.save_datasets_format == "pickle" and "training.pkl" == filepath.name:
                     continue
-                self._readfile(filepath, temp_dir)
+                _readfile(self.files, filepath, temp_dir)
         return self
 
     def predict(self, X: pd.DataFrame):
@@ -151,12 +215,17 @@ class GeneratedModel:
         with tempfile.TemporaryDirectory() as temp_dir_path_str:
             temp_dir = Path(temp_dir_path_str).absolute()
             temp_dir.mkdir(exist_ok=True)
-            self.save(temp_dir)
+            self.export(temp_dir)
             filename = "test." + ("pkl" if self.save_datasets_format == "pickle" else "csv")
             save_file(X, str(temp_dir / filename), self.csv_encoding, self.csv_delimiter)
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
             result_df = pd.read_csv(temp_dir / "prediction_result.csv")
-            result_df = result_df[self.params["target_columns"]]
+            target_columns = list()
+            for k, _, v in self.params:
+                if k == "target_columns":
+                    target_columns = eval(v)
+                    break
+            result_df = result_df[target_columns]
             return result_df
