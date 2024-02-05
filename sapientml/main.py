@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import pickle
 import tempfile
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
 from pathlib import Path
-from shutil import copytree
+from shutil import copyfile, copytree
 from typing import Literal, Optional, Union
 
 import pandas as pd
@@ -137,21 +138,6 @@ class SapientML:
             Valid only when task_type='classification'.
 
         """
-        self.params = {
-            "target_columns": target_columns,
-            "task_type": task_type,
-            "split_method": split_method,
-            "split_seed": split_seed,
-            "split_train_size": split_train_size,
-            "split_column_name": split_column_name,
-            "time_split_num": time_split_num,
-            "time_split_index": time_split_index,
-            "adaptation_metric": adaptation_metric,
-            "split_stratification": split_stratification,
-            "model_type": model_type,
-            **kwargs,
-        }
-
         self.task = Task(
             target_columns=target_columns,
             task_type=task_type,
@@ -272,6 +258,16 @@ class SapientML:
             self.output_dir = Path(temp_dir_path_str).absolute()
             self.output_dir.mkdir(exist_ok=True)
 
+            # copy libs
+            lib_path = self.output_dir / "lib"
+            lib_path.mkdir(exist_ok=True)
+
+            eps = entry_points(group="sapientml.export_modules")
+            for ep in eps:
+                if ep.name in [self.generator.__class__.__name__, "sample-dataset"]:
+                    for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                        copyfile(file, lib_path / Path(file).name)
+
             self.dataset = Dataset(
                 training_data=training_data,
                 validation_data=validation_data,
@@ -341,6 +337,12 @@ class SapientML:
             self.generator.generate_pipeline(self.dataset, self.task)
             self.dataset.reload()
             self.generator.save(self.output_dir)
+
+            self.params = {"model_type": self.model_type}
+            self.params.update(self.task.model_dump())
+            self.params.update(self.config.model_dump())
+            self.params.update(self.generator.loaddata.config.model_dump())
+            self.params.update(self.generator.preprocess.config.model_dump())
 
             self.model = GeneratedModel(
                 input_dir=self.output_dir,
