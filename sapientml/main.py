@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import pickle
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
 from pathlib import Path
+from shutil import copyfile
 from typing import Literal, Optional, Union
 
 import pandas as pd
@@ -268,6 +270,16 @@ class SapientML:
 
         self.output_dir = Path(output_dir).resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        # copy libs
+        lib_path = self.output_dir / "lib"
+        lib_path.mkdir(exist_ok=True)
+
+        eps = entry_points(group="sapientml.export_modules")
+        for ep in eps:
+            if ep.name in [self.generator.__class__.__name__, "sample-dataset"]:
+                for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
+                    copyfile(file, lib_path / Path(file).name)
 
         self.dataset = Dataset(
             training_data=training_data,
