@@ -123,7 +123,7 @@ class GeneratedModel(LanceModel):
         Save itself to database
         """
         db = lancedb.connect(".lancedb")
-        table = db.create_table("models", schema=GeneratedModel, exist_ok=True)
+        table = db.create_table("artifacts", schema=GeneratedModel, exist_ok=True)
         table.add([self])
         return self.id
 
@@ -133,7 +133,7 @@ class GeneratedModel(LanceModel):
         Load a GeneratedModel with id from database
         """
         db = lancedb.connect(".lancedb")
-        table = db.open_table("models")
+        table = db.open_table("artifacts")
         model = table.search().where(f"id='{id}'").limit(1).to_pydantic(GeneratedModel)[0]
         model.prev_id = id
         model.id = str(uuid())
