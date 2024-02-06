@@ -21,6 +21,7 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Literal, Optional, Union
 
+import numpy as np
 import pandas as pd
 from sapientml.model import GeneratedModel
 from sapientml.suggestion import SapientMLSuggestion
@@ -266,6 +267,16 @@ class SapientML:
                 for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
                     copyfile(file, lib_path / Path(file).name)
 
+        # For lancedb support replacing the '.' string to '_' in dataset column names and filling NoneType object to np.nan
+        training_data.columns = training_data.columns.str.replace(".", "_")
+        training_data.fillna(np.nan, inplace=True)
+        if validation_data is not None:
+            validation_data.columns = validation_data.columns.str.replace(".", "_")
+            validation_data.fillna(np.nan, inplace=True)
+        if test_data is not None:
+            test_data.columns = test_data.columns.str.replace(".", "_")
+            test_data.fillna(np.nan, inplace=True)
+
         self.dataset = Dataset(
             training_data=training_data,
             validation_data=validation_data,
@@ -376,5 +387,9 @@ class SapientML:
             It returns the prediction_result.csv result in dataframe format.
 
         """
+        # For lancedb support replacing the '.' string to '_' in dataset column names and filling NoneType object to np.nan
+        test_data.columns = test_data.columns.str.replace(".", "_")
+        test_data.fillna(np.nan, inplace=True)
+
         logger.info("Predicting by built model...")
         return self.model.predict(test_data)
