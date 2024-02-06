@@ -14,6 +14,7 @@
 
 import glob
 import pickle
+import re
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
@@ -180,21 +181,27 @@ class SapientML:
         sml: SapientML
             a new SapientML instance loaded from the pretrained model.
         """
-        try:
-            if isinstance(model, GeneratedModel):
-                pass
+
+        def _is_uuid(s):
+            return (
+                re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$", s) is not None
+            )
+
+        if isinstance(model, GeneratedModel):
+            # model is an instance of GeneratedModel. do nothing.
+            pass
+        elif isinstance(model, bytes):
+            model = pickle.loads(model)
+        elif isinstance(model, str):
+            if _is_uuid(model):
+                model = GeneratedModel.load(model)
             else:
-                if isinstance(model, str):
-                    with open(model, "rb") as f:
-                        model = pickle.load(f)
-                else:
-                    model = pickle.loads(model)
-                if not isinstance(model, GeneratedModel):
-                    raise RuntimeError("model is not an instance of GeneratedModel")
-        except Exception as e:
-            raise ValueError(
-                "model must be either pickle filename, pickle bytes-like object, or deserialized object"
-            ) from e
+                with open(model, "rb") as f:
+                    model = pickle.load(f)
+        else:
+            raise ValueError("model must be either model id, pickle filename, or bytes-like object")
+        if not isinstance(model, GeneratedModel):
+            raise RuntimeError("could not load an instance of GeneratedModel from model")
 
         params = {k: v if "str" in t else eval(v) for k, t, v in model.params}
         sml = SapientML(**params)

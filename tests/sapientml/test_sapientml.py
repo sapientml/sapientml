@@ -88,6 +88,25 @@ def test_sapientml_works_with_generated_model(testdata_df_light):
     model.predict(X)
 
 
+def test_sapientml_works_with_lancedb(testdata_df_light):
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
+    id = cls_.model.save()
+
+    # load a model from LanceDB
+    cls_ = SapientML.from_pretrained(id)
+
+    cls_.predict(
+        testdata_df_light,
+    )
+
+
 def test_sapientml_works_with_pickled_model_bytes_like_object(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],

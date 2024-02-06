@@ -24,7 +24,7 @@ from uuid import uuid4 as uuid
 
 import lancedb
 import pandas as pd
-from lancedb.pydantic import LanceModel, Vector
+from lancedb.pydantic import LanceModel
 
 from .executor import run
 from .params import save_file
@@ -46,7 +46,7 @@ def _readfile(files, filepath: Path, input_dir: Path):
 class GeneratedModel(LanceModel):
     id: str
     prev_id: str | None = None
-    vector: Vector(1)  # 1-d vector containing timestamp
+    timestamp: float
     files: list[tuple[str, str]]
     save_datasets_format: str
     timeout: int
@@ -107,7 +107,7 @@ class GeneratedModel(LanceModel):
 
         return GeneratedModel(
             id=id,
-            vector=[time.time()],
+            timestamp=time.time(),
             files=files,
             save_datasets_format=save_datasets_format,
             timeout=timeout,
@@ -124,6 +124,9 @@ class GeneratedModel(LanceModel):
         """
         db = lancedb.connect(".lancedb")
         table = db.create_table("artifacts", schema=GeneratedModel, exist_ok=True)
+        self.prev_id = self.id
+        self.id = str(uuid())
+        self.timestamp = time.time()
         table.add([self])
         return self.id
 
@@ -135,8 +138,6 @@ class GeneratedModel(LanceModel):
         db = lancedb.connect(".lancedb")
         table = db.open_table("artifacts")
         model = table.search().where(f"id='{id}'").limit(1).to_pydantic(GeneratedModel)[0]
-        model.prev_id = id
-        model.id = str(uuid())
         return model
 
     def export(self, output_dir: Union[str, PathLike]):

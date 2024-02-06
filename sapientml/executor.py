@@ -52,7 +52,7 @@ def run(
 
     """
 
-    if platform.system() == "Windows":
+    if platform.system() == "Windows":  # noqa
         encoding = "cp932"  # noqa
         replace_newline = "\r"  # noqa
         loop = asyncio.ProactorEventLoop()  # noqa
@@ -100,7 +100,7 @@ def run(
                     print("Terminating due to timeout")
                     proc.kill()
                     break
-                if cancel is not None and cancel.is_triggered:
+                if cancel is not None and cancel.is_triggered:  # noqa
                     returncode = -9  # noqa
                     interrupted_reason = "Cancelled by user"  # noqa
                     print("Terminating due to cancellation")  # noqa
