@@ -14,6 +14,7 @@
 
 import json
 import os
+import shutil
 import tempfile
 import time
 from os import PathLike
@@ -153,7 +154,9 @@ class GeneratedModel(LanceModel):
             GeneratedModel object itself
         """
         output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        output_dir.mkdir(parents=True)
         (output_dir / "lib").mkdir(exist_ok=True)
         for filename, content in self.files:
             _, ext = os.path.splitext(filename)
@@ -221,11 +224,12 @@ class GeneratedModel(LanceModel):
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
-            result_df = pd.read_csv(temp_dir / "prediction_result.csv")
-            target_columns = list()
+            id_columns_for_prediction = None
             for k, _, v in self.params:
-                if k == "target_columns":
-                    target_columns = eval(v)
+                if k == "id_columns_for_prediction":
+                    id_columns_for_prediction = eval(v)
                     break
-            result_df = result_df[target_columns]
+            if id_columns_for_prediction is None:
+                id_columns_for_prediction = [0]
+            result_df = pd.read_csv(temp_dir / "prediction_result.csv", index_col=id_columns_for_prediction)
             return result_df
