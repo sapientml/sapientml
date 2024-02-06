@@ -13,20 +13,21 @@
 # limitations under the License.
 
 import asyncio
-import glob
 import os
 import platform
 import sys
 import time
-from importlib.metadata import entry_points
 from pathlib import Path
-from shutil import copyfile
 from typing import Optional
+
+import nest_asyncio
 
 from .params import CancellationToken, Code, RunningResult
 from .util.logging import setup_logger
 
 logger = setup_logger()
+
+nest_asyncio.apply()
 
 
 def run(
@@ -52,25 +53,21 @@ def run(
     """
 
     if platform.system() == "Windows":
-        executable = None
-        encoding = "cp932"
-        cmd = f'{sys.executable} "{file_path}"'
-        replace_newline = "\r"
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
+        encoding = "cp932"  # noqa
+        replace_newline = "\r"  # noqa
+        loop = asyncio.ProactorEventLoop()  # noqa
+        asyncio.set_event_loop(loop)  # noqa
     else:
-        executable = "/bin/bash"
         encoding = "utf-8"
         replace_newline = ""
-        cmd = f"{sys.executable} {file_path}"
         loop = asyncio.get_event_loop()
 
     async def _run() -> RunningResult:
         start_time = time.time()
 
-        process = await asyncio.create_subprocess_shell(
-            cmd,
-            executable=executable,
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            file_path,
             cwd=cwd or os.path.dirname(file_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -104,11 +101,11 @@ def run(
                     proc.kill()
                     break
                 if cancel is not None and cancel.is_triggered:
-                    returncode = -9
-                    interrupted_reason = "Cancelled by user"
-                    print("Terminating due to cancellation")
-                    proc.kill()
-                    break
+                    returncode = -9  # noqa
+                    interrupted_reason = "Cancelled by user"  # noqa
+                    print("Terminating due to cancellation")  # noqa
+                    proc.kill()  # noqa
+                    break  # noqa
                 await asyncio.sleep(1)
             return returncode, interrupted_reason
 
@@ -179,15 +176,6 @@ class PipelineExecutor:
 
         """
         candidate_scripts: list[tuple[Code, RunningResult]] = []
-
-        # copy libs
-        lib_path = output_dir / "lib"
-        lib_path.mkdir(exist_ok=True)
-
-        eps = entry_points(group="sapientml.export_modules")
-        for ep in eps:
-            for file in glob.glob(f"{ep.load().__path__[0]}/*.py"):
-                copyfile(file, lib_path / Path(file).name)
 
         for index, pipeline in enumerate(pipeline_list, start=1):
             script_name = f"{index}_script.py"

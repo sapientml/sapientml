@@ -140,6 +140,23 @@ def test_sapientml_works_with_pickled_model(testdata_df_light):
     )
 
 
+def test_sapientml_works_with_probability_prediction_for_multiclass_with_id(testdata_df_light):
+    cls_ = SapientML(
+        ["target_category_multi_nonnum"],
+        task_type="classification",
+        id_columns_for_prediction=["id"],
+        initial_timeout=60,
+    )
+    test_df = testdata_df_light.copy()
+    test_df["id"] = np.arange(test_df.shape[0])
+    cls_.fit(
+        test_df,
+    )
+    cls_.predict(
+        test_df,
+    )
+
+
 def test_misc_sapientml_with_hpo_works(testdata_df_light, caplog):
     testdata_df_light = testdata_df_light[["target_number", "explanatory_multi_category_nonnum"]]
     logging.disable(logging.NOTSET)
@@ -215,7 +232,7 @@ def test_sapientml_raises_error_if_all_candidates_failed_to_run(testdata_df_ligh
         time_split_num=4,
         time_split_index=0,
     )
-    with mock.patch("asyncio.create_subprocess_shell") as process:
+    with mock.patch("asyncio.create_subprocess_exec") as process:
         attrs = {
             "return_value.stdout.readline.return_value": (b""),
             "return_value.stderr.readline.return_value": (b""),
