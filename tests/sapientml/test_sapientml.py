@@ -89,6 +89,7 @@ def test_sapientml_works_with_generated_model(testdata_df_light):
 
 
 def test_sapientml_works_with_lancedb(testdata_df_light):
+    SapientML.artifact_datastore = "lancedb"
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",

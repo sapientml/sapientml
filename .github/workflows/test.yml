@@ -20,7 +20,7 @@ on:
       - main
 
 env:
-  POETRY_VERSION: "1.5.1"
+  POETRY_VERSION: "1.7.1"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:  
@@ -29,7 +29,8 @@ jobs:
       matrix:
         version: ["3.10", "3.11"]
         test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc, test_explain]
-    runs-on: ubuntu-latest
+        vm: ["ubuntu-latest", "windows-latest"]
+    runs-on: ${{ matrix.vm }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,19 +40,17 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
 
-      - name: Install Poetry
+      - name: Install Poetry (Ubuntu)
+        if: matrix.vm == 'ubuntu-latest'
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
-
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
-
-      - name: Install Packages
-        run: sudo apt install -y graphviz
+      - name: Install Poetry (Windows)
+        if: matrix.vm == 'windows-latest'
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          "C:\Users\runneradmin\AppData\Roaming\Python\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
 
       - name: Install Dependencies
         run: poetry install
@@ -62,7 +61,7 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v3
         with:
-          name:  ${{ matrix.test }}
+          name:  ${{ matrix.test }}-${{ matrix.version }}-${{ matrix.vm }}
           path: .coverage
           retention-days: 1
 

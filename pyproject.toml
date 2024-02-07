@@ -40,6 +40,7 @@ pandas = "^2.0.3"
 pydantic = "^2.1.1"
 lancedb = "^0.5.3"
 tantivy = "^0.21.0"
+sapientml-preprocess = "0.3.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4,<9.0"
@@ -54,6 +55,10 @@ jedi = "^0.19.0"
 pygount = "^1.6.1"
 tabulate = "^0.9.0"
 coverage = "^7.3.2"
+
+[tool.poetry.plugins."sapientml.artifact_datastore"]
+localfile = "sapientml.model.localfile:GeneratedModel"
+lancedb = "sapientml.model.lancedb:GeneratedModel"
 
 [tool.pysen]
 version = "0.10"
