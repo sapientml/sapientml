@@ -32,7 +32,7 @@ class GeneratedModel:
         input_dir: PathLike,
         save_datasets_format: Literal["csv", "pickle"],
         timeout: int,
-        csv_encoding: Literal["UTF-8", "SJIS"],
+        csv_encoding: str,
         csv_delimiter: str,
         params: dict,
     ):
@@ -49,11 +49,13 @@ class GeneratedModel:
             Ignored when all inputs are specified as file path.
         timeout: int
             Timeout for the execution of training and prediction.
-        csv_encoding: 'UTF-8' or 'SJIS'
+        csv_encoding: str
             Encoding method when csv files are involved.
             Ignored when only pickle files are involved.
         csv_delimiter: str
             Delimiter to read csv files.
+        params: dict
+            All the parameters of SapientML and plugins
         """
 
         self.files = dict()
@@ -102,6 +104,8 @@ class GeneratedModel:
             Ignored when only pickle files are involved.
         csv_delimiter: str
             Delimiter to read csv files.
+        params: dict
+            All the parameters of SapientML and plugins
         """
         return GeneratedModel(input_dir, save_datasets_format, timeout, csv_encoding, csv_delimiter, params)
 

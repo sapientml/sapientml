@@ -34,13 +34,13 @@ from ..util.logging import setup_logger
 logger = setup_logger()
 
 
-def _readfile(files, filepath: Path, input_dir: Path):
+def _readfile(files, filepath: Path, input_dir: Path, encoding: str):
     _, ext = os.path.splitext(filepath)
     if ext == ".pkl":
         with open(filepath, "rb") as f:
             files.append((str(filepath.relative_to(input_dir)), " ".join(map(str, f.read()))))
     else:
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding=encoding) as f:
             files.append((str(filepath.relative_to(input_dir)), f.read()))
 
 
@@ -84,20 +84,22 @@ class GeneratedModel(LanceModel):
             Ignored when only pickle files are involved.
         csv_delimiter: str
             Delimiter to read csv files.
+        params: dict
+            All the parameters of SapientML and plugins
         """
         input_dir = Path(input_dir)
         files = list()
-        _readfile(files, input_dir / "final_script.py", input_dir)
-        _readfile(files, input_dir / "final_train.py", input_dir)
-        _readfile(files, input_dir / "final_predict.py", input_dir)
+        _readfile(files, input_dir / "final_script.py", input_dir, csv_encoding)
+        _readfile(files, input_dir / "final_train.py", input_dir, csv_encoding)
+        _readfile(files, input_dir / "final_predict.py", input_dir, csv_encoding)
 
         for filepath in input_dir.glob("lib/*.py"):
-            _readfile(files, filepath, input_dir)
+            _readfile(files, filepath, input_dir, csv_encoding)
 
         for filepath in input_dir.glob("**/*.pkl"):
             if save_datasets_format == "pickle" and "training.pkl" == filepath.name:
                 continue
-            _readfile(files, filepath, input_dir)
+            _readfile(files, filepath, input_dir, csv_encoding)
 
         with open(input_dir / "final_script.out.json", "r") as f:
             data = json.load(f)
@@ -137,9 +139,19 @@ class GeneratedModel(LanceModel):
         return self.id
 
     @staticmethod
-    def load(id):
+    def load(id: str):
         """
         Load a GeneratedModel with id from database
+
+        Parameters
+        ----------
+        id: str
+            UUID string of the model to be loaded
+
+        Returns
+        -------
+        model: GeneratedModel
+            GeneratedModel object loaded
         """
         db = lancedb.connect(".lancedb")
         table = db.open_table("artifacts")
@@ -171,7 +183,7 @@ class GeneratedModel(LanceModel):
                 with open(output_dir / filename, "wb") as f:
                     f.write(b"".join([int(i).to_bytes(1, "little") for i in content.split(" ")]))
             else:
-                with open(output_dir / filename, "w") as f:
+                with open(output_dir / filename, "w", encoding=self.csv_encoding) as f:
                     f.write(content)
 
     def fit(self, X: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series]] = None):
@@ -206,7 +218,7 @@ class GeneratedModel(LanceModel):
             for filepath in temp_dir.glob("**/*.pkl"):
                 if self.save_datasets_format == "pickle" and "training.pkl" == filepath.name:
                     continue
-                _readfile(self.files, filepath, temp_dir)
+                _readfile(self.files, filepath, temp_dir, self.csv_encoding)
         return self
 
     def predict(self, X: pd.DataFrame):
