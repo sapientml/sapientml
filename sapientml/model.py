@@ -95,8 +95,8 @@ class GeneratedModel:
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        (output_dir / "lib").mkdir(exist_ok=True)
         for filename, content in self.files.items():
+            Path(output_dir / filename).parent.mkdir(exist_ok=True,parents=True)
             with open(output_dir / filename, "wb") as f:
                 f.write(content)
 
