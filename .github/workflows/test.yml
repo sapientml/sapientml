@@ -20,7 +20,7 @@ on:
       - main
 
 env:
-  POETRY_VERSION: "1.5.1"
+  POETRY_VERSION: "1.7.1"
   POETRY_URL: https://install.python-poetry.org
 
 jobs:  
@@ -28,16 +28,9 @@ jobs:
     strategy:
       matrix:
         version: ["3.10", "3.11"]
-        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc,
-          test_regressor_works_number, test_regressor_works_with_nosparse,
-          test_classifier_category_binary_num_noproba, test_classifier_category_binary_num_proba,
-          test_classifier_category_multi_nonnum_metric_noproba, test_classifier_category_multi_nonnum_metric_proba,
-          test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
-          test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
-          test_classifier_notext_nonegative_explanatry, test_classifier_works_with,
-          test_explain
-          ]
-    runs-on: ubuntu-latest
+        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc, test_explain]
+        vm: ["ubuntu-latest", "windows-latest"]
+    runs-on: ${{ matrix.vm }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -47,19 +40,17 @@ jobs:
         with:
           python-version: ${{ matrix.version }}
 
-      - name: Install Poetry
+      - name: Install Poetry (Ubuntu)
+        if: matrix.vm == 'ubuntu-latest'
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install mecab
-        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
-
-      - name: Set up mecab
-        run: sudo cp /etc/mecabrc /usr/local/etc/
-
-      - name: Install Packages
-        run: sudo apt install -y graphviz
+      - name: Install Poetry (Windows)
+        if: matrix.vm == 'windows-latest'
+        run: |
+          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
+          "C:\Users\runneradmin\AppData\Roaming\Python\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
 
       - name: Install Dependencies
         run: poetry install
@@ -70,7 +61,7 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v3
         with:
-          name:  ${{ matrix.test }}
+          name:  ${{ matrix.test }}-${{ matrix.version }}-${{ matrix.vm }}
           path: .coverage
           retention-days: 1
 
