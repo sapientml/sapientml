@@ -95,8 +95,8 @@ class GeneratedModel:
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        (output_dir / "lib").mkdir(exist_ok=True)
         for filename, content in self.files.items():
+            Path(output_dir / filename).parent.mkdir(exist_ok=True, parents=True)
             with open(output_dir / filename, "wb") as f:
                 f.write(content)
 
@@ -157,6 +157,8 @@ class GeneratedModel:
             result = run(str(temp_dir / "final_predict.py"), self.timeout)
             if result.returncode != 0:
                 raise RuntimeError(f"Prediction was failed due to the following Error: {result.error}")
-            result_df = pd.read_csv(temp_dir / "prediction_result.csv")
-            result_df = result_df[self.params["target_columns"]]
+            id_columns_for_prediction = self.params.get("id_columns_for_prediction", [])
+            if not id_columns_for_prediction:
+                id_columns_for_prediction = [0]
+            result_df = pd.read_csv(temp_dir / "prediction_result.csv", index_col=id_columns_for_prediction)
             return result_df
