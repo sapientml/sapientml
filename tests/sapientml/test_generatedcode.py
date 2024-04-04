@@ -305,7 +305,13 @@ def test_classifier_category_binary_num_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -407,7 +413,13 @@ def test_classifier_category_multi_nonnum_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -509,7 +521,13 @@ def test_classifier_category_binary_boolean_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -610,7 +628,13 @@ def test_classifier_works_with_target_pattern(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -699,8 +723,19 @@ def test_classifier_notext_nonegative_explanatry(
     pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
     test_result_df = execute_code_for_test_ipynb(pipeline_results, temp_dir)
     for i in range(len(test_result_df)):
+        model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        assert returncode == 0
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
+            # "AttributeError: 'SVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        else:
+            assert returncode == 0
 
 
 @pytest.mark.parametrize("adaptation_metric", ["f1", "accuracy"])
