@@ -486,7 +486,7 @@ class Dataset:
             raise ValueError(f"target column of {target_data_name} dataframe has NaN or Inf.")
         elif (target_data_name != "train") and not self._isnot_nan(df, target_columns, 0):
             raise ValueError(f"target column of {target_data_name} dataframe has NaN or Inf.")
-        
+
         # 2. Check whether index names are unique
         if not self._is_index_unique(df):
             raise ValueError(f"Index names of {target_data_name} dataframe are not unique.")
@@ -516,7 +516,7 @@ class Dataset:
 
         return True
 
-    def _isnot_nan(self, df: pd.DataFrame, target_columns: list[str], limit: int) -> bool:        
+    def _isnot_nan(self, df: pd.DataFrame, target_columns: list[str], limit: int) -> bool:
         return not (len(df[df[target_columns].isin([np.inf, -np.inf, np.nan]).any(axis=1)]) > limit)
 
     def _is_columns_unique(self, df: pd.DataFrame) -> bool:

@@ -1272,6 +1272,7 @@ def test_additional_classifier_predict_option(
                 assert "prediction = pd.DataFrame(y_prob" in code_for_test
                 assert "prediction = pd.DataFrame(y_prob" in code_for_predict
 
+
 @pytest.mark.parametrize("invalid_target_value", [np.nan, np.inf, -np.inf])
 @pytest.mark.parametrize("invalid_count", ["half", "one"])
 def test_nan_or_inf_in_target_columns_for_train_data(
@@ -1304,14 +1305,15 @@ def test_nan_or_inf_in_target_columns_for_train_data(
 
     temp_dir = make_tempdir
     if invalid_count == "half":
-        dataset.training_dataframe.loc[0::2, task.target_columns]= invalid_target_value    
+        dataset.training_dataframe.loc[0::2, task.target_columns] = invalid_target_value
         with pytest.raises(ValueError) as e:
             execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
         assert "dataframe has NaN or Inf" in str(e.value)
     else:
-        dataset.training_dataframe.loc[dataset.training_dataframe.index[0],task.target_columns] = invalid_target_value
+        dataset.training_dataframe.loc[dataset.training_dataframe.index[0], task.target_columns] = invalid_target_value
         pipeline_results = execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
-        assert not(pipeline_results is None)
+        assert not (pipeline_results is None)
+
 
 @pytest.mark.parametrize("invalid_target_value", [np.nan, np.inf, -np.inf])
 def test_nan_or_inf_in_target_columns_for_validation_data(
@@ -1341,13 +1343,14 @@ def test_nan_or_inf_in_target_columns_for_validation_data(
     dataset.validation_data_path = (fxdir / "datasets" / "testdata_valid.csv").as_posix()
     dataset.test_data_path = (fxdir / "datasets" / "testdata_test.csv").as_posix()
 
-    dataset.validation_dataframe.loc[dataset.validation_dataframe.index[0],task.target_columns] = invalid_target_value
+    dataset.validation_dataframe.loc[dataset.validation_dataframe.index[0], task.target_columns] = invalid_target_value
 
     temp_dir = make_tempdir
     with pytest.raises(ValueError) as e:
         execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
 
     assert "dataframe has NaN or Inf" in str(e.value)
+
 
 @pytest.mark.parametrize("invalid_target_value", [np.nan, np.inf, -np.inf])
 def test_nan_or_inf_in_target_columns_for_test_data(
@@ -1377,8 +1380,8 @@ def test_nan_or_inf_in_target_columns_for_test_data(
     dataset.validation_data_path = (fxdir / "datasets" / "testdata_valid.csv").as_posix()
     dataset.test_data_path = (fxdir / "datasets" / "testdata_test.csv").as_posix()
 
-    dataset.test_dataframe.loc[dataset.test_dataframe.index[0],task.target_columns] = invalid_target_value
- 
+    dataset.test_dataframe.loc[dataset.test_dataframe.index[0], task.target_columns] = invalid_target_value
+
     temp_dir = make_tempdir
     with pytest.raises(ValueError) as e:
         execute_pipeline(dataset, task, config, temp_dir, initial_timeout=60)
