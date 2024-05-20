@@ -135,10 +135,10 @@ class Code(BaseModel):
 
     """
 
-    validation: String = ""
-    test: String = ""
-    train: String = ""
-    predict: String = ""
+    validation: str = ""
+    test: str = ""
+    train: str = ""
+    predict: str = ""
 
     def __add__(self, other):
         return Code(
@@ -161,9 +161,9 @@ class RunningResult(BaseModel):
 
     """
 
-    output: String
-    error: String
-    returncode: Int
+    output: str
+    error: str
+    returncode: int
     time: NonNegativeInt
 
 
