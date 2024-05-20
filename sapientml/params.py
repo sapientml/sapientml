@@ -178,8 +178,8 @@ class PipelineResult(BaseModel):
 
     """
 
-    score: Optional[Float]
-    metric: Optional[String]
+    score: Optional[float]
+    metric: Optional[str]
     best_params: Optional[dict]
 
 
