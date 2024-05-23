@@ -596,3 +596,16 @@ def test_sapientml_works_with_change_none_to_nan():
     )
 
     sml.fit(df)
+
+
+def test_sapientml_works_with_symbol_column(testdata_df_light):
+    col_has_symbol = {"target_number_large_scale": "[target_number]{}:<\\+"}
+    testdata_df_light = testdata_df_light.rename(columns=col_has_symbol)
+
+    cls_ = SapientML(
+        target_columns=["[target_number]{}:<\\+", "target_number"],
+        add_explanation=True,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
