@@ -159,7 +159,7 @@ def execute_code_for_test_ipynb():
             with open(save_file_path, "r", encoding="utf-8") as f:
                 nb = nbformat.read(f, as_version=4)
             code_for_test = pipeline_results[i][0].test
-            code_for_test_file = "code_test_" + str(i+1) + ".py"
+            code_for_test_file = "code_test_" + str(i + 1) + ".py"
             code_for_test_file_path = (temp_dir / code_for_test_file).absolute().as_posix()
             with open(code_for_test_file_path, "w", encoding="utf-8") as f:
                 f.write(code_for_test)
