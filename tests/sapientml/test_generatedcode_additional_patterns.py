@@ -332,7 +332,13 @@ def test_additional_classifier_category_binary_num_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -434,7 +440,13 @@ def test_additional_classifier_category_multi_nonnum_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -536,7 +548,13 @@ def test_additional_classifier_category_binary_boolean_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -637,7 +655,13 @@ def test_additional_classifier_works_with_target_pattern_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -970,7 +994,13 @@ def test_additional_classifier_category_binary_nonnum_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -1072,7 +1102,13 @@ def test_additional_classifier_category_multi_num_metric_noproba(
     for i in range(len(test_result_df)):
         model = test_result_df.loc[i, "model"]
         returncode = test_result_df.loc[i, "returncode"]
-        if model == "SVC":
+        if model == "LinearSVC":
+            # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
+            assert returncode == 1
+        elif model == "SGDClassifier":
+            # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
+            assert returncode == 1
+        elif model == "SVC":
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
         elif model == "GaussianNB":
@@ -1195,14 +1231,20 @@ def test_additional_classifier_predict_option(
             # "AttributeError:var not found" occurs in SVC because of sparse_matrix
             assert returncode == 1
             assert returncode_train + returncode_predict > 0
-        elif model == "LinearSVC" and (predict_option == "probability" or adaptation_metric == "auc"):
+        elif model == "LinearSVC":
             # AttributeError: 'LinearSVC' object has no attribute 'predict_proba'
             assert returncode == 1
-            assert returncode_train + returncode_predict > 0
-        elif model == "SGDClassifier" and (predict_option == "probability" or adaptation_metric == "auc"):
+            if predict_option == "probability" or adaptation_metric == "auc":
+                assert returncode_train + returncode_predict > 0
+            else:
+                assert returncode_train + returncode_predict == 0
+        elif model == "SGDClassifier":
             # AttributeError: probability estimates are not available for loss='hinge' (‘hinge’ gives a linear SVM.)
             assert returncode == 1
-            assert returncode_train + returncode_predict > 0
+            if predict_option == "probability" or adaptation_metric == "auc":
+                assert returncode_train + returncode_predict > 0
+            else:
+                assert returncode_train + returncode_predict == 0
         elif model == "GaussianNB":
             # Sparse matrix is not supported
             assert returncode == 1
