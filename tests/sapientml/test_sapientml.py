@@ -602,3 +602,35 @@ def test_sapientml_works_with_regression_split_stratification(testdata_df_light)
     )
 
     assert "stratify" not in cls_.generator._best_pipeline.test
+
+
+def test_sapientml_works_with_change_none_to_nan():
+    df = pd.DataFrame(
+        {
+            "A": list(range(1, 11)),
+            "B": [None if i % 2 == 0 else "B" for i in range(1, 11)],
+            # It also fails when the value np.nan is included.
+            # "B": [np.nan if i % 2 == 0 else "B" for i in range(1, 11)],
+            "y": ["y" if i % 2 == 0 else "n" for i in range(1, 11)],
+        }
+    )
+
+    sml = SapientML(
+        ["y"],
+        add_explanation=True,
+    )
+
+    sml.fit(df)
+
+
+def test_sapientml_works_with_symbol_column(testdata_df_light):
+    col_has_symbol = {"target_number_large_scale": "[target_number]{}:<\\+"}
+    testdata_df_light = testdata_df_light.rename(columns=col_has_symbol)
+
+    cls_ = SapientML(
+        target_columns=["[target_number]{}:<\\+", "target_number"],
+        add_explanation=True,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )

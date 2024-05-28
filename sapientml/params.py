@@ -508,7 +508,7 @@ class Dataset:
                 incorrect_summary.append((col, index, value))
         if incorrect_summary:
             logger.warning(
-                f"The follwing columns would have incorrect datetime values in {target_data_name} dataframe: {incorrect_cols}"
+                f"The following columns would have incorrect datetime values in {target_data_name} dataframe: {incorrect_cols}"
             )
             logger.warning(f"For example, (column_name, index, value) = {incorrect_summary}")
 

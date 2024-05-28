@@ -27,8 +27,6 @@ from .util.logging import setup_logger
 
 logger = setup_logger()
 
-nest_asyncio.apply()
-
 
 def run(
     file_path: str, timeout: int, cancel: Optional[CancellationToken] = None, cwd: Optional[str] = None
@@ -56,11 +54,13 @@ def run(
         encoding = "cp932"  # noqa
         replace_newline = "\r"  # noqa
         loop = asyncio.ProactorEventLoop()  # noqa
-        asyncio.set_event_loop(loop)  # noqa
     else:
         encoding = "utf-8"
         replace_newline = ""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
+
+    asyncio.set_event_loop(loop)
+    nest_asyncio.apply(loop)
 
     async def _run() -> RunningResult:
         start_time = time.time()
@@ -139,7 +139,12 @@ def run(
         )
         return result
 
-    return loop.run_until_complete(_run())
+    try:
+        result = loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+    return result
 
 
 class PipelineExecutor:
