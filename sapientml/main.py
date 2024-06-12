@@ -160,7 +160,7 @@ class SapientML:
         self.model_type = model_type
         self.generator = self._Generator(**kwargs)
         self.config = self.generator.config
-        self.config.postinit()
+        self.config.post_init()
 
     @staticmethod
     def from_pretrained(model):
@@ -339,7 +339,7 @@ class SapientML:
         self.params = {"model_type": self.model_type}
         self.params.update(self.task.model_dump())
         self.params.update(self.config.model_dump())
-        self.params.update(self.generator.loaddata.config.model_dump())
+        self.params.update(self.generator.datastore.config.model_dump())
         self.params.update(self.generator.preprocess.config.model_dump())
 
         self.model = GeneratedModel(
