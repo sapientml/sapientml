@@ -14,11 +14,11 @@
 
 import warnings
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Annotated, List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from .macros import Metric
 from .util.logging import setup_logger
@@ -29,9 +29,22 @@ MAX_SEED = 2**32 - 1
 MAX_COLUMN_NAME_LENGTH = 1000
 MAX_TIME_SPLIT_NUM = 10000
 MAX_TIME_SPLIT_INDEX = 10000
-MAX_N_MODELS = 30
 DEFAULT_OUTPUT_DIR = "./outputs"
 INITIAL_TIMEOUT = 600
+
+MAX_STR_LENGTH = 1000
+MAX_INT = 1000000000
+
+Int = Annotated[int, Field(strict=False, gt=-MAX_INT, lt=MAX_INT)]
+PositiveInt = Annotated[int, Field(strict=False, gt=0, lt=MAX_INT)]
+NonNegativeInt = Annotated[int, Field(strict=False, ge=0, lt=MAX_INT)]
+Float = Annotated[float, Field(strict=False, gt=-MAX_INT, lt=MAX_INT)]
+NonNegativeFloat = Annotated[float, Field(strict=False, ge=0, lt=MAX_INT)]
+Fraction = Annotated[float, Field(strict=False, ge=0, le=1)]
+String = Annotated[str, StringConstraints(max_length=MAX_STR_LENGTH)]
+
+ColumnName = Annotated[str, StringConstraints(min_length=1, max_length=MAX_COLUMN_NAME_LENGTH - 1)]
+Seed = Annotated[int, Field(strict=False, ge=0, le=MAX_SEED)]
 
 logger = setup_logger()
 
@@ -151,7 +164,7 @@ class RunningResult(BaseModel):
     output: str
     error: str
     returncode: int
-    time: int
+    time: NonNegativeInt
 
 
 class PipelineResult(BaseModel):
@@ -218,15 +231,15 @@ class Task(BaseModel):
 
     """
 
-    target_columns: list[str]
+    target_columns: list[ColumnName]
     task_type: Optional[Literal["classification", "regression"]]
     split_method: Literal["random", "time", "group"]
-    split_seed: int
-    split_train_size: float
-    split_column_name: Optional[str]
-    time_split_num: int
-    time_split_index: int
-    adaptation_metric: Optional[str]
+    split_seed: Seed
+    split_train_size: Float
+    split_column_name: Optional[ColumnName]
+    time_split_num: PositiveInt
+    time_split_index: NonNegativeInt
+    adaptation_metric: Optional[String]
     is_multiclass: bool = False
     split_stratification: Optional[bool] = None
 
@@ -246,31 +259,10 @@ class Task(BaseModel):
             raise ValueError("Target columns are empty.")
         return v
 
-    @field_validator("target_columns")
-    def _check_column_name_length(cls, v):
-        if v is None:
-            return v
-        for _v in v.keys() if isinstance(v, dict) else v:
-            if len(_v) >= MAX_COLUMN_NAME_LENGTH:
-                raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
-        return v
-
-    @field_validator("split_seed")
-    def _check_seed(cls, v):
-        if v < 0 or MAX_SEED < v:
-            raise ValueError(f"{v} is out of [0, {MAX_SEED}]")
-        return v
-
     @field_validator("split_train_size")
     def _check_split_train_size(cls, v):
         if v <= 0 or 1 <= v:
             raise ValueError(f"{v} is out of (0, 1)")
-        return v
-
-    @field_validator("split_column_name")
-    def _check_split_column_name(cls, v):
-        if v is not None and len(v) >= MAX_COLUMN_NAME_LENGTH:
-            raise ValueError(f"Column name length must be shorter than {MAX_COLUMN_NAME_LENGTH}")
         return v
 
     @field_validator("time_split_num")
@@ -316,10 +308,10 @@ class Config(BaseModel):
         Debug mode or not.
     """
 
-    initial_timeout: int = INITIAL_TIMEOUT
-    timeout_for_test: int = 0
+    initial_timeout: NonNegativeInt = INITIAL_TIMEOUT
+    timeout_for_test: NonNegativeInt = 0
     cancel: Optional[CancellationToken] = None
-    project_name: Optional[str] = None
+    project_name: Optional[String] = None
     debug: bool = False
 
 

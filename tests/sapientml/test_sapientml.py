@@ -250,10 +250,10 @@ def test_sapientml_raises_error_if_all_candidates_failed_to_run(testdata_df_ligh
 def test_misc_sapientml_set_logger_handler_only_once():
     logger = setup_logger()
     assert len(logger.handlers) == 1
-    _ = SapientML([""])
+    _ = SapientML(["a"])
     logger = setup_logger()
     assert len(logger.handlers) == 1
-    _ = SapientML([""])
+    _ = SapientML(["a"])
     assert len(logger.handlers) == 1
 
 
