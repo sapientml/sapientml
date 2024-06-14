@@ -483,8 +483,14 @@ class Dataset:
 
         # 1. Check NaN in target column
         if (target_data_name == "train") and not self._isnot_nan(df, target_columns, 10):
-            raise ValueError(f"target column of {target_data_name} dataframe has more than 10 rows including NaN or Inf.")
-        elif (target_data_name != "train") and set(target_columns).issubset(set(df.columns)) and not self._isnot_nan(df, target_columns, 0):
+            raise ValueError(
+                f"target column of {target_data_name} dataframe has more than 10 rows including NaN or Inf."
+            )
+        elif (
+            (target_data_name != "train")
+            and set(target_columns).issubset(set(df.columns))
+            and not self._isnot_nan(df, target_columns, 0)
+        ):
             raise ValueError(f"target column of {target_data_name} dataframe has NaN or Inf.")
 
         # 2. Check whether index names are unique
