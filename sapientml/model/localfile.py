@@ -134,6 +134,10 @@ class GeneratedModel:
             with open(output_dir / filename, "wb") as f:
                 f.write(content)
 
+    @staticmethod
+    def load(id: str):
+        pass
+
     def fit(self, X: pd.DataFrame, y: Optional[Union[pd.DataFrame, pd.Series]] = None):
         """
         Generate ML scripts for input data.

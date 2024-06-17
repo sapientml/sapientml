@@ -126,11 +126,11 @@ class GeneratedModel(LanceModel):
     def params(self) -> dict:
         return {k: v if "str" in t else eval(v) for k, t, v in self.params_list}
 
-    def save(self):
+    def save(self, output_dir: PathLike = ".lancedb"):
         """
         Save itself to database
         """
-        db = lancedb.connect(".lancedb")
+        db = lancedb.connect(output_dir)
         table = db.create_table("artifacts", schema=GeneratedModel, exist_ok=True)
         self.prev_id = self.id
         self.id = str(uuid())
