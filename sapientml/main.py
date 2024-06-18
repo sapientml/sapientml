@@ -160,7 +160,7 @@ class SapientML:
         self.model_type = model_type
         self.generator = self._Generator(**kwargs)
         self.config = self.generator.config
-        self.config.postinit()
+        self.config.post_init()
 
     @staticmethod
     def from_pretrained(model):
