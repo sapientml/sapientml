@@ -360,7 +360,7 @@ class SapientML:
         self.params = {"model_type": self.model_type}
         self.params.update(self.task.model_dump())
         self.params.update(self.config.model_dump())
-        self.params.update(self.generator.loaddata.config.model_dump())
+        self.params.update(self.generator.datastore.config.model_dump())
         self.params.update(self.generator.preprocess.config.model_dump())
 
         _GeneratedModel = SapientML._get_generated_model()
