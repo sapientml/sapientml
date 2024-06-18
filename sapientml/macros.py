@@ -182,7 +182,13 @@ class Metric(enum.Enum):
             return False
 
 
-metric_lower_is_better = [Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value, Metric.LogLoss.value, Metric.MAPE.value]
+metric_lower_is_better = [
+    Metric.RMSLE.value,
+    Metric.RMSE.value,
+    Metric.MAE.value,
+    Metric.LogLoss.value,
+    Metric.MAPE.value,
+]
 
 metric_needing_predict_proba = [
     Metric.LogLoss.value,
