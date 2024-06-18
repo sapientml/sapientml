@@ -157,7 +157,7 @@ class SapientML:
         self.model_type = model_type
         self.generator = _Generator(**kwargs)
         self.config = self.generator.config
-        self.config.postinit()
+        self.config.post_init()
 
     @staticmethod
     def _get_pipeline_generator(model_type: str):
