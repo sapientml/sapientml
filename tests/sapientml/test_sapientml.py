@@ -88,6 +88,27 @@ def test_sapientml_works_with_generated_model(testdata_df_light):
     model.predict(X)
 
 
+def test_sapientml_works_with_lancedb(testdata_df_light):
+    SapientML.artifact_datastore = "lancedb"
+    cls_ = SapientML(
+        ["target_number"],
+        task_type="regression",
+        initial_timeout=60,
+    )
+    cls_.fit(
+        testdata_df_light,
+    )
+    id = cls_.model.save()
+
+    # load a model from LanceDB
+    cls_ = SapientML.from_pretrained(id)
+
+    cls_.predict(
+        testdata_df_light,
+    )
+    SapientML.artifact_datastore = "localfile"
+
+
 def test_sapientml_works_with_pickled_model_bytes_like_object(testdata_df_light):
     cls_ = SapientML(
         ["target_number"],
@@ -336,15 +357,18 @@ def test_sapientml_works_with_ignored_mixed_type_column(testdata_df_light):
 
 
 @pytest.mark.parametrize(
-    ("use_pos_list", "use_word_stemming"),
+    ("use_pos_list", "use_word_stemming", "artifact_datastore"),
     [
-        (["名詞", "動詞", "助動詞", "形容詞", "副詞"], True),
-        (None, False),
+        (["名詞", "動詞", "助動詞", "形容詞", "副詞"], True, "localfile"),
+        (["名詞", "動詞", "助動詞", "形容詞", "副詞"], True, "lancedb"),
+        (None, False, "localfile"),
+        (None, False, "lancedb"),
     ],
 )
-def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, use_word_stemming):
+def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, use_word_stemming, artifact_datastore):
     testdata_df.loc[1, "explanatory_text_japanese"] = 1
 
+    SapientML.artifact_datastore = artifact_datastore
     cls_ = SapientML(
         ["target_number"],
         task_type="regression",
@@ -355,6 +379,7 @@ def test_sapientml_works_with_Japanese_text_column(testdata_df, use_pos_list, us
         testdata_df,
     )
     assert "# HANDLE JAPANESE TEXT" in cls_.generator._best_pipeline.test
+    SapientML.artifact_datastore = "localfile"
 
 
 @pytest.mark.parametrize(

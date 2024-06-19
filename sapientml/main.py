@@ -14,6 +14,7 @@
 
 import glob
 import pickle
+import re
 
 # from msilib.schema import Error
 from importlib.metadata import entry_points
@@ -22,7 +23,6 @@ from shutil import copyfile
 from typing import Literal, Optional, Union
 
 import pandas as pd
-from sapientml.model import GeneratedModel
 from sapientml.suggestion import SapientMLSuggestion
 
 from .macros import Metric
@@ -76,6 +76,8 @@ def _check_stratification(
 
 
 class SapientML:
+    artifact_datastore: str = "localfile"
+
     def __init__(
         self,
         # Dataset
@@ -149,18 +151,29 @@ class SapientML:
             adaptation_metric=adaptation_metric,
             split_stratification=split_stratification,
         )
+
+        _Generator = SapientML._get_pipeline_generator(model_type)
+
+        self.model_type = model_type
+        self.generator = _Generator(**kwargs)
+        self.config = self.generator.config
+        self.config.post_init()
+
+    @staticmethod
+    def _get_pipeline_generator(model_type: str):
         eps_generator = entry_points(group="sapientml.pipeline_generator")
-        eps_config = entry_points(group="sapientml.config")
-        if eps_generator[model_type] and eps_config[model_type]:
-            self._Generator = eps_generator[model_type].load()
-            self._Config = eps_config[model_type].load()
+        if eps_generator[model_type]:
+            return eps_generator[model_type].load()
         else:
             raise ValueError(f"Model '{model_type}' is invalid.")
 
-        self.model_type = model_type
-        self.generator = self._Generator(**kwargs)
-        self.config = self.generator.config
-        self.config.post_init()
+    @staticmethod
+    def _get_generated_model():
+        eps_artifact_datastore = entry_points(group="sapientml.artifact_datastore")
+        if eps_artifact_datastore[SapientML.artifact_datastore]:
+            return eps_artifact_datastore[SapientML.artifact_datastore].load()
+        else:
+            raise ValueError(f"Artifact Datastore '{SapientML.artifact_datastore}' is invalid.")
 
     @staticmethod
     def from_pretrained(model):
@@ -180,21 +193,29 @@ class SapientML:
         sml: SapientML
             a new SapientML instance loaded from the pretrained model.
         """
-        try:
-            if isinstance(model, GeneratedModel):
-                pass
+        _GeneratedModel = SapientML._get_generated_model()
+
+        def _is_uuid(s):
+            return (
+                re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$", s) is not None
+            )
+
+        if isinstance(model, _GeneratedModel):
+            # model is an instance of GeneratedModel. do nothing.
+            pass
+        elif isinstance(model, bytes):
+            model = pickle.loads(model)
+        elif isinstance(model, str):
+            if _is_uuid(model):
+                model = _GeneratedModel.load(model)
             else:
-                if isinstance(model, str):
-                    with open(model, "rb") as f:
-                        model = pickle.load(f)
-                else:
-                    model = pickle.loads(model)
-                if not isinstance(model, GeneratedModel):
-                    raise RuntimeError("model is not an instance of GeneratedModel")
-        except Exception as e:
-            raise ValueError(
-                "model must be either pickle filename, pickle bytes-like object, or deserialized object"
-            ) from e
+                with open(model, "rb") as f:
+                    model = pickle.load(f)
+        else:
+            raise ValueError("model must be either model id, pickle filename, or bytes-like object")
+        if not isinstance(model, _GeneratedModel):
+            raise RuntimeError("could not load an instance of GeneratedModel from model")
+
         sml = SapientML(**model.params)
         sml.model = model
         return sml
@@ -342,7 +363,8 @@ class SapientML:
         self.params.update(self.generator.datastore.config.model_dump())
         self.params.update(self.generator.preprocess.config.model_dump())
 
-        self.model = GeneratedModel(
+        _GeneratedModel = SapientML._get_generated_model()
+        self.model = _GeneratedModel.create(
             input_dir=self.output_dir,
             save_datasets_format=save_datasets_format,
             csv_encoding=csv_encoding,
