@@ -41,6 +41,8 @@ class Metric(enum.Enum):
         It is calculated as the ratio between the number of correct predictions to the total number of predictions.
     MAE : str
         Mean Absolute Error (MAE)
+    MAPE : str
+        Mean Absolute Percentage Error (MAPE)
     Gini : str
         The Gini Coefficient is used to evaluate the performance of Binary Classifier Models.
         The value of the Gini Coefficient can be between 0 to 1. The higher the Gini coefficient, the better is the model.
@@ -72,6 +74,7 @@ class Metric(enum.Enum):
     MCC = "MCC"  # Matthews correlation coefficient
     MAP_K = "MAP_"
     QWK = "QWK"  # Quadratic weighted kappa
+    MAPE = "MAPE"
 
     @staticmethod
     def get(string) -> str:
@@ -179,7 +182,13 @@ class Metric(enum.Enum):
             return False
 
 
-metric_lower_is_better = [Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value, Metric.LogLoss.value]
+metric_lower_is_better = [
+    Metric.RMSLE.value,
+    Metric.RMSE.value,
+    Metric.MAE.value,
+    Metric.LogLoss.value,
+    Metric.MAPE.value,
+]
 
 metric_needing_predict_proba = [
     Metric.LogLoss.value,
@@ -189,7 +198,7 @@ metric_needing_predict_proba = [
     Metric.Gini.value,
 ]
 
-metrics_for_regression = [Metric.R2.value, Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value]
+metrics_for_regression = [Metric.R2.value, Metric.RMSLE.value, Metric.RMSE.value, Metric.MAE.value, Metric.MAPE.value]
 
 metrics_for_classification = [
     Metric.F1.value,
