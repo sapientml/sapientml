@@ -35,7 +35,7 @@ jobs:
           test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
           test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
           test_classifier_notext_nonegative_explanatry, test_classifier_works_with,
-          test_explain
+          test_explain, test_nan_or_inf_in_target_columns
           ]
     runs-on: ubuntu-latest
     steps:

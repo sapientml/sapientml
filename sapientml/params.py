@@ -474,7 +474,15 @@ class Dataset:
             raise ValueError(f"{target_data_name} doesn't have target columns")
 
         # 1. Check NaN in target column
-        if set(target_columns).issubset(set(df.columns)) and (not self._isnot_nan(df, target_columns)):
+        if (target_data_name == "train") and not self._isnot_nan(df, target_columns, 10):
+            raise ValueError(
+                f"target column of {target_data_name} dataframe has more than 10 rows including NaN or Inf."
+            )
+        elif (
+            (target_data_name != "train")
+            and set(target_columns).issubset(set(df.columns))
+            and not self._isnot_nan(df, target_columns, 0)
+        ):
             raise ValueError(f"target column of {target_data_name} dataframe has NaN or Inf.")
 
         # 2. Check whether index names are unique
@@ -506,12 +514,8 @@ class Dataset:
 
         return True
 
-    def _isnot_nan(self, df: pd.DataFrame, target_columns: list[str]) -> bool:
-        for target_column in target_columns:
-            target_data = df[target_column].replace([-np.inf, np.inf], np.nan)
-            if target_data.isna().any():
-                return False
-        return True
+    def _isnot_nan(self, df: pd.DataFrame, target_columns: list[str], limit: int) -> bool:
+        return not (df[target_columns].isin([np.inf, -np.inf, np.nan]).any(axis=1).sum() > limit)
 
     def _is_columns_unique(self, df: pd.DataFrame) -> bool:
         if df.columns.is_unique:
