@@ -143,6 +143,7 @@ def run(
         result = loop.run_until_complete(_run())
     finally:
         loop.close()
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
     return result
 
