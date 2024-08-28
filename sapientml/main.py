@@ -14,9 +14,9 @@
 
 import glob
 import pickle
+import sys
 
 # from msilib.schema import Error
-from importlib.metadata import entry_points
 from pathlib import Path
 from shutil import copyfile
 from typing import Literal, Optional, Union
@@ -28,6 +28,11 @@ from sapientml.suggestion import SapientMLSuggestion
 from .macros import Metric
 from .params import Dataset, Task
 from .util.logging import setup_logger
+
+if sys.version_info.minor <= 9:
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 logger = setup_logger()
 
