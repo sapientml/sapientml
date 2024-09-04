@@ -33,7 +33,7 @@ homepage = "https://sapientml.io/"
 documentation = "https://sapientml.readthedocs.io/"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.9,<3.13"
 sapientml-core = "*"
 numpy = "^1.19.5"
 pandas = "^2.0.3"
