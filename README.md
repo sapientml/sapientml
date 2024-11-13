@@ -31,13 +31,13 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 
 From PyPI repository
 
-```
+```bash
 pip install sapientml
 ```
 
 From source code:
 
-```
+```bash
 git clone https://github.com/sapientml/sapientml.git
 cd sapientml
 pip install poetry
@@ -48,7 +48,7 @@ poetry install
 Please see our [Documentation](https://sapientml.readthedocs.io/en/latest/user/usage.html) for further details.
 ## Run AutoML
 
-```py
+```python
 import pandas as pd
 from sapientml import SapientML
 from sklearn.metrics import f1_score
@@ -73,7 +73,7 @@ print(f"F1 score: {f1_score(y_true, y_pred)}")
 You can access `model` field to get a model consisting of generated code after executing `fit` method.
 `model` provides `fit`, `predict`, and `save` method to train a model by generated code, predict from a test data by generated code, and save generated code to a designated folder.
 
-```py
+```python
 model = sml.fit(train_data, codegen_only=True).model
 
 model.fit(X_train, y_train) # build a model by using another data and the same generated code
