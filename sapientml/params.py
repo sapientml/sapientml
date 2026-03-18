@@ -66,7 +66,7 @@ def save_file(dataframe: pd.DataFrame, filepath: str, csv_encoding: str, csv_del
         The data to output
     filepath : str
         The path of output file
-    csv_encoding : 'UTF-8' or 'SJIS'
+    csv_encoding : str
         Encoding method when csv files are involved.
         Ignored when only pickle files are involved.
     csv_delimiter : str
