@@ -192,7 +192,7 @@ def test_misc_sapientml_with_hpo_works(testdata_df_light, caplog):
     cls_.fit(
         testdata_df_light,
     )
-    assert "Error" not in caplog.text
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
     caplog.clear()
     logging.disable(logging.FATAL)
 
@@ -572,7 +572,7 @@ def test_misc_sapientml_with_hpo_works_for_classification_task(testdata_df_light
         testdata_df_light,
     )
 
-    assert "Error" not in caplog.text
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
     caplog.clear()
     logging.disable(logging.FATAL)
 
