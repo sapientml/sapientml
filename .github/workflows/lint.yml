@@ -31,19 +31,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache Packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.local
-          key: poetry-${{ matrix.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/*.yml') }}
-
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Dependencies
-        run: pip install pysen flake8 black isort
+        run: pip install "pysen>=0.10.5,<0.12.0" flake8 "black>=23.7,<26.0" "isort>=5,<8"
 
       - name: Pysen run lint
         run: pysen run lint
