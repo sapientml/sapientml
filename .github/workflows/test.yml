@@ -70,7 +70,7 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
-          name:  ${{ matrix.test }}
+          name: py${{ matrix.version }}-${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
