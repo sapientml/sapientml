@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,12 +35,12 @@ jobs:
           test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
           test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
           test_classifier_notext_nonegative_explanatry, test_classifier_works_with,
-          test_explain
+          test_explain, test_nan_or_inf_in_target_columns
           ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.version }}
         uses: actions/setup-python@v4
@@ -71,6 +71,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name:  ${{ matrix.test }}
+          include-hidden-files: true
           path: .coverage
           retention-days: 1
 
@@ -91,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.version }}
         uses: actions/setup-python@v4
@@ -122,6 +123,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name:  ${{ matrix.test }}
+          include-hidden-files: true
           path: .coverage
           retention-days: 1
 
@@ -132,7 +134,7 @@ jobs:
       - additional_test
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
@@ -164,7 +166,7 @@ jobs:
       - additional_test
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4

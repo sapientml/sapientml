@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,29 +28,38 @@ jobs:
     strategy:
       matrix:
         version: ["3.10", "3.11"]
-        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc, test_explain]
-        vm: ["ubuntu-latest", "windows-latest"]
-    runs-on: ${{ matrix.vm }}
+        test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc,
+          test_regressor_works_number, test_regressor_works_with_nosparse,
+          test_classifier_category_binary_num_noproba, test_classifier_category_binary_num_proba,
+          test_classifier_category_multi_nonnum_metric_noproba, test_classifier_category_multi_nonnum_metric_proba,
+          test_classifier_category_binary_boolean_metric_noproba, test_classifier_category_binary_boolean_metric_proba,
+          test_classifier_category_binary_num_use_proba_with_metric_default_noproba, test_classifier_category_multi_nonnum_noproba_metric_with_proba,
+          test_classifier_notext_nonegative_explanatry, test_classifier_works_with,
+          test_explain, test_nan_or_inf_in_target_columns
+          ]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.version }}
 
-      - name: Install Poetry (Ubuntu)
-        if: matrix.vm == 'ubuntu-latest'
+      - name: Install Poetry
         run: |
           curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install Poetry (Windows)
-        if: matrix.vm == 'windows-latest'
-        run: |
-          curl -sSL ${{ env.POETRY_URL }} | python - --version ${{ env.POETRY_VERSION }}
-          "C:\Users\runneradmin\AppData\Roaming\Python\Scripts" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Install mecab
+        run: sudo apt install -y mecab libmecab-dev mecab-ipadic-utf8
+
+      - name: Set up mecab
+        run: sudo cp /etc/mecabrc /usr/local/etc/
+
+      - name: Install Packages
+        run: sudo apt install -y graphviz
 
       - name: Install Dependencies
         run: poetry install
@@ -61,7 +70,8 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v3
         with:
-          name:  ${{ matrix.test }}-${{ matrix.version }}-${{ matrix.vm }}
+          name:  ${{ matrix.test }}
+          include-hidden-files: true
           path: .coverage
           retention-days: 1
 
@@ -71,7 +81,7 @@ jobs:
       - test
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v4

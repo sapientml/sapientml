@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
 import glob
 import pickle
 import re
-
-# from msilib.schema import Error
-from importlib.metadata import entry_points
+import sys
 from pathlib import Path
 from shutil import copyfile
 from typing import Literal, Optional, Union
@@ -28,6 +26,11 @@ from sapientml.suggestion import SapientMLSuggestion
 from .macros import Metric
 from .params import Dataset, Task
 from .util.logging import setup_logger
+
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 logger = setup_logger()
 

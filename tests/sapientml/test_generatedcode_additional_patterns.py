@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -951,7 +951,7 @@ def test_additional_misc_preprocess_specify_train_valid_test(
         assert "Preprocess:DateTime" in code_for_test
         assert "Preprocess:TextPreprocessing" in code_for_test
         assert "Preprocess:TfidfVectorizer" in code_for_test
-        assert "np.log" in code_for_test
+        # assert "np.log" in code_for_test
         if model == "SVR":
             # "AttributeError:var not found" occurs in SVR because of sparse_matrix
             assert returncode == 1

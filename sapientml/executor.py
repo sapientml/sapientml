@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -143,6 +143,7 @@ def run(
         result = loop.run_until_complete(_run())
     finally:
         loop.close()
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
     return result
 

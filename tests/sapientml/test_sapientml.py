@@ -1,4 +1,4 @@
-# Copyright 2023 The SapientML Authors
+# Copyright 2023-2024 The SapientML Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -281,7 +281,7 @@ def test_misc_sapientml_set_logger_handler_only_once():
 def test_sapientml_raises_error_if_target_has_inf(testdata_df_light):
     import numpy as np
 
-    testdata_df_light.loc[[1, 4, 7, 9, 11, 16, 19, 20], "target_number"] = np.inf
+    testdata_df_light.loc[0::2, "target_number"] = np.inf
     with pytest.raises(Exception):
         cls_ = SapientML(
             ["target_number"],
