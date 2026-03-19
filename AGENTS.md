@@ -12,11 +12,16 @@
 - `numpy = ">=1.19.5,<2.0.0"` — upper bound required for fasttext-wheel 0.9.2 compatibility
 - `poetry` for dependency management; `poetry.lock` pins numpy to 1.26.4
 
+## Releases
+| Version | Date | Notes |
+|---------|------|-------|
+| 0.4.16 | 2026-03-18 | LanceDB (#91), datetime fix (#111); requires sapientml-core 0.7.4 |
+
 ## CI / GitHub Actions
-- Workflow: `.github/workflows/test.yml`
-- Artifact name pattern: `py${{ matrix.version }}-${{ matrix.test }}` (avoids 409 conflicts when multiple matrix jobs upload coverage)
-- Strategy `fail-fast: true` → one real failure cancels all sibling jobs (many X annotations = cascading cancels, not real failures)
-- Coverage: `report_coverage` job runs after all test jobs
+- Workflow: `.github/workflows/release.yml`
+- **Artifact name pattern**: `${{ matrix.version }}-${{ matrix.test }}` — MUST include the Python version prefix; without it, 3.10 and 3.11 matrix jobs upload to the same artifact name and the second upload gets a 409 Conflict, triggering a cascade cancellation via `fail-fast`
+- **Strategy**: `fail-fast: false` on both `test` and `additional_test` matrices; `overwrite: true` on Upload Coverage for clean reruns
+- Coverage: `report_coverage` job runs after all test + additional_test jobs complete
 
 ## Test Patterns
 - `caplog` assertions for HPO tests: use `assert not any(r.levelno >= logging.ERROR for r in caplog.records)` **not** `assert "Error" not in caplog.text`
