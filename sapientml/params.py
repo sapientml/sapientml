@@ -111,6 +111,26 @@ def _is_date_column(c):
     return ratio > 0.8
 
 
+def _normalize_mixed_datetime_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert object columns containing Timestamp values to datetime64[ns].
+
+    In pandas 2.x, assigning a non-datetime value (e.g. " ") to a datetime64
+    column silently downcasts it to object dtype, leaving a mix of Timestamps
+    and strings.  sapientml-core cannot generate runnable code for such columns,
+    so we coerce the whole column back to datetime64[ns] (invalid entries become NaT).
+    """
+    df = df.copy()
+    for col in df.select_dtypes("object").columns:
+        non_null = df[col].dropna()
+        if non_null.empty:
+            continue
+        if any(isinstance(v, pd.Timestamp) for v in non_null):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                df[col] = pd.to_datetime(df[col], errors="coerce")
+    return df
+
+
 class CancellationToken(BaseModel):
     """CancellationToken class.
 
@@ -367,7 +387,7 @@ class Dataset:
             self.training_dataframe = _read_file(training_data, csv_encoding, csv_delimiter)
             self.training_data_path = training_data
         elif isinstance(training_data, pd.DataFrame):
-            self.training_dataframe = training_data.copy()
+            self.training_dataframe = _normalize_mixed_datetime_columns(training_data)
             filename = "training." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.training_data_path = str(self.output_dir / filename)
             save_file(self.training_dataframe, self.training_data_path, csv_encoding, csv_delimiter)
@@ -381,7 +401,7 @@ class Dataset:
             self.validation_dataframe = _read_file(validation_data, csv_encoding, csv_delimiter)
             self.validation_data_path = validation_data
         elif isinstance(validation_data, pd.DataFrame):
-            self.validation_dataframe = validation_data.copy()
+            self.validation_dataframe = _normalize_mixed_datetime_columns(validation_data)
             filename = "validation." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.validation_data_path = str(self.output_dir / filename)
             save_file(self.validation_dataframe, self.validation_data_path, csv_encoding, csv_delimiter)
@@ -393,7 +413,7 @@ class Dataset:
             self.test_dataframe = _read_file(test_data, csv_encoding, csv_delimiter)
             self.test_data_path = test_data
         elif isinstance(test_data, pd.DataFrame):
-            self.test_dataframe = test_data.copy()
+            self.test_dataframe = _normalize_mixed_datetime_columns(test_data)
             filename = "test." + ("pkl" if save_datasets_format == "pickle" else "csv")
             self.test_data_path = str(self.output_dir / filename)
             save_file(self.test_dataframe, self.test_data_path, csv_encoding, csv_delimiter)
