@@ -26,6 +26,7 @@ env:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         version: ["3.10", "3.11"]
         test: [test_sapientml_works_with, test_sapientml_raises_error, test_misc,
@@ -70,13 +71,15 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
-          name:  ${{ matrix.test }}
+          name: ${{ matrix.version }}-${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
+          overwrite: true
 
   additional_test:
     strategy:
+      fail-fast: false
       matrix:
         version: ["3.10", "3.11"]
         test: [test_additional_misc,
@@ -122,10 +125,11 @@ jobs:
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
         with:
-          name:  ${{ matrix.test }}
+          name: ${{ matrix.version }}-${{ matrix.test }}
           include-hidden-files: true
           path: .coverage
           retention-days: 1
+          overwrite: true
 
   report_coverage:
     runs-on: ubuntu-latest
