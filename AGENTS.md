@@ -3,14 +3,14 @@
 ## Repository Overview
 - **Purpose**: AutoML library that generates scikit-learn pipelines from tabular data
 - **Branch structure**: `main` + feature branches; PRs via GitHub
-- **Python support**: 3.10, 3.11 (CI matrix); Python 3.13 compatible after fixes
+- **Python support**: `>=3.9,<3.14`; `requires-python` extended from `<3.13` in PR #112
 
 ## Key Dependencies & Constraints
 - `sapientml-core 0.7.3` pins **`scikit-learn==1.6.1`** exactly
   - sklearn 1.6.0 removed `AdaBoostClassifier(algorithm='SAMME.R')`; only `'SAMME'` is valid
   - sapientml-core still generates `SAMME.R` internally — trials fail at WARNING level via optuna
-- `numpy = ">=1.19.5,<2.0.0"` — upper bound required for fasttext-wheel 0.9.2 compatibility
-- `poetry` for dependency management; `poetry.lock` pins numpy to 1.26.4
+- `numpy = ">=1.19.5,<3.0.0"` — previously capped at `<2.0.0` for fasttext-wheel (commit 279f99d); cap removed in PR #112 after sapientml-core replaced fasttext-wheel with langdetect
+- `poetry` for dependency management (but `sapientml-core` uses `uv`)
 
 ## Releases
 | Version | Date | Notes |
