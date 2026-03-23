@@ -80,6 +80,8 @@ def save_file(dataframe: pd.DataFrame, filepath: str, csv_encoding: str, csv_del
 
 def _is_strnum_column(c):
     c2 = c.loc[c.notnull()]
+    if c2.empty:
+        return False
     c2 = pd.to_numeric(c2, errors="coerce")
     ratio = c2.notnull().sum() / c2.shape[0]
     return ratio > 0.9
