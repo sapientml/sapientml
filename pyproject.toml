@@ -79,3 +79,17 @@ includes = ["sapientml/", "tests/"]
 [tool.pytest.ini_options]
 addopts = "-s -x --cov-branch --cov=sapientml"
 testpaths = ["tests"]
+filterwarnings = [
+    # sapientml_core: uses deprecated pandas.DataFrame.applymap (pandas >= 2.1)
+    "ignore::FutureWarning:sapientml_core",
+    # sapientml_core: scipy pearsonr raises ConstantInputWarning on constant arrays
+    "ignore:An input array is constant:UserWarning:sapientml_core",
+    # sapientml_core: arithmetic warnings in AutoVisualization and preprocessor
+    "ignore::RuntimeWarning:sapientml_core",
+    # sapientml_core: code_miner opens template file without context manager (GC-triggered)
+    "ignore:unclosed file:ResourceWarning",
+    # pandas: internal nanops RuntimeWarnings triggered by sapientml_core operations
+    "ignore::RuntimeWarning:pandas.core.nanops",
+    # sklearn: sapientml_core bundles models pickled with a newer sklearn; version mismatch is benign
+    "ignore::sklearn.exceptions.InconsistentVersionWarning",
+]

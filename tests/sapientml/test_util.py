@@ -5,7 +5,7 @@ from uuid import uuid4
 import numpy as np
 import pandas as pd
 import pytest
-from sapientml.params import _normalize_mixed_datetime_columns
+from sapientml.params import _is_strnum_column, _normalize_mixed_datetime_columns
 from sapientml.util.json_util import JSONDecoder, JSONEncoder
 
 
@@ -107,3 +107,29 @@ def test_misc_normalize_mixed_datetime_columns_does_not_mutate_input():
     _normalize_mixed_datetime_columns(df)
 
     assert df["dt"].dtype == original_dtype
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for _is_strnum_column (sapientml/params.py)
+# ---------------------------------------------------------------------------
+
+
+def test_misc_is_strnum_column_all_null_returns_false_no_warning():
+    """All-null column must return False without raising RuntimeWarning (divide-by-zero guard)."""
+    import warnings
+
+    c = pd.Series([None, None, None], dtype=object)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        result = _is_strnum_column(c)
+    assert result is False
+
+
+def test_misc_is_strnum_column_numeric_strings_returns_true():
+    c = pd.Series(["1.0", "2", "3.5", "4"])
+    assert _is_strnum_column(c)
+
+
+def test_misc_is_strnum_column_mixed_strings_returns_false():
+    c = pd.Series(["a", "b", "c", "d"])
+    assert not _is_strnum_column(c)
