@@ -20,10 +20,12 @@
   - sapientml-core still generates `SAMME.R` internally — trials fail at WARNING level via optuna
 - `numpy = ">=1.19.5,<3.0.0"` — previously capped at `<2.0.0` for fasttext-wheel (commit 279f99d); cap removed in PR #112 after sapientml-core replaced fasttext-wheel with langdetect
 - `poetry` for dependency management (but `sapientml-core` uses `uv`)
+- `setuptools = ">=65.0.0"` — required because `japanize-matplotlib==1.1.3` (pulled in by `sapientml-core`) does `from distutils.version import LooseVersion`; `distutils` was removed in Python 3.12 but `setuptools>=65` provides the compat shim. Without this, `test_explain` fails on 3.12/3.13.
 
 ## Releases
 | Version | Date | Notes |
 |---------|------|-------|
+| 0.4.17 | 2026-03-18 | Python 3.10–3.13 support; `setuptools>=65.0.0` distutils shim; README pyversions badge |
 | 0.4.16 | 2026-03-18 | LanceDB (#91), datetime fix (#111); requires sapientml-core 0.7.4 |
 
 ## CI / GitHub Actions
