@@ -30,7 +30,7 @@ SapientML is an AutoML technology that can learn from a corpus of existing datas
 
 # Installation
 
-Requires **Python 3.10–3.13**.
+Requires **Python 3.10–3.14**.
 
 From PyPI repository
 

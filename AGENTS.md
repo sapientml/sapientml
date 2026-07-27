@@ -3,7 +3,7 @@
 ## Repository Overview
 - **Purpose**: AutoML library that generates scikit-learn pipelines from tabular data
 - **Branch structure**: `main` + feature branches; PRs via GitHub
-- **Python support**: `>=3.9,<3.14`; `requires-python` extended from `<3.13` in PR #112
+- **Python support**: `>=3.10,<3.15`; `requires-python` extended from `<3.14` in the Python 3.14 support work
 
 ## PR Rules (mandatory)
 1. **DCO sign-off**: Every commit on the branch must carry `Signed-off-by: <name> <email>`.
