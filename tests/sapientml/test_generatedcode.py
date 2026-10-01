@@ -925,7 +925,7 @@ def test_misc_preprocess_specify_train_valid_test(
             # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
-            assert returncode == 0
+            assert returncode == 0, f"Unexpected failure for {model}: {exception}"
 
 
 def test_misc_sapientml_works_initial_timeout(setup_request_parameters, make_tempdir, execute_pipeline, test_data):
