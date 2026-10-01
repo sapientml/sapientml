@@ -226,7 +226,7 @@ def test_regressor_works_number(
             # If the violation in the automatic check is large, a shap.utils.ExplainerError occurs.
             assert returncode == 1
         else:
-            assert returncode == 0
+            assert returncode == 0, f"Unexpected failure for {model}: {exception}"
 
 
 @pytest.mark.parametrize("adaptation_metric", ["MAE"])
