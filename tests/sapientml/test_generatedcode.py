@@ -597,7 +597,7 @@ def test_classifier_category_binary_boolean_metric_proba(
             # Negative value is not supported
             assert returncode == 1
         else:
-            assert returncode == 0
+            assert returncode == 0, f"Unexpected failure for {model}: {test_result_df.loc[i, 'exception']}"
 
 
 @pytest.mark.parametrize("adaptation_metric", ["f1"])
