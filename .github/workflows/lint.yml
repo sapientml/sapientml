@@ -37,7 +37,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Dependencies
-        run: pip install "pysen>=0.10.5,<0.12.0" flake8 "black>=23.7,<26.0" "isort>=5,<8"
+        run: pip install "pysen>=0.10.5,<0.12.0" "tomlkit<0.15.1" flake8 "black>=23.7,<26.0" "isort>=5,<8"
 
       - name: Pysen run lint
         run: pysen run lint
